@@ -1,0 +1,239 @@
+{% extends 'agricultor/base_dashboard.html' %}
+
+{% block title %}Mis Solicitudes - Agricultor{% endblock %}
+{% block header_title %}Análisis de Suelo{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex justify-between items-end">
+    <div>
+        <h2 class="text-3xl font-bold text-gray-900">Solicitudes de Análisis</h2>
+        <p class="text-gray-500 mt-1">Pide un análisis para tus fincas y consulta los resultados aquí.</p>
+    </div>
+    <button onclick="abrirModalSolicitud()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2.5 px-5 rounded-lg shadow-md transition-colors flex items-center gap-2">
+        <i class="fa-solid fa-plus"></i> Solicitar Análisis
+    </button>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-6">
+        {% if solicitudes %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-600 text-sm font-semibold uppercase tracking-wider">
+                        <th class="p-4 border-b border-gray-200 rounded-tl-lg">ID</th>
+                        <th class="p-4 border-b border-gray-200">Terreno</th>
+                        <th class="p-4 border-b border-gray-200">Fecha Solicitud</th>
+                        <th class="p-4 border-b border-gray-200">Visita Programada</th>
+                        <th class="p-4 border-b border-gray-200">Estado</th>
+                        <th class="p-4 border-b border-gray-200 text-center rounded-tr-lg">Acción</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm">
+                    {% for s in solicitudes %}
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td class="p-4 font-bold text-gray-900">#{{ s.id }}</td>
+                        <td class="p-4 font-medium text-gray-800">{{ s.terreno.nombre }}</td>
+                        <td class="p-4 text-gray-600">{{ s.fecha_solicitud|date:"d M Y" }}</td>
+                        <td class="p-4 text-gray-600">
+                            {% if s.fecha_visita %}
+                                {{ s.fecha_visita|date:"d M Y" }}
+                            {% else %}
+                                <span class="text-gray-400 italic">Por definir</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-4">
+                            {% if s.estado == 'PENDIENTE' %}
+                                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-bold">PENDIENTE</span>
+                            {% elif s.estado == 'ASIGNADA' or s.estado == 'EN_PROCESO' %}
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-bold">ASIGNADA</span>
+                            {% elif s.estado == 'COMPLETADA' %}
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">COMPLETADA</span>
+                            {% else %}
+                                <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-bold">{{ s.estado }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-4 text-center">
+                            {% if s.estado == 'COMPLETADA' %}
+                                <button onclick="verReporte('{{ s.analisis_resultado.diagnostico_ia|escapejs }}')" class="text-blue-600 hover:text-blue-800 font-bold bg-blue-50 px-3 py-1.5 rounded-lg flex items-center gap-2 mx-auto transition-colors">
+                                    <i class="fa-solid fa-file-invoice"></i> Ver Reporte
+                                </button>
+                            {% else %}
+                                <span class="text-gray-400"><i class="fa-solid fa-clock"></i> En espera</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-16">
+            <div class="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-500 text-4xl">
+                <i class="fa-solid fa-flask"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-700">Aún no has solicitado un análisis</h3>
+            <p class="text-gray-500 mt-2 max-w-md mx-auto">Conocer la salud de tu suelo es el primer paso para mejorar tu cosecha.</p>
+            <button onclick="abrirModalSolicitud()" class="mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow transition-colors">
+                Pedir mi primer análisis
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Div oculto con opciones de terrenos para el Select -->
+<div id="opcionesTerrenos" class="hidden">
+    {% for t in terrenos %}
+        <option value="{{ t.id }}">{{ t.nombre }} ({{ t.hectareas }} ha)</option>
+    {% endfor %}
+</div>
+
+<!-- Modal Historial/Reporte -->
+<div id="modalReporte" class="hidden fixed inset-0 z-50 bg-gray-900 bg-opacity-80 flex items-center justify-center px-4 overflow-y-auto py-10">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 relative">
+        <button onclick="cerrarReporte()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                <i class="fa-solid fa-file-contract"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900">Resultados del Análisis IA</h3>
+            <p class="text-gray-500 mt-1">Recomendaciones basadas en los datos del sensor</p>
+        </div>
+        
+        <div id="contenidoReporte" class="space-y-4"></div>
+        
+        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition-colors mt-6" onclick="cerrarReporte()">
+            Cerrar Reporte
+        </button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function abrirModalSolicitud() {
+        const opciones = document.getElementById('opcionesTerrenos').innerHTML;
+        
+        if (opciones.trim() === '') {
+            Swal.fire('Atención', 'Debes registrar al menos una finca (Terreno) antes de pedir un análisis.', 'warning');
+            return;
+        }
+
+        Swal.fire({
+            title: 'Solicitar Análisis',
+            html: `
+                <div class="space-y-4 text-left mt-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Selecciona el Terreno</label>
+                        <select id="sTerreno" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <option value="">-- Elige una finca --</option>
+                            ${opciones}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Notas adicionales (Opcional)</label>
+                        <textarea id="sNotas" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" rows="3" placeholder="Ej. El suelo está muy seco ultimamente..."></textarea>
+                    </div>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '<i class="fa-solid fa-paper-plane mr-1"></i> Enviar Petición',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const t = document.getElementById('sTerreno').value;
+                const n = document.getElementById('sNotas').value;
+                if (!t) {
+                    Swal.showValidationMessage('Debes seleccionar un terreno');
+                    return false;
+                }
+                return { terreno_id: t, notas: n };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'Enviando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                
+                const fd = new FormData();
+                fd.append('terreno_id', result.value.terreno_id);
+                fd.append('notas', result.value.notas);
+                
+                fetch("{% url 'solicitudes_agricultor:crear_solicitud' %}", {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                    body: fd
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if(data.mensaje) {
+                        Swal.fire('¡Enviada!', data.mensaje, 'success').then(() => window.location.reload());
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                }).catch(() => Swal.fire('Error', 'Problema de conexión', 'error'));
+            }
+        });
+    }
+
+    function verReporte(rawJson) {
+        const modal = document.getElementById('modalReporte');
+        const container = document.getElementById('contenidoReporte');
+        
+        try {
+            const data = JSON.parse(rawJson);
+            let html = '';
+            
+            if (data.recomendaciones) {
+                data.recomendaciones.forEach(rec => {
+                    let color = rec.compatibilidad >= 70 ? 'green' : (rec.compatibilidad >= 40 ? 'yellow' : 'red');
+                    html += `
+                    <div class="border border-gray-200 rounded-xl p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-lg text-gray-800">${rec.cultivo}</h4>
+                            <span class="bg-${color}-100 text-${color}-800 font-bold px-3 py-1 rounded-full text-sm">
+                                ${rec.compatibilidad}%
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-600">${rec.descripcion}</p>
+                    </div>`;
+                });
+            }
+            if (data.consejo_general) {
+                html += `
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mt-4">
+                    <p class="text-sm text-blue-800 font-medium"><i class="fa-solid fa-circle-info mr-2"></i>${data.consejo_general}</p>
+                </div>`;
+            }
+            container.innerHTML = html;
+            modal.classList.remove('hidden');
+        } catch (e) {
+            console.error(e);
+            container.innerHTML = '<p class="text-red-500">Error al leer el reporte. El formato no es válido.</p>';
+            modal.classList.remove('hidden');
+        }
+    }
+    
+    function cerrarReporte() {
+        document.getElementById('modalReporte').classList.add('hidden');
+    }
+</script>
+{% endblock %}

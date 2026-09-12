@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard Laboratorista - TierSystem{% endblock %}</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#2E7D32">
+    
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2E7D32',
+                        secondary: '#4CAF50',
+                        dark: '#1B5E20',
+                        accent: '#FBC02D',
+                        light: '#E8F5E9',
+                        darkBg: '#1e293b'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-transition { transition: transform 0.3s ease-in-out; }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-100 text-gray-800 antialiased h-screen overflow-hidden flex">
+
+    <!-- Mobile Header (Visible only on mobile) -->
+    <div class="md:hidden fixed w-full bg-white shadow-sm z-40 h-16 flex items-center justify-between px-4">
+        <div class="flex items-center gap-2">
+            <button id="mobile-menu-open" class="text-gray-600 hover:text-primary focus:outline-none p-2 rounded-lg">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+            <span class="font-bold text-lg text-dark">TierSystem</span>
+        </div>
+        
+        <!-- Online/Offline Indicator Mobile -->
+        <div id="connection-status-mobile" class="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
+            <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+            <span>Online</span>
+        </div>
+    </div>
+
+    <!-- Sidebar Overlay (Mobile) -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40 hidden md:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="bg-darkBg text-white w-64 flex-shrink-0 flex flex-col h-full fixed md:relative z-50 transform -translate-x-full md:translate-x-0 sidebar-transition shadow-2xl">
+        <!-- Logo Area -->
+        <div class="h-16 flex items-center justify-between px-6 bg-gray-900 border-b border-gray-800">
+            <a href="{% url 'dashboard_laboratorista' %}" class="flex items-center gap-2 text-xl font-bold text-white">
+                <i class="fa-solid fa-leaf text-secondary"></i>
+                <span>TierSystem</span>
+            </a>
+            <button id="mobile-menu-close" class="md:hidden text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+
+        <!-- User Profile -->
+        <div class="p-6 border-b border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center border-2 border-primary">
+                    <i class="fa-solid fa-user-doctor text-gray-300"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-sm">{{ request.user.username|title }}</p>
+                    <p class="text-xs text-secondary">Laboratorista</p>
+                </div>
+            </div>
+            
+            <!-- Online/Offline Indicator Desktop -->
+            <div id="connection-status-desktop" class="mt-4 flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold bg-green-900/30 text-green-400 border border-green-800/50 hidden md:flex">
+                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span>Sistema Conectado</span>
+            </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <p class="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Módulos</p>
+            
+            <a href="{% url 'solicitudes:pendientes' %}" class="flex items-center gap-3 px-3 py-3 rounded-lg bg-gray-800 text-white transition-colors">
+                <i class="fa-solid fa-inbox w-5 text-center"></i>
+                <span>Banco Solicitudes</span>
+            </a>
+            
+            <a href="{% url 'solicitudes:mis_tareas' %}" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+                <i class="fa-solid fa-clipboard-list w-5 text-center"></i>
+                <span>Mis Tareas</span>
+            </a>
+            
+            <a href="{% url 'dashboard_laboratorista' %}" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+                <i class="fa-solid fa-microchip w-5 text-center"></i>
+                <span>Conexión ESP32</span>
+            </a>
+            
+            <a href="{% url 'analisis:historial' %}" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+                <i class="fa-solid fa-clock-rotate-left w-5 text-center"></i>
+                <span>Historial de Análisis</span>
+            </a>
+        </nav>
+
+        <!-- Sidebar Footer / Logout -->
+        <div class="p-4 border-t border-gray-800">
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="flex items-center gap-3 px-3 py-3 w-full rounded-lg text-red-400 hover:bg-gray-800 hover:text-red-300 transition-colors">
+                    <i class="fa-solid fa-right-from-bracket w-5 text-center"></i>
+                    <span>Cerrar Sesión</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col h-full w-full bg-gray-50 relative pt-16 md:pt-0 overflow-y-auto">
+        
+        <!-- Desktop Header -->
+        <header class="hidden md:flex bg-white h-16 shadow-sm items-center justify-between px-8 z-10 sticky top-0">
+            <h1 class="text-xl font-bold text-gray-800">{% block header_title %}Panel de Control{% endblock %}</h1>
+            <div class="flex items-center gap-4">
+                <button class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:text-primary transition-colors">
+                    <i class="fa-solid fa-bell"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Dynamic Content -->
+        <div class="p-4 md:p-8">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <script>
+        // Lógica del Sidebar Móvil
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const openBtn = document.getElementById('mobile-menu-open');
+        const closeBtn = document.getElementById('mobile-menu-close');
+
+        function openSidebar() {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+        }
+
+        function closeSidebar() {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        }
+
+        openBtn.addEventListener('click', openSidebar);
+        closeBtn.addEventListener('click', closeSidebar);
+        overlay.addEventListener('click', closeSidebar);
+
+        // Lógica de Estado de Red (Online / Offline)
+        const statusMobile = document.getElementById('connection-status-mobile');
+        const statusDesktop = document.getElementById('connection-status-desktop');
+
+        function updateNetworkStatus() {
+            if (navigator.onLine) {
+                // Online State
+                statusMobile.className = 'flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700';
+                statusMobile.innerHTML = '<div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div><span>Online</span>';
+                
+                statusDesktop.className = 'mt-4 flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold bg-green-900/30 text-green-400 border border-green-800/50 hidden md:flex';
+                statusDesktop.innerHTML = '<div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div><span>Sistema Conectado</span>';
+            } else {
+                // Offline State
+                statusMobile.className = 'flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-gray-200 text-gray-600';
+                statusMobile.innerHTML = '<div class="w-2 h-2 rounded-full bg-gray-500"></div><span>Offline</span>';
+                
+                statusDesktop.className = 'mt-4 flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-800 text-gray-400 border border-gray-700 hidden md:flex';
+                statusDesktop.innerHTML = '<div class="w-2 h-2 rounded-full bg-gray-500"></div><span>Modo Offline</span>';
+                
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'warning',
+                    title: 'Conexión perdida. Operando en modo offline.',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            }
+        }
+
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+        
+        // Initial check
+        updateNetworkStatus();
+        
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/js/service-worker.js');
+            });
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

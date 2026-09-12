@@ -1,0 +1,75 @@
+{% extends 'agricultor/base_dashboard.html' %}
+
+{% block title %}Mercado - TierSystem{% endblock %}
+{% block header_title %}Mercado Agrícola{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex justify-between items-end">
+    <div>
+        <h2 class="text-3xl font-bold text-gray-900">Mercado Regional</h2>
+        <p class="text-gray-500 mt-1">Descubre y conecta con otros productores agrícolas de la región.</p>
+    </div>
+    {% if request.user.perfil.rol == 'AGRICULTOR' %}
+    <a href="{% url 'mercado:mi_tienda' %}" class="bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold py-2.5 px-5 rounded-lg shadow-sm transition-colors flex items-center gap-2 border border-orange-200">
+        <i class="fa-solid fa-store"></i> Mi Tienda
+    </a>
+    {% endif %}
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <!-- Buscador (visual) -->
+    <div class="mb-8 flex gap-4">
+        <div class="flex-1 relative">
+            <i class="fa-solid fa-search absolute left-4 top-3.5 text-gray-400"></i>
+            <input type="text" placeholder="Buscar productos (Ej. Café, Maíz...)" class="w-full bg-gray-50 border border-gray-200 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500">
+        </div>
+        <button class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 px-6 rounded-xl transition-colors">
+            Buscar
+        </button>
+    </div>
+
+    {% if productos %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+        {% for p in productos %}
+        <div class="border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl hover:border-orange-200 transition-all group bg-white flex flex-col">
+            <div class="h-48 bg-orange-50 flex items-center justify-center relative overflow-hidden group-hover:bg-orange-100 transition-colors">
+                <i class="fa-solid fa-basket-shopping text-6xl text-orange-300 group-hover:scale-110 transition-transform duration-500"></i>
+                <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                <div class="absolute top-3 right-3 bg-white/90 backdrop-blur text-gray-800 text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                    Stock: {{ p.cantidad_disponible }}
+                </div>
+            </div>
+            
+            <div class="p-5 flex-1 flex flex-col">
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-xl font-bold text-gray-900 line-clamp-1">{{ p.nombre }}</h3>
+                </div>
+                
+                <p class="text-xs text-gray-500 mb-4 flex items-center gap-1">
+                    <i class="fa-solid fa-user-circle"></i> Vendedor: {{ p.vendedor.get_full_name|default:p.vendedor.username }}
+                </p>
+                
+                <div class="mt-auto space-y-4">
+                    <div class="text-2xl font-black text-orange-600">
+                        ${{ p.precio }} <span class="text-sm font-semibold text-gray-400">COP/{{ p.unidad_medida }}</span>
+                    </div>
+                    
+                    <button class="w-full bg-gray-900 hover:bg-orange-600 text-white font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+                        <i class="fa-brands fa-whatsapp text-lg"></i> Contactar
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-16">
+        <div class="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300 text-4xl">
+            <i class="fa-solid fa-shop-slash"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-700">El mercado está vacío</h3>
+        <p class="text-gray-500 mt-2 max-w-md mx-auto">Actualmente no hay productos agrícolas publicados en la región.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,135 @@
+{% extends 'laboratorista/base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Historial de Análisis - TierSystem{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-3xl font-bold text-gray-900">Historial de Análisis</h2>
+    <p class="text-gray-500 mt-1">Registro de todos los diagnósticos de suelo que has completado.</p>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-6">
+        {% if analisis %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-600 text-sm font-semibold uppercase tracking-wider">
+                        <th class="p-4 border-b border-gray-200"># Solicitud</th>
+                        <th class="p-4 border-b border-gray-200">Fecha</th>
+                        <th class="p-4 border-b border-gray-200">Terreno</th>
+                        <th class="p-4 border-b border-gray-200">Agricultor</th>
+                        <th class="p-4 border-b border-gray-200">Resultados Sensor</th>
+                        <th class="p-4 border-b border-gray-200 text-center">Acción</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm">
+                    {% for a in analisis %}
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                        <td class="p-4 font-bold text-gray-900">#{{ a.solicitud.id }}</td>
+                        <td class="p-4 text-gray-600">{{ a.fecha_analisis|date:"d M Y - H:i" }}</td>
+                        <td class="p-4">
+                            <span class="font-medium text-gray-800">{{ a.solicitud.terreno.nombre }}</span>
+                        </td>
+                        <td class="p-4">
+                            {{ a.solicitud.agricultor.get_full_name|default:a.solicitud.agricultor.username }}
+                        </td>
+                        <td class="p-4 text-xs">
+                            <div class="flex gap-2">
+                                <span class="bg-blue-50 text-blue-700 px-2 py-1 rounded">Hum: {{ a.humedad }}%</span>
+                                <span class="bg-purple-50 text-purple-700 px-2 py-1 rounded">pH: {{ a.ph }}</span>
+                                <span class="bg-green-50 text-green-700 px-2 py-1 rounded">NPK: {{ a.nitrogeno }}-{{ a.fosforo }}-{{ a.potasio }}</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-center">
+                            <button onclick="verReporte({{ a.id }})" class="text-blue-500 hover:text-blue-700 font-semibold flex items-center gap-1 mx-auto" data-json="{{ a.diagnostico_ia }}">
+                                <i class="fa-solid fa-eye"></i> Ver Reporte
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-16">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400 text-4xl">
+                <i class="fa-solid fa-folder-open"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-700">No hay historial</h3>
+            <p class="text-gray-500 mt-2">Aún no has completado ningún análisis.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Historial -->
+<div id="modalReporte" class="hidden fixed inset-0 z-50 bg-gray-900 bg-opacity-80 flex items-center justify-center px-4 overflow-y-auto py-10">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 relative">
+        <button onclick="cerrarReporte()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                <i class="fa-solid fa-brain"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900">Reporte IA Guardado</h3>
+        </div>
+        
+        <div id="contenidoReporte" class="space-y-4"></div>
+        
+        <button class="w-full bg-primary hover:bg-dark text-white font-bold py-3 rounded-xl shadow-md transition-colors mt-6" onclick="cerrarReporte()">
+            Cerrar Reporte
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function verReporte(id) {
+        const btn = event.currentTarget;
+        const rawJson = btn.getAttribute('data-json');
+        const modal = document.getElementById('modalReporte');
+        const container = document.getElementById('contenidoReporte');
+        
+        try {
+            const data = JSON.parse(rawJson);
+            let html = '';
+            
+            if (data.recomendaciones) {
+                data.recomendaciones.forEach(rec => {
+                    let color = rec.compatibilidad >= 70 ? 'green' : (rec.compatibilidad >= 40 ? 'yellow' : 'red');
+                    html += `
+                    <div class="border border-gray-200 rounded-xl p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-lg text-gray-800">${rec.cultivo}</h4>
+                            <span class="bg-${color}-100 text-${color}-800 font-bold px-3 py-1 rounded-full text-sm">
+                                ${rec.compatibilidad}%
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-600">${rec.descripcion}</p>
+                    </div>`;
+                });
+            }
+            if (data.consejo_general) {
+                html += `
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mt-4">
+                    <p class="text-sm text-blue-800 font-medium"><i class="fa-solid fa-circle-info mr-2"></i>${data.consejo_general}</p>
+                </div>`;
+            }
+            container.innerHTML = html;
+            modal.classList.remove('hidden');
+        } catch (e) {
+            console.error(e);
+            container.innerHTML = '<p class="text-red-500">Error al leer el reporte.</p>';
+            modal.classList.remove('hidden');
+        }
+    }
+    
+    function cerrarReporte() {
+        document.getElementById('modalReporte').classList.add('hidden');
+    }
+</script>
+{% endblock %}

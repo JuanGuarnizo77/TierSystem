@@ -1,0 +1,101 @@
+{% extends 'agricultor/base_dashboard.html' %}
+
+{% block title %}Inicio - Agricultor{% endblock %}
+{% block header_title %}Inicio{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Welcome Section -->
+    <div class="bg-gradient-to-r from-primary to-secondary rounded-2xl p-6 md:p-8 text-white shadow-lg relative overflow-hidden">
+        <div class="absolute right-0 top-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl transform translate-x-10 -translate-y-10"></div>
+        <div class="relative z-10">
+            <h2 class="text-2xl md:text-3xl font-bold mb-2">¡Hola, {{ request.user.username|title }}!</h2>
+            <p class="text-green-50 max-w-lg">Bienvenido a tu panel agrícola. Gestiona tus fincas, solicita análisis de suelo y accede a recomendaciones inteligentes para maximizar tus cultivos.</p>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow">
+            <div>
+                <p class="text-sm font-medium text-gray-500 mb-1">Mis Fincas</p>
+                <h3 class="text-3xl font-bold text-gray-900">{{ total_terrenos }}</h3>
+            </div>
+            <div class="w-12 h-12 bg-green-50 text-primary rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-map-location-dot"></i>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow">
+            <div>
+                <p class="text-sm font-medium text-gray-500 mb-1">Solicitudes Activas</p>
+                <h3 class="text-3xl font-bold text-gray-900">{{ solicitudes_activas }}</h3>
+            </div>
+            <div class="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-flask"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow">
+            <div>
+                <p class="text-sm font-medium text-gray-500 mb-1">Productos en Venta</p>
+                <h3 class="text-3xl font-bold text-gray-900">{{ total_productos }}</h3>
+            </div>
+            <div class="w-12 h-12 bg-orange-50 text-orange-500 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-store"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Actions Cards -->
+    <h3 class="text-xl font-bold text-gray-800 pt-4">Acciones Principales</h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Acceso a Terrenos -->
+        <a href="{% url 'terrenos:mis_terrenos' %}" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-primary hover:shadow-lg transition-all group relative overflow-hidden">
+            <div class="absolute right-0 bottom-0 w-32 h-32 bg-gray-50 rounded-tl-full -z-0 group-hover:bg-green-50 transition-colors"></div>
+            <div class="relative z-10 flex flex-col items-start h-full">
+                <div class="w-14 h-14 bg-light text-primary rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                </div>
+                <h4 class="text-lg font-bold text-gray-900 mb-2">Gestionar Fincas</h4>
+                <p class="text-gray-500 text-sm mb-4">Registra nuevos terrenos y administra la información de tus fincas actuales.</p>
+                <div class="mt-auto flex items-center text-primary font-medium text-sm group-hover:translate-x-1 transition-transform">
+                    Ver fincas <i class="fa-solid fa-arrow-right ml-2"></i>
+                </div>
+            </div>
+        </a>
+
+        <!-- Acceso a Solicitudes -->
+        <a href="{% url 'solicitudes_agricultor:mis_solicitudes' %}" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-blue-500 hover:shadow-lg transition-all group relative overflow-hidden">
+            <div class="absolute right-0 bottom-0 w-32 h-32 bg-gray-50 rounded-tl-full -z-0 group-hover:bg-blue-50 transition-colors"></div>
+            <div class="relative z-10 flex flex-col items-start h-full">
+                <div class="w-14 h-14 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-flask"></i>
+                </div>
+                <h4 class="text-lg font-bold text-gray-900 mb-2">Análisis de Suelo</h4>
+                <p class="text-gray-500 text-sm mb-4">Solicita un nuevo análisis, revisa el estado de tus peticiones y lee los reportes IA.</p>
+                <div class="mt-auto flex items-center text-blue-500 font-medium text-sm group-hover:translate-x-1 transition-transform">
+                    Ver solicitudes <i class="fa-solid fa-arrow-right ml-2"></i>
+                </div>
+            </div>
+        </a>
+
+        <!-- Acceso a Mercado -->
+        <a href="{% url 'mercado:publico' %}" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-orange-500 hover:shadow-lg transition-all group relative overflow-hidden">
+            <div class="absolute right-0 bottom-0 w-32 h-32 bg-gray-50 rounded-tl-full -z-0 group-hover:bg-orange-50 transition-colors"></div>
+            <div class="relative z-10 flex flex-col items-start h-full">
+                <div class="w-14 h-14 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-orange-500 group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-store"></i>
+                </div>
+                <h4 class="text-lg font-bold text-gray-900 mb-2">Mercado</h4>
+                <p class="text-gray-500 text-sm mb-4">Publica tus cosechas y descubre precios y productos de otros agricultores.</p>
+                <div class="mt-auto flex items-center text-orange-500 font-medium text-sm group-hover:translate-x-1 transition-transform">
+                    Ir al mercado <i class="fa-solid fa-arrow-right ml-2"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}

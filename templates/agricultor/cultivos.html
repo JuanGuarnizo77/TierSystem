@@ -1,0 +1,42 @@
+{% extends 'agricultor/base_dashboard.html' %}
+
+{% block title %}Catálogo de Cultivos - TierSystem{% endblock %}
+{% block header_title %}Catálogo de Cultivos{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-3xl font-bold text-gray-900">Guía de Cultivos</h2>
+    <p class="text-gray-500 mt-1">Conoce los requerimientos ideales de suelo para los principales cultivos de la región.</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for c in cultivos %}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-all group">
+        <div class="flex items-center gap-4 mb-4">
+            <div class="w-16 h-16 bg-green-50 text-primary rounded-2xl flex items-center justify-center text-3xl group-hover:bg-primary group-hover:text-white transition-colors">
+                <i class="fa-solid {{ c.img }}"></i>
+            </div>
+            <div>
+                <h3 class="text-2xl font-bold text-gray-900">{{ c.nombre }}</h3>
+                <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded-full">{{ c.clima }}</span>
+            </div>
+        </div>
+        
+        <div class="space-y-3 border-t border-gray-100 pt-4 mt-2">
+            <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-500 font-semibold"><i class="fa-solid fa-droplet text-blue-400 w-5"></i> Humedad Ideal</span>
+                <span class="font-bold text-gray-800">{{ c.humedad }}</span>
+            </div>
+            <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-500 font-semibold"><i class="fa-solid fa-flask text-purple-400 w-5"></i> pH Ideal</span>
+                <span class="font-bold text-gray-800">{{ c.ph }}</span>
+            </div>
+            <div class="flex justify-between items-center text-sm">
+                <span class="text-gray-500 font-semibold"><i class="fa-solid fa-temperature-half text-red-400 w-5"></i> Temperatura</span>
+                <span class="font-bold text-gray-800">18°C - 24°C</span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,499 @@
+{% extends 'laboratorista/base_dashboard.html' %}
+
+{% block header_title %}Inicio - Laboratorista{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Welcome Section -->
+    <div class="bg-gradient-to-r from-primary to-secondary rounded-2xl p-6 md:p-8 text-white shadow-lg relative overflow-hidden">
+        <div class="absolute right-0 top-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl transform translate-x-10 -translate-y-10"></div>
+        <div class="relative z-10">
+            <h2 class="text-2xl md:text-3xl font-bold mb-2">¡Hola, {{ request.user.username|title }}!</h2>
+            <p class="text-green-50 max-w-lg">Bienvenido a tu panel de control de campo. Aquí puedes gestionar las solicitudes de análisis, conectar con el sensor ESP32 y generar diagnósticos de suelo.</p>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow">
+            <div>
+                <p class="text-sm font-medium text-gray-500 mb-1">Solicitudes Pendientes</p>
+                <h3 class="text-3xl font-bold text-gray-900">{{ total_pendientes }}</h3>
+            </div>
+            <div class="w-12 h-12 bg-red-50 text-red-500 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-clipboard-list"></i>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow">
+            <div>
+                <p class="text-sm font-medium text-gray-500 mb-1">Análisis Completados</p>
+                <h3 class="text-3xl font-bold text-gray-900">{{ total_completados }}</h3>
+            </div>
+            <div class="w-12 h-12 bg-green-50 text-primary rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-chart-pie"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow">
+            <div>
+                <p class="text-sm font-medium text-gray-500 mb-1">Estado de Batería (Último ESP32)</p>
+                <h3 class="text-3xl font-bold text-gray-900">100%</h3>
+            </div>
+            <div class="w-12 h-12 bg-yellow-50 text-accent rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-battery-three-quarters"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Actions Cards -->
+    <h3 class="text-xl font-bold text-gray-800 pt-4">Acciones Principales</h3>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Acceso a Solicitudes -->
+        <a href="{% url 'solicitudes:pendientes' %}" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-primary hover:shadow-lg transition-all group relative overflow-hidden">
+            <div class="absolute right-0 bottom-0 w-32 h-32 bg-gray-50 rounded-tl-full -z-0 group-hover:bg-green-50 transition-colors"></div>
+            <div class="relative z-10 flex flex-col items-start">
+                <div class="w-14 h-14 bg-light text-primary rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-list-check"></i>
+                </div>
+                <h4 class="text-lg font-bold text-gray-900 mb-2">Gestionar Solicitudes</h4>
+                <p class="text-gray-500 text-sm">Revisa las solicitudes de los agricultores, acepta nuevas tareas y asigna fechas de visita al terreno.</p>
+                <div class="mt-4 flex items-center text-primary font-medium text-sm group-hover:translate-x-1 transition-transform">
+                    Ver listado <i class="fa-solid fa-arrow-right ml-2"></i>
+                </div>
+            </div>
+        </a>
+
+        {% if solicitud_activa %}
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fa-solid fa-clipboard-check text-blue-500 mt-1"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-bold text-blue-800">
+                        Analizando Solicitud #{{ solicitud_activa.id }}
+                    </h3>
+                    <p class="text-sm text-blue-600 mt-1">
+                        Terreno: {{ solicitud_activa.terreno.nombre }} | Agricultor: {{ solicitud_activa.agricultor.get_full_name|default:solicitud_activa.agricultor.username }}
+                    </p>
+                    <input type="hidden" id="solicitudIdActiva" value="{{ solicitud_activa.id }}">
+                    {% if solicitud_activa.terreno.cultivo_principal %}
+                    <input type="hidden" id="cultivoSugerido" value="{{ solicitud_activa.terreno.cultivo_principal }}">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Acceso a ESP32 -->
+        <a href="javascript:void(0)" onclick="iniciarConexionESP32()" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-accent hover:shadow-lg transition-all group relative overflow-hidden cursor-pointer">
+            <div class="absolute right-0 bottom-0 w-32 h-32 bg-gray-50 rounded-tl-full -z-0 group-hover:bg-yellow-50 transition-colors"></div>
+            <div class="relative z-10 flex flex-col items-start">
+                <div class="w-14 h-14 bg-yellow-50 text-accent rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-accent group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-satellite-dish"></i>
+                </div>
+                <h4 class="text-lg font-bold text-gray-900 mb-2">Capturar Datos (ESP32)</h4>
+                <p class="text-gray-500 text-sm">Conéctate al sensor en campo vía WiFi para realizar la captura de los 7 parámetros de suelo. Demora ~20s.</p>
+                <div class="mt-4 flex items-center text-accent font-medium text-sm group-hover:translate-x-1 transition-transform">
+                    Iniciar conexión <i class="fa-solid fa-arrow-right ml-2"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+
+</div>
+
+<!-- Modal para Mostrar Resultados de Captura -->
+<div id="resultadosModal" class="hidden fixed inset-0 z-[100] bg-gray-900 bg-opacity-50 flex items-center justify-center px-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative">
+        <button onclick="cerrarModalResultados()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                <i class="fa-solid fa-check-double"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900">Lectura Exitosa</h3>
+            <p class="text-gray-500 text-sm mt-1">Datos capturados y estabilizados desde el ESP32</p>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100"><span class="block text-xs text-gray-500">Humedad</span><span id="res_humedad" class="font-bold text-lg">0%</span></div>
+            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100"><span class="block text-xs text-gray-500">Temperatura</span><span id="res_temperatura" class="font-bold text-lg">0°C</span></div>
+            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100"><span class="block text-xs text-gray-500">Conductividad</span><span id="res_conductividad" class="font-bold text-lg">0</span></div>
+            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100"><span class="block text-xs text-gray-500">pH</span><span id="res_ph" class="font-bold text-lg">0</span></div>
+            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100"><span class="block text-xs text-gray-500">Nitrógeno (N)</span><span id="res_n" class="font-bold text-lg">0</span></div>
+            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100"><span class="block text-xs text-gray-500">Fósforo (P)</span><span id="res_p" class="font-bold text-lg">0</span></div>
+            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100 col-span-2"><span class="block text-xs text-gray-500">Potasio (K)</span><span id="res_k" class="font-bold text-lg">0</span></div>
+        </div>
+        <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Cultivo de interés (Opcional)</label>
+            <input type="text" id="inputCultivo" list="listaCultivos" placeholder="Ej. Café, Maíz..." class="w-full border border-gray-300 rounded-lg px-4 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="actualizarVariedades()" oninput="actualizarVariedades()">
+            <datalist id="listaCultivos">
+                <option value="Café"></option>
+                <option value="Maíz"></option>
+                <option value="Frijol"></option>
+                <option value="Tomate"></option>
+                <option value="Papa"></option>
+            </datalist>
+
+            <div id="containerVariedad" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Variedad Específica (Opcional)</label>
+                <input type="text" id="inputVariedad" list="listaVariedades" placeholder="Selecciona o escribe una variedad" class="w-full border border-gray-300 rounded-lg px-4 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <datalist id="listaVariedades">
+                </datalist>
+            </div>
+            
+            <button class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2" onclick="procesarDiagnosticoAutomatico()">
+                <i class="fa-solid fa-microchip"></i> Generar Diagnóstico Automático
+            </button>
+        </div>
+        <button class="w-full text-gray-500 hover:text-gray-700 font-bold py-3 mt-2 rounded-xl transition-colors" onclick="cerrarModalResultados()">
+            Guardar datos sin diagnosticar
+        </button>
+    </div>
+</div>
+
+<!-- Modal para Diagnóstico -->
+<div id="diagnosticoModal" class="hidden fixed inset-0 z-[110] bg-gray-900 bg-opacity-80 flex items-center justify-center px-4 overflow-y-auto py-10">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 relative">
+        <button onclick="cerrarModalDiagnostico()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+        <div class="text-center mb-6">
+            <div id="diagnosticoIcon" class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                <i class="fa-solid fa-brain"></i>
+            </div>
+            <h3 id="diagnosticoTitle" class="text-2xl font-bold text-gray-900">Resultados del Diagnóstico</h3>
+            <p id="diagnosticoSub" class="text-gray-500 text-sm mt-1">Generado por Inteligencia Artificial</p>
+        </div>
+        
+        <div id="diagnosticoContent" class="space-y-4">
+            <!-- Content gets injected here -->
+        </div>
+        
+        <div class="flex gap-3 mt-6">
+            <button class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl transition-colors" onclick="volverAResultados()">
+                <i class="fa-solid fa-search"></i> Consultar otro
+            </button>
+            <button class="w-full bg-primary hover:bg-dark text-white font-bold py-3 rounded-xl shadow-md transition-colors" onclick="cerrarModalDiagnostico()">
+                Cerrar Reporte
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function iniciarConexionESP32() {
+        let timerInterval;
+        Swal.fire({
+            title: 'Conectando al ESP32...',
+            html: 'Por favor, enciende el sensor si no lo has hecho.<br><br>Estabilizando señales: <b>20</b> segundos.',
+            timer: 20000,
+            timerProgressBar: true,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+                const timer = Swal.getHtmlContainer().querySelector('b');
+                timerInterval = setInterval(() => {
+                    timer.textContent = Math.ceil(Swal.getTimerLeft() / 1000);
+                }, 100);
+            },
+            willClose: () => {
+                clearInterval(timerInterval);
+            }
+        }).then((result) => {
+            if (result.dismiss === Swal.DismissReason.timer) {
+                // Al terminar los 20s, llamar a nuestra API
+                verificarDatosEstables();
+            }
+        });
+    }
+
+    async function verificarDatosEstables() {
+        try {
+            const response = await fetch('/api/captura-estable/');
+            const data = await response.json();
+            
+            if (data.estado === 'ok') {
+                const d = data.datos;
+                // Verificación de sensor al aire libre
+                if (d.humedad === 0 && d.conductividad === 0 && d.nitrogeno === 0 && d.fosforo === 0 && d.potasio === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Sensor Fuera de Tierra',
+                        text: 'Se detectó Humedad 0%, Conductividad 0 y NPK en 0. Por favor, entierra las puntas del sensor en el suelo para obtener lecturas reales.',
+                        confirmButtonColor: '#f59e0b'
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Conexión Exitosa!',
+                    text: `Se tomaron ${data.datos.muestras_tomadas} muestras estables.`,
+                    confirmButtonColor: '#2E7D32'
+                }).then(() => {
+                    mostrarResultados(data.datos);
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de Conexión',
+                    text: data.mensaje || 'El sensor no fue encontrado o está desconectado.',
+                    confirmButtonColor: '#d33'
+                });
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de Red',
+                text: 'No se pudo comunicar con el servidor Django.',
+                confirmButtonColor: '#d33'
+            });
+        }
+    }
+    
+    // Variable global para almacenar los datos actuales del sensor
+    let datosSensorActual = null;
+
+    function mostrarResultados(datos) {
+        datosSensorActual = datos; // Guardar para el diagnóstico
+        
+        document.getElementById('res_humedad').innerText = datos.humedad + '%';
+        document.getElementById('res_temperatura').innerText = datos.temperatura + '°C';
+        document.getElementById('res_conductividad').innerText = datos.conductividad + ' us/cm';
+        document.getElementById('res_ph').innerText = datos.ph;
+        document.getElementById('res_n').innerText = datos.nitrogeno + ' mg/kg';
+        document.getElementById('res_p').innerText = datos.fosforo + ' mg/kg';
+        document.getElementById('res_k').innerText = datos.potasio + ' mg/kg';
+        
+        document.getElementById('resultadosModal').classList.remove('hidden');
+    }
+    
+    function cerrarModalResultados() {
+        document.getElementById('resultadosModal').classList.add('hidden');
+    }
+
+    function cerrarModalDiagnostico() {
+        document.getElementById('diagnosticoModal').classList.add('hidden');
+    }
+
+    function volverAResultados() {
+        cerrarModalDiagnostico();
+        document.getElementById('resultadosModal').classList.remove('hidden');
+    }
+
+    // Datos para el autocompletado
+    const opcionesCultivos = {
+        "Café": ["Variedad Castillo", "Variedad Borbón", "Variedad Caturra"],
+        "Maíz": ["Híbrido Amarillo", "Maíz Blanco"],
+        "Frijol": ["Cargamanto", "Bola Roja"],
+        "Tomate": ["Chonto", "Milano"],
+        "Papa": ["Pastusa", "Criolla"]
+    };
+
+    function actualizarVariedades() {
+        const cultivo = document.getElementById('inputCultivo').value.trim();
+        const container = document.getElementById('containerVariedad');
+        const datalist = document.getElementById('listaVariedades');
+        const inputVariedad = document.getElementById('inputVariedad');
+        
+        datalist.innerHTML = '';
+        
+        // Solo mostramos el campo de variedad si el usuario escribió algo en cultivo
+        if (cultivo) {
+            container.classList.remove('hidden');
+            
+            // Si el cultivo está en nuestra base de datos, mostramos sus variedades
+            const variedades = opcionesCultivos[cultivo];
+            if (variedades) {
+                variedades.forEach(v => {
+                    const option = document.createElement('option');
+                    option.value = v;
+                    datalist.appendChild(option);
+                });
+            }
+        } else {
+            container.classList.add('hidden');
+            inputVariedad.value = '';
+        }
+    }
+
+    // Funciones auxiliares para obtener la preferencia unificada
+    function obtenerPreferenciaUnificada() {
+        const cultivo = document.getElementById('inputCultivo').value.trim();
+        const variedad = document.getElementById('inputVariedad') ? document.getElementById('inputVariedad').value.trim() : '';
+        if (cultivo && variedad) return `${cultivo} (${variedad})`;
+        return cultivo;
+    }
+
+    // Inicializar pre-selección si hay solicitud
+    document.addEventListener('DOMContentLoaded', () => {
+        const cultivoSug = document.getElementById('cultivoSugerido');
+        if (cultivoSug && document.getElementById('inputCultivo')) {
+            document.getElementById('inputCultivo').value = cultivoSug.value;
+            actualizarVariedades();
+        }
+    });
+
+    // Nuevo manejador automático
+    function procesarDiagnosticoAutomatico() {
+        if (!datosSensorActual) return;
+        
+        // Comprobar internet nativo del navegador
+        if (navigator.onLine) {
+            // Si hay internet, mandamos a la IA directamente
+            solicitarDiagnosticoIA();
+        } else {
+            // Si no hay internet, mandamos al proceso Offline local
+            solicitarDiagnosticoOffline();
+        }
+    }
+
+    async function solicitarDiagnosticoIA() {
+        const preferencia = obtenerPreferenciaUnificada();
+        cerrarModalResultados();
+        
+        Swal.fire({
+            title: 'Consultando a la IA...',
+            text: 'Conexión a internet detectada. Analizando nutrientes...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        try {
+            const payload = {
+                ...datosSensorActual,
+                preferencia: preferencia
+            };
+            
+            const solId = document.getElementById('solicitudIdActiva');
+            if (solId) {
+                payload.solicitud_id = solId.value;
+            }
+
+            const response = await fetch('/api/ia/diagnosticar/', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            
+            Swal.close();
+            
+            if (result.estado === 'ok') {
+                mostrarDiagnosticoUI(result.diagnostico, 'ia');
+            } else {
+                Swal.fire('Error IA', result.mensaje || 'Error al conectar con Gemini API', 'error');
+            }
+        } catch (e) {
+            Swal.fire('Error de red', 'No se pudo contactar al servidor', 'error');
+        }
+    }
+
+    async function solicitarDiagnosticoOffline() {
+        if (!datosSensorActual) return;
+        const preferencia = obtenerPreferenciaUnificada().toLowerCase();
+        cerrarModalResultados();
+        Swal.fire({
+            title: 'Calculando...',
+            text: 'Comparando con base de datos local...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        try {
+            // En un entorno real PWA, esto se leería de IndexedDB.
+            // Aquí haremos un fetch a la base de datos (simulando que la PWA lo saca del caché offline).
+            const response = await fetch('/api/ia/cultivos/');
+            const result = await response.json();
+            
+            if (result.estado === 'ok') {
+                const cultivos = result.cultivos;
+                let recomendaciones = [];
+
+                cultivos.forEach(c => {
+                    let puntos = 0;
+                    const r = c.rangos;
+                    if (datosSensorActual.humedad >= r.humedad[0] && datosSensorActual.humedad <= r.humedad[1]) puntos++;
+                    if (datosSensorActual.temperatura >= r.temperatura[0] && datosSensorActual.temperatura <= r.temperatura[1]) puntos++;
+                    if (datosSensorActual.ph >= r.ph[0] && datosSensorActual.ph <= r.ph[1]) puntos++;
+                    if (datosSensorActual.nitrogeno >= r.nitrogeno[0] && datosSensorActual.nitrogeno <= r.nitrogeno[1]) puntos++;
+                    if (datosSensorActual.fosforo >= r.fosforo[0] && datosSensorActual.fosforo <= r.fosforo[1]) puntos++;
+                    if (datosSensorActual.potasio >= r.potasio[0] && datosSensorActual.potasio <= r.potasio[1]) puntos++;
+                    
+                    const compatibilidad = Math.round((puntos / 6) * 100);
+                    
+                    recomendaciones.push({
+                        cultivo: c.nombre,
+                        compatibilidad: compatibilidad,
+                        descripcion: c.descripcion + ` (Basado en ${puntos}/6 parámetros óptimos)`
+                    });
+                });
+
+                // Ordenar por compatibilidad
+                recomendaciones.sort((a, b) => b.compatibilidad - a.compatibilidad);
+                
+                const diagnosticoOffline = {
+                    recomendaciones: recomendaciones.slice(0, 3), // Top 3
+                    consejo_general: "Análisis realizado localmente sin conexión a internet usando matemáticas de rangos óptimos."
+                };
+
+                Swal.close();
+                mostrarDiagnosticoUI(diagnosticoOffline, 'offline');
+            }
+        } catch (e) {
+            Swal.fire('Error', 'No hay datos en caché para el modo offline', 'error');
+        }
+    }
+
+    function mostrarDiagnosticoUI(diagnostico, modo) {
+        const modal = document.getElementById('diagnosticoModal');
+        const content = document.getElementById('diagnosticoContent');
+        const icon = document.getElementById('diagnosticoIcon');
+        const sub = document.getElementById('diagnosticoSub');
+        
+        if (modo === 'ia') {
+            icon.className = "w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4";
+            icon.innerHTML = '<i class="fa-solid fa-brain"></i>';
+            sub.innerText = "Generado por Inteligencia Artificial Especializada";
+        } else {
+            icon.className = "w-16 h-16 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4";
+            icon.innerHTML = '<i class="fa-solid fa-database"></i>';
+            sub.innerText = "Calculado localmente sin conexión a internet";
+        }
+
+        let html = '';
+        diagnostico.recomendaciones.forEach(rec => {
+            let color = rec.compatibilidad > 75 ? 'bg-green-500' : (rec.compatibilidad > 50 ? 'bg-yellow-500' : 'bg-red-500');
+            html += `
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="font-bold text-lg text-gray-900">${rec.cultivo}</h4>
+                    <span class="${color} text-white px-3 py-1 rounded-full text-xs font-bold">${rec.compatibilidad}% Ideal</span>
+                </div>
+                <p class="text-gray-600 text-sm">${rec.descripcion}</p>
+            </div>`;
+        });
+
+        if (diagnostico.consejo_general) {
+            html += `
+            <div class="mt-4 bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                <h4 class="text-yellow-800 font-bold mb-1"><i class="fa-solid fa-lightbulb"></i> Consejo</h4>
+                <p class="text-sm text-yellow-700">${diagnostico.consejo_general}</p>
+            </div>`;
+        }
+
+        content.innerHTML = html;
+        modal.classList.remove('hidden');
+    }
+</script>
+{% endblock %}

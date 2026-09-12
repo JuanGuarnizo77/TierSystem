@@ -1,0 +1,82 @@
+{% extends 'laboratorista/base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Mis Tareas Asignadas - TierSystem{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-3xl font-bold text-gray-900">Mis Tareas Asignadas</h2>
+    <p class="text-gray-500 mt-1">Listado de terrenos que debes visitar para capturar datos con el ESP32.</p>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-6">
+        {% if solicitudes %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for sol in solicitudes %}
+            <div class="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow relative overflow-hidden bg-gray-50 border-t-4 border-t-blue-500">
+                <div class="absolute top-0 right-0 mt-3 mr-3">
+                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                        {{ sol.get_estado_display }}
+                    </span>
+                </div>
+                
+                <h3 class="text-xl font-bold text-gray-900 mb-1">Solicitud #{{ sol.id }}</h3>
+                <p class="text-sm text-gray-500 font-semibold text-blue-600 mb-4"><i class="fa-regular fa-calendar-check mr-1"></i> Visita: {{ sol.fecha_visita|date:"d M Y" }}</p>
+                
+                <div class="space-y-3 mb-6">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase font-semibold">Agricultor</p>
+                            <p class="text-sm font-medium text-gray-800">{{ sol.agricultor.get_full_name|default:sol.agricultor.username }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase font-semibold">Terreno</p>
+                            <p class="text-sm font-medium text-gray-800">{{ sol.terreno.nombre }}</p>
+                            <p class="text-xs text-gray-500">{{ sol.terreno.ubicacion }} • {{ sol.terreno.hectareas }} ha</p>
+                        </div>
+                    </div>
+                    
+                    {% if sol.terreno.cultivo_principal %}
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="fa-solid fa-seedling"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 uppercase font-semibold">Cultivo Principal</p>
+                            <p class="text-sm font-medium text-gray-800">{{ sol.terreno.cultivo_principal }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <a href="{% url 'dashboard_laboratorista' %}?solicitud_id={{ sol.id }}" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2.5 rounded-lg shadow transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-microchip"></i> Iniciar Análisis ESP32
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-16">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400 text-4xl">
+                <i class="fa-solid fa-clipboard-check"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-700">No tienes tareas pendientes</h3>
+            <p class="text-gray-500 mt-2">Ve al Banco de Solicitudes para asignar más trabajo.</p>
+            <a href="{% url 'solicitudes:pendientes' %}" class="inline-block mt-4 bg-primary text-white font-bold px-6 py-2 rounded-lg hover:bg-dark transition-colors">
+                Ir al Banco
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

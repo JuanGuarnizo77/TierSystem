@@ -1,0 +1,193 @@
+{% extends 'agricultor/base_dashboard.html' %}
+
+{% block title %}Mi Tienda - Agricultor{% endblock %}
+{% block header_title %}Mi Tienda / Inventario{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex justify-between items-end">
+    <div>
+        <h2 class="text-3xl font-bold text-gray-900">Mis Productos</h2>
+        <p class="text-gray-500 mt-1">Sube y administra los productos agrícolas que ofreces al mercado.</p>
+    </div>
+    <div class="flex gap-3">
+        <a href="{% url 'mercado:publico' %}" class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-bold py-2.5 px-5 rounded-lg shadow-sm transition-colors flex items-center gap-2">
+            <i class="fa-solid fa-store"></i> Ver Mercado
+        </a>
+        <button onclick="abrirModalProducto()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-5 rounded-lg shadow-md transition-colors flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i> Nuevo Producto
+        </button>
+    </div>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    {% if productos %}
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        {% for p in productos %}
+        <div class="border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow group relative bg-gray-50 flex flex-col">
+            <!-- Menú opciones -->
+            <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <button onclick="eliminarProducto({{ p.id }}, '{{ p.nombre }}')" class="w-8 h-8 bg-white text-red-500 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors">
+                    <i class="fa-solid fa-trash text-sm"></i>
+                </button>
+            </div>
+            
+            <div class="h-40 bg-orange-100 flex items-center justify-center text-orange-500 text-6xl relative overflow-hidden">
+                <i class="fa-solid fa-box-open relative z-10"></i>
+                <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')]"></div>
+            </div>
+            
+            <div class="p-5 flex-1 flex flex-col">
+                <h3 class="text-xl font-bold text-gray-900 mb-1">{{ p.nombre }}</h3>
+                <p class="text-xs text-gray-400 mb-4">{{ p.fecha_publicacion|date:"d M Y" }}</p>
+                
+                <div class="space-y-3 mt-auto">
+                    <div class="flex flex-col bg-white border border-gray-100 rounded-lg p-3">
+                        <span class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Precio Unitario</span>
+                        <span class="font-bold text-gray-800 text-lg">${{ p.precio }} COP / {{ p.unidad_medida }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm px-1">
+                        <span class="text-gray-500 font-semibold">Stock:</span>
+                        <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-bold">{{ p.cantidad_disponible }} {{ p.unidad_medida }}s</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-16">
+        <div class="w-24 h-24 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-500 text-4xl">
+            <i class="fa-solid fa-basket-shopping"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-700">No tienes productos en venta</h3>
+        <p class="text-gray-500 mt-2 max-w-md mx-auto">Publica tu cosecha para que otros puedan verla y contactarte.</p>
+        <button onclick="abrirModalProducto()" class="mt-6 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-lg shadow transition-colors">
+            Publicar mi primer producto
+        </button>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function abrirModalProducto() {
+        Swal.fire({
+            title: 'Publicar Producto',
+            html: `
+                <div class="space-y-4 text-left mt-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Nombre del Producto</label>
+                        <input type="text" id="pNombre" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:outline-none" placeholder="Ej. Bulto de Cacao">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Precio (COP)</label>
+                            <input type="number" id="pPrecio" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:outline-none" placeholder="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Stock / Cantidad</label>
+                            <input type="number" id="pCantidad" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:outline-none" placeholder="0">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Unidad de Medida</label>
+                        <select id="pUnidad" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                            <option value="kg">Kilogramos (kg)</option>
+                            <option value="bulto">Bultos (60kg aprox)</option>
+                            <option value="arroba">Arrobas (12.5kg)</option>
+                            <option value="litro">Litros</option>
+                            <option value="unidad">Unidades</option>
+                        </select>
+                    </div>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonColor: '#f97316',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '<i class="fa-solid fa-cloud-arrow-up mr-1"></i> Publicar',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const n = document.getElementById('pNombre').value.trim();
+                const p = document.getElementById('pPrecio').value.trim();
+                const c = document.getElementById('pCantidad').value.trim();
+                const u = document.getElementById('pUnidad').value;
+                
+                if (!n || !p || !c) {
+                    Swal.showValidationMessage('Completa los campos de nombre, precio y cantidad');
+                    return false;
+                }
+                return { nombre: n, precio: p, cantidad: c, unidad: u };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'Publicando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                
+                const fd = new FormData();
+                fd.append('nombre', result.value.nombre);
+                fd.append('precio', result.value.precio);
+                fd.append('cantidad', result.value.cantidad);
+                fd.append('unidad', result.value.unidad);
+                
+                fetch("{% url 'mercado:agregar_producto' %}", {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                    body: fd
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if(data.mensaje) {
+                        Swal.fire('¡Publicado!', data.mensaje, 'success').then(() => window.location.reload());
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                }).catch(() => Swal.fire('Error', 'Problema de conexión', 'error'));
+            }
+        });
+    }
+
+    function eliminarProducto(id, nombre) {
+        Swal.fire({
+            title: '¿Eliminar producto?',
+            text: `Estás a punto de quitar "${nombre}" del mercado.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'Eliminando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                fetch(`/mercado/eliminar/${id}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if(data.mensaje) {
+                        Swal.fire('Eliminado', data.mensaje, 'success').then(() => window.location.reload());
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                }).catch(() => Swal.fire('Error', 'Problema de red', 'error'));
+            }
+        });
+    }
+</script>
+{% endblock %}
