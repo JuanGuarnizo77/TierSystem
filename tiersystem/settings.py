@@ -107,3 +107,13 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny', # Change to IsAuthenticated later
     ]
 }
+
+# Configuración de Correo (SMTP Gmail)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+# REEMPLAZA ESTAS VARIABLES CON TUS CREDENCIALES REALES
+EMAIL_HOST_USER = 'guarnizoperez16@gmail.com' 
+EMAIL_HOST_PASSWORD = 'jgnuzfawjcgtbnun'
+DEFAULT_FROM_EMAIL = 'TierSystem Notificaciones <guarnizoperez16@gmail.com>'

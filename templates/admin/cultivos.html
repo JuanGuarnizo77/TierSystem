@@ -1,0 +1,266 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Cultivos - Administrador{% endblock %}
+{% block header_title %}Base de Datos de Cultivos y Rangos Agronómicos{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div>
+        <h2 class="text-2xl font-bold text-gray-800">Gestión de Cultivos</h2>
+        <p class="text-gray-500 mt-1">Configura los parámetros ideales (pH, NPK, humedad, etc.) que la IA usará para sus diagnósticos.</p>
+    </div>
+    
+    <button onclick="abrirModalCultivo()" class="bg-primary hover:bg-secondary text-white font-medium py-2.5 px-5 rounded-xl transition-colors shadow-sm shadow-primary/30 flex items-center gap-2">
+        <i class="fa-solid fa-plus"></i>
+        <span>Añadir Cultivo</span>
+    </button>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    {% for c in cultivos %}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col justify-between">
+        <div>
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center text-2xl shadow-sm">
+                    <i class="fa-solid fa-seedling"></i>
+                </div>
+                <div class="flex gap-1">
+                    <button onclick="abrirModalCultivo({{ c.id }}, '{{ c.nombre }}', '{{ c.descripcion }}', {{ c.ph_min }}, {{ c.ph_max }}, {{ c.nitrogeno_min }}, {{ c.nitrogeno_max }}, {{ c.fosforo_min }}, {{ c.fosforo_max }}, {{ c.potasio_min }}, {{ c.potasio_max }})" class="w-8 h-8 rounded-lg flex items-center justify-center text-blue-500 hover:bg-blue-50 transition-colors" title="Editar">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button onclick="eliminarCultivo({{ c.id }}, '{{ c.nombre }}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors" title="Eliminar">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <h3 class="text-xl font-bold text-gray-800 mb-1">{{ c.nombre }}</h3>
+            <p class="text-sm text-gray-500 line-clamp-2 mb-4">{{ c.descripcion|default:"Sin descripción" }}</p>
+            
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <div class="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                    <span class="text-gray-400 font-bold block">pH Ideal</span>
+                    <span class="text-gray-700 font-semibold">{{ c.ph_min }} - {{ c.ph_max }}</span>
+                </div>
+                <div class="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                    <span class="text-gray-400 font-bold block">Nitrógeno (N)</span>
+                    <span class="text-gray-700 font-semibold">{{ c.nitrogeno_min }} - {{ c.nitrogeno_max }}</span>
+                </div>
+                <div class="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                    <span class="text-gray-400 font-bold block">Fósforo (P)</span>
+                    <span class="text-gray-700 font-semibold">{{ c.fosforo_min }} - {{ c.fosforo_max }}</span>
+                </div>
+                <div class="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                    <span class="text-gray-400 font-bold block">Potasio (K)</span>
+                    <span class="text-gray-700 font-semibold">{{ c.potasio_min }} - {{ c.potasio_max }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+        <i class="fa-solid fa-seedling text-5xl text-gray-300 mb-4 block"></i>
+        <h3 class="text-xl font-bold text-gray-700 mb-2">No hay cultivos registrados</h3>
+        <p class="text-gray-500 max-w-md mx-auto">La base de datos agronómica está vacía. Añade el primer cultivo para que el sistema pueda generar recomendaciones de IA.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modal Cultivo -->
+<div id="modalCultivo" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+            <h3 id="modalTitle" class="text-xl font-bold text-gray-800">Añadir Cultivo</h3>
+            <button onclick="cerrarModal()" class="text-gray-400 hover:text-gray-700">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        
+        <div class="p-6 overflow-y-auto">
+            <form id="formCultivo" class="space-y-6">
+                <input type="hidden" id="cultivo_id">
+                
+                <div class="grid grid-cols-1 gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre del Cultivo *</label>
+                        <input type="text" id="nombre" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción (Opcional)</label>
+                        <textarea id="descripcion" rows="2" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none"></textarea>
+                    </div>
+                </div>
+                
+                <div class="border-t border-gray-100 pt-6">
+                    <h4 class="font-bold text-gray-800 mb-4"><i class="fa-solid fa-flask text-primary mr-2"></i> Rangos Agronómicos Ideales</h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- pH -->
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <label class="block text-sm font-bold text-gray-700 mb-3">pH</label>
+                            <div class="flex gap-4">
+                                <div class="w-1/2">
+                                    <span class="text-xs text-gray-500 mb-1 block">Mínimo</span>
+                                    <input type="number" step="0.1" id="ph_min" required class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                                </div>
+                                <div class="w-1/2">
+                                    <span class="text-xs text-gray-500 mb-1 block">Máximo</span>
+                                    <input type="number" step="0.1" id="ph_max" required class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Nitrógeno -->
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <label class="block text-sm font-bold text-gray-700 mb-3">Nitrógeno (N)</label>
+                            <div class="flex gap-4">
+                                <div class="w-1/2">
+                                    <span class="text-xs text-gray-500 mb-1 block">Mínimo (mg/kg)</span>
+                                    <input type="number" step="0.1" id="n_min" required class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                                </div>
+                                <div class="w-1/2">
+                                    <span class="text-xs text-gray-500 mb-1 block">Máximo (mg/kg)</span>
+                                    <input type="number" step="0.1" id="n_max" required class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Fósforo -->
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <label class="block text-sm font-bold text-gray-700 mb-3">Fósforo (P)</label>
+                            <div class="flex gap-4">
+                                <div class="w-1/2">
+                                    <span class="text-xs text-gray-500 mb-1 block">Mínimo (mg/kg)</span>
+                                    <input type="number" step="0.1" id="p_min" required class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                                </div>
+                                <div class="w-1/2">
+                                    <span class="text-xs text-gray-500 mb-1 block">Máximo (mg/kg)</span>
+                                    <input type="number" step="0.1" id="p_max" required class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Potasio -->
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <label class="block text-sm font-bold text-gray-700 mb-3">Potasio (K)</label>
+                            <div class="flex gap-4">
+                                <div class="w-1/2">
+                                    <span class="text-xs text-gray-500 mb-1 block">Mínimo (mg/kg)</span>
+                                    <input type="number" step="0.1" id="k_min" required class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                                </div>
+                                <div class="w-1/2">
+                                    <span class="text-xs text-gray-500 mb-1 block">Máximo (mg/kg)</span>
+                                    <input type="number" step="0.1" id="k_max" required class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="p-6 border-t border-gray-100 flex justify-end gap-3 bg-white">
+            <button onclick="cerrarModal()" class="px-6 py-2.5 font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">Cancelar</button>
+            <button onclick="guardarCultivo()" class="px-6 py-2.5 font-medium text-white bg-primary hover:bg-secondary shadow-sm shadow-primary/30 rounded-xl transition-colors">Guardar Cultivo</button>
+        </div>
+    </div>
+</div>
+
+{% csrf_token %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const modal = document.getElementById('modalCultivo');
+    
+    function abrirModalCultivo(id = null, nombre = '', desc = '', ph_min = '', ph_max = '', n_min = '', n_max = '', p_min = '', p_max = '', k_min = '', k_max = '') {
+        document.getElementById('modalTitle').innerText = id ? 'Editar Cultivo' : 'Añadir Cultivo';
+        
+        document.getElementById('cultivo_id').value = id || '';
+        document.getElementById('nombre').value = nombre;
+        document.getElementById('descripcion').value = desc;
+        
+        document.getElementById('ph_min').value = ph_min;
+        document.getElementById('ph_max').value = ph_max;
+        document.getElementById('n_min').value = n_min;
+        document.getElementById('n_max').value = n_max;
+        document.getElementById('p_min').value = p_min;
+        document.getElementById('p_max').value = p_max;
+        document.getElementById('k_min').value = k_min;
+        document.getElementById('k_max').value = k_max;
+        
+        modal.classList.remove('hidden');
+    }
+    
+    function cerrarModal() {
+        modal.classList.add('hidden');
+        document.getElementById('formCultivo').reset();
+    }
+    
+    function guardarCultivo() {
+        const form = document.getElementById('formCultivo');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        const data = {
+            id: document.getElementById('cultivo_id').value,
+            nombre: document.getElementById('nombre').value,
+            descripcion: document.getElementById('descripcion').value,
+            ph_min: document.getElementById('ph_min').value,
+            ph_max: document.getElementById('ph_max').value,
+            nitrogeno_min: document.getElementById('n_min').value,
+            nitrogeno_max: document.getElementById('n_max').value,
+            fosforo_min: document.getElementById('p_min').value,
+            fosforo_max: document.getElementById('p_max').value,
+            potasio_min: document.getElementById('k_min').value,
+            potasio_max: document.getElementById('k_max').value,
+        };
+        
+        fetch('{% url "guardar_cultivo_admin" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.error) throw new Error(data.error);
+            Swal.fire('¡Guardado!', data.mensaje, 'success').then(() => location.reload());
+        })
+        .catch(err => Swal.fire('Error', err.message, 'error'));
+    }
+    
+    function eliminarCultivo(id, nombre) {
+        Swal.fire({
+            title: `Eliminar ${nombre}`,
+            text: "¿Estás seguro? Los análisis existentes no se verán afectados, pero no se podrá seleccionar este cultivo para nuevos diagnósticos.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#9ca3af',
+            confirmButtonText: 'Sí, eliminar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/administrador/cultivos/${id}/eliminar/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.error) throw new Error(data.error);
+                    Swal.fire('Eliminado', data.mensaje, 'success').then(() => location.reload());
+                })
+                .catch(err => Swal.fire('Error', err.message, 'error'));
+            }
+        });
+    }
+</script>
+{% endblock %}

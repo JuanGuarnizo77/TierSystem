@@ -10,11 +10,20 @@ class SolicitudAnalisis(models.Model):
         ('COMPLETADA', 'Completada'),
         ('RECHAZADA', 'Rechazada'),
     )
+    MODALIDADES = (
+        ('VISITA', 'Solicitar Visita en Campo'),
+        ('LLEVAR_MUESTRA', 'Llevar Muestra al Laboratorio'),
+    )
 
     agricultor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='solicitudes_creadas')
     terreno = models.ForeignKey(Terreno, on_delete=models.CASCADE, related_name='solicitudes')
     laboratorista_asignado = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='solicitudes_asignadas')
     estado = models.CharField(max_length=20, choices=ESTADOS, default='PENDIENTE')
+    
+    # Nuevos campos
+    cultivo_deseado = models.CharField(max_length=100, default='No especificado')
+    modalidad = models.CharField(max_length=20, choices=MODALIDADES, default='VISITA')
+    
     fecha_solicitud = models.DateTimeField(auto_now_add=True)
     fecha_visita = models.DateField(null=True, blank=True)
     notas_agricultor = models.TextField(blank=True, null=True)

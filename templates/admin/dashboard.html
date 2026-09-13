@@ -1,0 +1,185 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Dashboard - Administrador{% endblock %}
+{% block header_title %}Visión General del Sistema{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-2xl font-bold text-gray-800">Bienvenido, {{ request.user.first_name|default:"Administrador" }}</h2>
+    <p class="text-gray-500 mt-1">Aquí tienes un resumen de la actividad reciente en la plataforma.</p>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Agricultores -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
+        <div>
+            <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Agricultores</p>
+            <h3 class="text-3xl font-bold text-gray-800">{{ total_agricultores }}</h3>
+        </div>
+        <div class="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center text-green-500">
+            <i class="fa-solid fa-users text-2xl"></i>
+        </div>
+    </div>
+    
+    <!-- Laboratoristas -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
+        <div>
+            <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Laboratoristas</p>
+            <h3 class="text-3xl font-bold text-gray-800">{{ total_laboratoristas }}</h3>
+        </div>
+        <div class="w-14 h-14 rounded-full bg-purple-50 flex items-center justify-center text-purple-500">
+            <i class="fa-solid fa-flask-vial text-2xl"></i>
+        </div>
+    </div>
+
+    <!-- Terrenos Registrados -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
+        <div>
+            <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Terrenos Registrados</p>
+            <h3 class="text-3xl font-bold text-gray-800">{{ total_terrenos }}</h3>
+        </div>
+        <div class="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center text-amber-500">
+            <i class="fa-solid fa-map-location-dot text-2xl"></i>
+        </div>
+    </div>
+    
+    <!-- Solicitudes de Análisis -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
+        <div>
+            <p class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Solicitudes Totales</p>
+            <h3 class="text-3xl font-bold text-gray-800">{{ total_solicitudes }}</h3>
+        </div>
+        <div class="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
+            <i class="fa-solid fa-clipboard-list text-2xl"></i>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Accesos Rápidos -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-6 border-b border-gray-100">
+            <h3 class="font-bold text-gray-800"><i class="fa-solid fa-bolt text-primary mr-2"></i> Accesos Rápidos</h3>
+        </div>
+        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <a href="{% url 'crear_laboratorista' %}" class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-xl hover:border-primary hover:bg-blue-50 transition-colors text-center group">
+                <i class="fa-solid fa-user-plus text-3xl text-gray-400 group-hover:text-primary mb-3"></i>
+                <span class="font-medium text-gray-600 group-hover:text-primary">Nuevo Laboratorista</span>
+            </a>
+            
+            <a href="{% url 'lista_usuarios' %}" class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-xl hover:border-primary hover:bg-blue-50 transition-colors text-center group">
+                <i class="fa-solid fa-users-viewfinder text-3xl text-gray-400 group-hover:text-primary mb-3"></i>
+                <span class="font-medium text-gray-600 group-hover:text-primary">Ver Todos los Usuarios</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Panel de Estado -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-6 border-b border-gray-100">
+            <h3 class="font-bold text-gray-800"><i class="fa-solid fa-server text-primary mr-2"></i> Estado del Sistema</h3>
+        </div>
+        <div class="p-6">
+            <ul class="space-y-4">
+                <li class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                        <span class="text-gray-600">Base de Datos</span>
+                    </div>
+                    <span class="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md">Conectada</span>
+                </li>
+                <li class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                        <span class="text-gray-600">Servicio de Correos (SMTP)</span>
+                    </div>
+                    <span class="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md">Operativo</span>
+                </li>
+                <li class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <span class="text-gray-600">API SIPSA / DANE</span>
+                    </div>
+                    <span class="text-sm font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-md">Auto-gestionado</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Panel de Estado del Hardware (ESP32) -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden lg:col-span-2 mt-2">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+            <h3 class="font-bold text-gray-800"><i class="fa-solid fa-microchip text-primary mr-2"></i> Monitoreo del Hardware (ESP32)</h3>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                En Línea
+            </span>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <!-- Conexión -->
+                <div class="flex flex-col gap-2">
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Última Conexión</span>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-800">Hace 2 min</p>
+                            <p class="text-xs text-gray-500">12/09/2026 10:45 AM</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Batería -->
+                <div class="flex flex-col gap-2">
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Nivel de Batería</span>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-green-50 text-green-500 flex items-center justify-center">
+                            <i class="fa-solid fa-battery-three-quarters"></i>
+                        </div>
+                        <div class="w-full">
+                            <div class="flex justify-between mb-1">
+                                <p class="font-bold text-gray-800">78%</p>
+                                <p class="text-xs text-gray-500">Descargando</p>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-1.5">
+                                <div class="bg-green-500 h-1.5 rounded-full" style="width: 78%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Intensidad Señal -->
+                <div class="flex flex-col gap-2">
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Intensidad WiFi</span>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center">
+                            <i class="fa-solid fa-wifi"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-800">-65 dBm</p>
+                            <p class="text-xs text-green-500 font-medium">Buena señal</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lecturas -->
+                <div class="flex flex-col gap-2">
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Última Lectura de Sensor</span>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center">
+                            <i class="fa-solid fa-satellite-dish"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-800">Exitosa</p>
+                            <p class="text-xs text-gray-500">Módulo NPK operativo</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

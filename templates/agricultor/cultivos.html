@@ -4,39 +4,198 @@
 {% block header_title %}Catálogo de Cultivos{% endblock %}
 
 {% block content %}
-<div class="mb-8">
-    <h2 class="text-3xl font-bold text-gray-900">Guía de Cultivos</h2>
-    <p class="text-gray-500 mt-1">Conoce los requerimientos ideales de suelo para los principales cultivos de la región.</p>
+<div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div>
+        <h2 class="text-3xl font-bold text-gray-900">Directorio Agrícola del Huila</h2>
+        <p class="text-gray-500 mt-1">Explora más de 40 cultivos compatibles con las tierras de la región.</p>
+    </div>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {% for c in cultivos %}
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-all group">
-        <div class="flex items-center gap-4 mb-4">
-            <div class="w-16 h-16 bg-green-50 text-primary rounded-2xl flex items-center justify-center text-3xl group-hover:bg-primary group-hover:text-white transition-colors">
-                <i class="fa-solid {{ c.img }}"></i>
-            </div>
-            <div>
-                <h3 class="text-2xl font-bold text-gray-900">{{ c.nombre }}</h3>
-                <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded-full">{{ c.clima }}</span>
-            </div>
-        </div>
-        
-        <div class="space-y-3 border-t border-gray-100 pt-4 mt-2">
-            <div class="flex justify-between items-center text-sm">
-                <span class="text-gray-500 font-semibold"><i class="fa-solid fa-droplet text-blue-400 w-5"></i> Humedad Ideal</span>
-                <span class="font-bold text-gray-800">{{ c.humedad }}</span>
-            </div>
-            <div class="flex justify-between items-center text-sm">
-                <span class="text-gray-500 font-semibold"><i class="fa-solid fa-flask text-purple-400 w-5"></i> pH Ideal</span>
-                <span class="font-bold text-gray-800">{{ c.ph }}</span>
-            </div>
-            <div class="flex justify-between items-center text-sm">
-                <span class="text-gray-500 font-semibold"><i class="fa-solid fa-temperature-half text-red-400 w-5"></i> Temperatura</span>
-                <span class="font-bold text-gray-800">18°C - 24°C</span>
-            </div>
-        </div>
+<!-- Barra de Controles (Buscador y Filtros) -->
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6 flex flex-col md:flex-row gap-4">
+    <div class="flex-1 relative">
+        <i class="fa-solid fa-search absolute left-4 top-3.5 text-gray-400"></i>
+        <input type="text" id="searchInput" placeholder="Buscar cultivo por nombre..." class="w-full bg-gray-50 border border-gray-200 rounded-xl pl-12 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary">
     </div>
-    {% endfor %}
+    <div class="w-full md:w-64">
+        <select id="categoryFilter" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer">
+            <option value="all">Todas las Categorías</option>
+            <option value="Frutal">Frutales</option>
+            <option value="Hortaliza">Hortalizas</option>
+            <option value="Tubérculo">Tubérculos</option>
+            <option value="Cereal">Cereales</option>
+            <option value="Industrial">Industriales</option>
+            <option value="Leguminosa">Leguminosas</option>
+        </select>
+    </div>
 </div>
+
+<!-- Contenedor del Grid (Inyectado por JS) -->
+<div id="cropsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 min-h-[400px]">
+    <!-- Las tarjetas aparecerán aquí -->
+</div>
+
+<!-- Controles de Paginación -->
+<div class="mt-8 flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+    <span class="text-sm text-gray-500" id="pageInfo">Mostrando 0 de 0 cultivos</span>
+    <div class="flex gap-2">
+        <button id="btnPrev" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-primary hover:text-white transition-colors font-bold disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="fa-solid fa-chevron-left mr-1"></i> Anterior
+        </button>
+        <div id="pageNumbers" class="hidden md:flex gap-1 items-center mx-2">
+            <!-- Números de página -->
+        </div>
+        <button id="btnNext" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-primary hover:text-white transition-colors font-bold disabled:opacity-50 disabled:cursor-not-allowed">
+            Siguiente <i class="fa-solid fa-chevron-right ml-1"></i>
+        </button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Recibir los datos crudos desde Django
+    const rawData = '{{ cultivos_json|escapejs }}';
+    const allCrops = JSON.parse(rawData);
+    
+    // Variables de estado
+    let filteredCrops = [...allCrops];
+    let currentPage = 1;
+    const itemsPerPage = 12;
+
+    // Referencias al DOM
+    const grid = document.getElementById('cropsGrid');
+    const searchInput = document.getElementById('searchInput');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const pageInfo = document.getElementById('pageInfo');
+    const pageNumbers = document.getElementById('pageNumbers');
+
+    function renderCard(crop) {
+        // Colores por categoría (opcional para estilo)
+        const catColors = {
+            'Frutal': 'bg-orange-100 text-orange-800',
+            'Hortaliza': 'bg-green-100 text-green-800',
+            'Tubérculo': 'bg-yellow-100 text-yellow-800',
+            'Cereal': 'bg-amber-100 text-amber-800',
+            'Industrial': 'bg-blue-100 text-blue-800',
+            'Leguminosa': 'bg-purple-100 text-purple-800'
+        };
+        const badgeColor = catColors[crop.categoria] || 'bg-gray-100 text-gray-800';
+
+        return `
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-lg transition-all group flex flex-col h-full">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-14 h-14 bg-gray-50 text-primary rounded-2xl flex items-center justify-center text-2xl group-hover:bg-primary group-hover:text-white transition-colors shrink-0">
+                    <i class="fa-solid ${crop.img}"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 leading-tight">${crop.nombre}</h3>
+                    <span class="${badgeColor} text-xs font-bold px-2 py-0.5 rounded-full mt-1 inline-block">${crop.categoria}</span>
+                </div>
+            </div>
+            
+            <div class="space-y-2 border-t border-gray-100 pt-3 mt-auto">
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-gray-500 font-semibold"><i class="fa-solid fa-droplet text-blue-400 w-4"></i> Humedad</span>
+                    <span class="font-bold text-gray-800">${crop.humedad}</span>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-gray-500 font-semibold"><i class="fa-solid fa-flask text-purple-400 w-4"></i> pH Ideal</span>
+                    <span class="font-bold text-gray-800">${crop.ph}</span>
+                </div>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-gray-500 font-semibold"><i class="fa-solid fa-cloud-sun text-yellow-500 w-4"></i> Clima</span>
+                    <span class="font-bold text-gray-800">${crop.clima}</span>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+
+    function updateGrid() {
+        // Calcular índices
+        const totalItems = filteredCrops.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+        
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const currentItems = filteredCrops.slice(startIndex, endIndex);
+
+        // Renderizar Grid
+        if (currentItems.length === 0) {
+            grid.innerHTML = `
+                <div class="col-span-full text-center py-16">
+                    <i class="fa-solid fa-seedling text-4xl text-gray-300 mb-3"></i>
+                    <h3 class="text-lg font-bold text-gray-500">No se encontraron cultivos</h3>
+                    <p class="text-gray-400 text-sm">Intenta buscar con otro término o categoría.</p>
+                </div>
+            `;
+        } else {
+            grid.innerHTML = currentItems.map(renderCard).join('');
+        }
+
+        // Actualizar Info y Botones
+        const startNum = totalItems === 0 ? 0 : startIndex + 1;
+        const endNum = Math.min(endIndex, totalItems);
+        pageInfo.textContent = `Mostrando ${startNum} - ${endNum} de ${totalItems} cultivos`;
+
+        btnPrev.disabled = currentPage === 1;
+        btnNext.disabled = currentPage === totalPages;
+
+        // Renderizar números de página
+        pageNumbers.innerHTML = '';
+        for(let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            btn.className = `w-8 h-8 rounded-md font-bold text-sm flex items-center justify-center transition-colors ${i === currentPage ? 'bg-primary text-white' : 'text-gray-500 hover:bg-gray-100'}`;
+            btn.onclick = () => {
+                currentPage = i;
+                updateGrid();
+            };
+            pageNumbers.appendChild(btn);
+        }
+    }
+
+    function applyFilters() {
+        const term = searchInput.value.toLowerCase().trim();
+        const cat = categoryFilter.value;
+
+        filteredCrops = allCrops.filter(crop => {
+            const matchName = crop.nombre.toLowerCase().includes(term);
+            const matchCat = cat === 'all' || crop.categoria === cat;
+            return matchName && matchCat;
+        });
+
+        currentPage = 1; // Volver a pág 1 tras filtrar
+        updateGrid();
+    }
+
+    // Event Listeners
+    searchInput.addEventListener('input', applyFilters);
+    categoryFilter.addEventListener('change', applyFilters);
+    
+    btnPrev.addEventListener('click', () => {
+        if(currentPage > 1) {
+            currentPage--;
+            updateGrid();
+        }
+    });
+
+    btnNext.addEventListener('click', () => {
+        const totalPages = Math.ceil(filteredCrops.length / itemsPerPage);
+        if(currentPage < totalPages) {
+            currentPage++;
+            updateGrid();
+        }
+    });
+
+    // Init
+    updateGrid();
+</script>
 {% endblock %}

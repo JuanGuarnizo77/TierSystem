@@ -18,7 +18,7 @@ def login_view(request):
                 # Redirigir según rol
                 rol = user.perfil.rol if hasattr(user, 'perfil') else None
                 if rol == 'ADMIN':
-                    return redirect('/admin/') # Al panel nativo de django o propio
+                    return redirect('dashboard_admin') # Al panel personalizado
                 elif rol == 'LABORATORISTA':
                     return redirect('dashboard_laboratorista') 
                 else:
@@ -50,3 +50,49 @@ def register_view(request):
         form = RegistroForm()
         
     return render(request, 'usuarios/register.html', {'form': form})
+
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.contrib.auth import update_session_auth_hash
+
+@login_required(login_url='login')
+def perfil_view(request):
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'update_info':
+            nombre = request.POST.get('first_name')
+            telefono = request.POST.get('telefono')
+            
+            user = request.user
+            user.first_name = nombre
+            user.save()
+            
+            if hasattr(user, 'perfil'):
+                user.perfil.telefono = telefono
+                user.perfil.save()
+                
+            return JsonResponse({'mensaje': 'Perfil actualizado correctamente.'})
+            
+        elif action == 'change_password':
+            old_pass = request.POST.get('old_password')
+            new_pass = request.POST.get('new_password')
+            
+            user = request.user
+            if user.check_password(old_pass):
+                user.set_password(new_pass)
+                user.save()
+                update_session_auth_hash(request, user)  # Importante para que no cierre sesión
+                return JsonResponse({'mensaje': 'Contraseña actualizada.'})
+            else:
+                return JsonResponse({'error': 'La contraseña actual es incorrecta.'}, status=400)
+                
+    # Determinamos la plantilla según el rol para mantener el diseño base
+    template = 'usuarios/perfil.html' # Plantilla genérica o podríamos tener una por rol
+    rol = request.user.perfil.rol if hasattr(request.user, 'perfil') else None
+    
+    if rol == 'AGRICULTOR':
+        template = 'agricultor/perfil.html'
+    # TODO: add para los otros roles si es necesario
+    
+    return render(request, template)

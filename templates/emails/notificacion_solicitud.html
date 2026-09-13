@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actualización de Solicitud</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .header {
+            background-color: #16a34a; /* primary green */
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 28px;
+            letter-spacing: 1px;
+        }
+        .content {
+            padding: 40px 30px;
+            color: #374151;
+            line-height: 1.6;
+        }
+        .content p {
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .status-box {
+            background-color: #f8fafc;
+            border-left: 4px solid {% if estado == 'ASIGNADA' %}#3b82f6{% else %}#ef4444{% endif %};
+            padding: 20px;
+            border-radius: 0 8px 8px 0;
+            margin: 25px 0;
+        }
+        .status-box h2 {
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            color: #111827;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .details-table th {
+            text-align: left;
+            padding: 8px 0;
+            color: #6b7280;
+            font-weight: 600;
+            width: 40%;
+        }
+        .details-table td {
+            padding: 8px 0;
+            font-weight: 500;
+        }
+        .btn-container {
+            text-align: center;
+            margin-top: 35px;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #16a34a;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .footer {
+            background-color: #f9fafb;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #9ca3af;
+            border-top: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>TierSystem</h1>
+        </div>
+        
+        <div class="content">
+            <p>Hola <strong>{{ nombre_agricultor }}</strong>,</p>
+            <p>Queremos informarte que ha habido una actualización en tu solicitud de análisis de suelo para la finca <strong>"{{ nombre_finca }}"</strong>.</p>
+            
+            <div class="status-box">
+                <h2>Estado de tu Solicitud: <span style="color: {% if estado == 'ASIGNADA' %}#3b82f6{% else %}#ef4444{% endif %}">
+                    {% if estado == 'ASIGNADA' %}Aceptada y Asignada{% else %}Rechazada{% endif %}
+                </span></h2>
+                
+                <table class="details-table">
+                    <tr>
+                        <th>Laboratorista a cargo:</th>
+                        <td>{{ nombre_laboratorista }}</td>
+                    </tr>
+                    {% if estado == 'ASIGNADA' %}
+                    <tr>
+                        <th>Fecha de Visita Programada:</th>
+                        <td>{{ fecha_visita }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+            
+            {% if estado == 'ASIGNADA' %}
+            <p>El laboratorista visitará tu finca en la fecha indicada para recolectar las muestras de suelo necesarias. Por favor, asegúrate de tener el área accesible.</p>
+            {% else %}
+            <p>Lamentablemente el laboratorista no ha podido aceptar tu solicitud en este momento. Te invitamos a ingresar al sistema para generar una nueva solicitud con fechas o detalles diferentes.</p>
+            {% endif %}
+            
+            <div class="btn-container">
+                <a href="http://127.0.0.1:8000/agricultor/solicitudes/" class="btn">Ver en mi Panel</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            &copy; 2026 TierSystem. Todos los derechos reservados.<br>
+            Este es un correo automático, por favor no respondas a esta dirección.
+        </div>
+    </div>
+</body>
+</html>

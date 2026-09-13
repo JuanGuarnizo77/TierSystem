@@ -7,6 +7,7 @@ class Terreno(models.Model):
     ubicacion = models.CharField(max_length=255, help_text="Vereda, municipio, etc.")
     hectareas = models.DecimalField(max_digits=8, decimal_places=2)
     cultivo_principal = models.CharField(max_length=100, blank=True, null=True)
+    coordenadas_poligono = models.TextField(blank=True, null=True, help_text="Coordenadas JSON del polígono")
     fecha_registro = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

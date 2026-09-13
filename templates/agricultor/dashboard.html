@@ -39,11 +39,11 @@
 
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow">
             <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">Productos en Venta</p>
-                <h3 class="text-3xl font-bold text-gray-900">{{ total_productos }}</h3>
+                <p class="text-sm font-medium text-gray-500 mb-1">Precios Actualizados</p>
+                <h3 class="text-3xl font-bold text-gray-900">SIPSA</h3>
             </div>
-            <div class="w-12 h-12 bg-orange-50 text-orange-500 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
-                <i class="fa-solid fa-store"></i>
+            <div class="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-chart-line"></i>
             </div>
         </div>
     </div>
@@ -83,16 +83,16 @@
         </a>
 
         <!-- Acceso a Mercado -->
-        <a href="{% url 'mercado:publico' %}" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-orange-500 hover:shadow-lg transition-all group relative overflow-hidden">
-            <div class="absolute right-0 bottom-0 w-32 h-32 bg-gray-50 rounded-tl-full -z-0 group-hover:bg-orange-50 transition-colors"></div>
+        <a href="{% url 'mercado:precios_sipsa' %}" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-blue-500 hover:shadow-lg transition-all group relative overflow-hidden">
+            <div class="absolute right-0 bottom-0 w-32 h-32 bg-gray-50 rounded-tl-full -z-0 group-hover:bg-blue-50 transition-colors"></div>
             <div class="relative z-10 flex flex-col items-start h-full">
-                <div class="w-14 h-14 bg-orange-50 text-orange-500 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-orange-500 group-hover:text-white transition-colors">
-                    <i class="fa-solid fa-store"></i>
+                <div class="w-14 h-14 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                    <i class="fa-solid fa-chart-line"></i>
                 </div>
-                <h4 class="text-lg font-bold text-gray-900 mb-2">Mercado</h4>
-                <p class="text-gray-500 text-sm mb-4">Publica tus cosechas y descubre precios y productos de otros agricultores.</p>
-                <div class="mt-auto flex items-center text-orange-500 font-medium text-sm group-hover:translate-x-1 transition-transform">
-                    Ir al mercado <i class="fa-solid fa-arrow-right ml-2"></i>
+                <h4 class="text-lg font-bold text-gray-900 mb-2">Precios SIPSA</h4>
+                <p class="text-gray-500 text-sm mb-4">Consulta los precios oficiales de referencia de los cultivos según SIPSA.</p>
+                <div class="mt-auto flex items-center text-blue-500 font-medium text-sm group-hover:translate-x-1 transition-transform">
+                    Ver precios <i class="fa-solid fa-arrow-right ml-2"></i>
                 </div>
             </div>
         </a>

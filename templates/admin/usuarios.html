@@ -1,0 +1,268 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}Usuarios - Administrador{% endblock %}
+{% block header_title %}Gestión de Usuarios{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div>
+        <h2 class="text-2xl font-bold text-gray-800">Directorio de Usuarios</h2>
+        <p class="text-gray-500 mt-1">Administra los accesos, activa cuentas o elimina registros.</p>
+    </div>
+    
+    <a href="{% url 'crear_laboratorista' %}" class="bg-primary hover:bg-secondary text-white font-medium py-2.5 px-5 rounded-xl transition-colors shadow-sm shadow-primary/30 flex items-center gap-2">
+        <i class="fa-solid fa-plus"></i>
+        <span>Nuevo Laboratorista</span>
+    </a>
+</div>
+
+<!-- Tabs -->
+<div class="flex border-b border-gray-200 mb-6">
+    <button onclick="switchTab('laboratoristas')" id="tab-laboratoristas" class="px-6 py-3 font-medium text-primary border-b-2 border-primary transition-colors">
+        <i class="fa-solid fa-flask text-sm mr-2"></i> Laboratoristas
+    </button>
+    <button onclick="switchTab('agricultores')" id="tab-agricultores" class="px-6 py-3 font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 transition-colors">
+        <i class="fa-solid fa-leaf text-sm mr-2"></i> Agricultores
+    </button>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+    <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+        <div class="relative w-full max-w-md">
+            <input type="text" id="buscador" placeholder="Buscar por nombre o correo..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none">
+            <i class="fa-solid fa-search absolute left-3 top-2.5 text-gray-400"></i>
+        </div>
+    </div>
+    
+    <!-- Contenedor Laboratoristas -->
+    <div id="content-laboratoristas" class="overflow-x-auto tab-content">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-white text-gray-400 text-xs uppercase tracking-wider">
+                    <th class="p-4 font-semibold">Usuario</th>
+                    <th class="p-4 font-semibold">Correo Electrónico</th>
+                    <th class="p-4 font-semibold">Fecha de Registro</th>
+                    <th class="p-4 font-semibold">Estado</th>
+                    <th class="p-4 font-semibold text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">
+                {% for u in laboratoristas %}
+                <tr class="hover:bg-gray-50 transition-colors fila-usuario">
+                    <td class="p-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+                                {{ u.first_name|first|default:u.username|first|upper }}
+                            </div>
+                            <div>
+                                <p class="font-bold text-gray-800 nombre-user">{{ u.get_full_name|default:u.username }}</p>
+                                <p class="text-xs text-gray-500">@{{ u.username }}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-4 text-gray-600 correo-user">
+                        {{ u.email|default:"No registrado" }}
+                    </td>
+                    <td class="p-4 text-gray-500">
+                        {{ u.date_joined|date:"d M, Y" }}
+                    </td>
+                    <td class="p-4">
+                        {% if u.is_active %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
+                                <i class="fa-solid fa-circle-check"></i> Activo
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-red-100 text-red-700">
+                                <i class="fa-solid fa-lock"></i> Inactivo
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="p-4 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <button onclick="cambiarEstado({{ u.id }}, {% if u.is_active %}false{% else %}true{% endif %})" 
+                                class="w-8 h-8 rounded-lg flex items-center justify-center {% if u.is_active %}text-orange-500 hover:bg-orange-50{% else %}text-green-500 hover:bg-green-50{% endif %} transition-colors" 
+                                title="{% if u.is_active %}Desactivar{% else %}Activar{% endif %}">
+                                <i class="fa-solid {% if u.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
+                            </button>
+                            <button onclick="eliminarUsuario({{ u.id }}, '{{ u.username }}')" 
+                                class="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors" title="Eliminar Permanentemente">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="p-8 text-center text-gray-500">No hay laboratoristas registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Contenedor Agricultores -->
+    <div id="content-agricultores" class="overflow-x-auto tab-content hidden">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-white text-gray-400 text-xs uppercase tracking-wider">
+                    <th class="p-4 font-semibold">Usuario</th>
+                    <th class="p-4 font-semibold">Correo Electrónico</th>
+                    <th class="p-4 font-semibold">Fecha de Registro</th>
+                    <th class="p-4 font-semibold">Estado</th>
+                    <th class="p-4 font-semibold text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">
+                {% for u in agricultores %}
+                <tr class="hover:bg-gray-50 transition-colors fila-usuario">
+                    <td class="p-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center font-bold">
+                                {{ u.first_name|first|default:u.username|first|upper }}
+                            </div>
+                            <div>
+                                <p class="font-bold text-gray-800 nombre-user">{{ u.get_full_name|default:u.username }}</p>
+                                <p class="text-xs text-gray-500">@{{ u.username }}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-4 text-gray-600 correo-user">
+                        {{ u.email|default:"No registrado" }}
+                    </td>
+                    <td class="p-4 text-gray-500">
+                        {{ u.date_joined|date:"d M, Y" }}
+                    </td>
+                    <td class="p-4">
+                        {% if u.is_active %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
+                                <i class="fa-solid fa-circle-check"></i> Activo
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-red-100 text-red-700">
+                                <i class="fa-solid fa-lock"></i> Bloqueado
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="p-4 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <button onclick="cambiarEstado({{ u.id }}, {% if u.is_active %}false{% else %}true{% endif %})" 
+                                class="w-8 h-8 rounded-lg flex items-center justify-center {% if u.is_active %}text-orange-500 hover:bg-orange-50{% else %}text-green-500 hover:bg-green-50{% endif %} transition-colors" 
+                                title="{% if u.is_active %}Bloquear acceso{% else %}Restaurar acceso{% endif %}">
+                                <i class="fa-solid {% if u.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
+                            </button>
+                            <button onclick="eliminarUsuario({{ u.id }}, '{{ u.username }}')" 
+                                class="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors" title="Eliminar Permanentemente">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="p-8 text-center text-gray-500">No hay agricultores registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% csrf_token %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Búsqueda
+    document.getElementById('buscador').addEventListener('input', function(e) {
+        const query = e.target.value.toLowerCase();
+        const filas = document.querySelectorAll('.fila-usuario');
+        
+        filas.forEach(fila => {
+            const nombre = fila.querySelector('.nombre-user').textContent.toLowerCase();
+            const correo = fila.querySelector('.correo-user').textContent.toLowerCase();
+            
+            if (nombre.includes(query) || correo.includes(query)) {
+                fila.style.display = '';
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+    });
+
+    // Pestañas
+    function switchTab(tab) {
+        // Esconder todos
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        // Resetear estilos de tabs
+        const btnLabs = document.getElementById('tab-laboratoristas');
+        const btnAgri = document.getElementById('tab-agricultores');
+        
+        btnLabs.className = "px-6 py-3 font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 transition-colors";
+        btnAgri.className = "px-6 py-3 font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 transition-colors";
+        
+        // Activar el seleccionado
+        document.getElementById(`content-${tab}`).classList.remove('hidden');
+        document.getElementById(`tab-${tab}`).className = "px-6 py-3 font-medium text-primary border-b-2 border-primary transition-colors";
+    }
+
+    // Acciones AJAX
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    function cambiarEstado(userId, activar) {
+        const accion = activar ? "activar" : "desactivar";
+        Swal.fire({
+            title: `¿Estás seguro?`,
+            text: `Vas a ${accion} a este usuario.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: activar ? '#10b981' : '#f97316',
+            cancelButtonColor: '#9ca3af',
+            confirmButtonText: `Sí, ${accion}`
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/administrador/usuarios/${userId}/estado/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ is_active: activar })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.error) throw new Error(data.error);
+                    Swal.fire('¡Éxito!', data.mensaje, 'success').then(() => location.reload());
+                })
+                .catch(err => Swal.fire('Error', err.message, 'error'));
+            }
+        })
+    }
+
+    function eliminarUsuario(userId, username) {
+        Swal.fire({
+            title: `Eliminar a @${username}`,
+            text: "¡Esta acción es PERMANENTE e IRREVERSIBLE! Se borrarán todos los datos asociados a este usuario.",
+            icon: 'error',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#9ca3af',
+            confirmButtonText: 'Sí, ELIMINAR definitivamente'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/administrador/usuarios/${userId}/eliminar/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.error) throw new Error(data.error);
+                    Swal.fire('Eliminado', data.mensaje, 'success').then(() => location.reload());
+                })
+                .catch(err => Swal.fire('Error', err.message, 'error'));
+            }
+        })
+    }
+</script>
+{% endblock %}

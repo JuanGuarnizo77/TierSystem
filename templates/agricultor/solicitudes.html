@@ -58,6 +58,10 @@
                                 <button onclick="verReporte('{{ s.analisis_resultado.diagnostico_ia|escapejs }}')" class="text-blue-600 hover:text-blue-800 font-bold bg-blue-50 px-3 py-1.5 rounded-lg flex items-center gap-2 mx-auto transition-colors">
                                     <i class="fa-solid fa-file-invoice"></i> Ver Reporte
                                 </button>
+                            {% elif s.estado == 'PENDIENTE' %}
+                                <button onclick="cancelarSolicitud({{ s.id }})" class="text-red-600 hover:text-red-800 font-bold bg-red-50 px-3 py-1.5 rounded-lg flex items-center gap-2 mx-auto transition-colors">
+                                    <i class="fa-solid fa-xmark"></i> Cancelar
+                                </button>
                             {% else %}
                                 <span class="text-gray-400"><i class="fa-solid fa-clock"></i> En espera</span>
                             {% endif %}
@@ -150,6 +154,17 @@
                         </select>
                     </div>
                     <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Cultivo Deseado</label>
+                        <input type="text" id="sCultivo" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Ej. Café, Plátano, Cacao">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Modalidad de Servicio</label>
+                        <select id="sModalidad" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <option value="VISITA">Solicitar Visita del Laboratorista a Campo</option>
+                            <option value="LLEVAR_MUESTRA">Llevar Muestra al Laboratorio</option>
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1">Notas adicionales (Opcional)</label>
                         <textarea id="sNotas" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" rows="3" placeholder="Ej. El suelo está muy seco ultimamente..."></textarea>
                     </div>
@@ -162,12 +177,14 @@
             cancelButtonText: 'Cancelar',
             preConfirm: () => {
                 const t = document.getElementById('sTerreno').value;
+                const c = document.getElementById('sCultivo').value;
+                const m = document.getElementById('sModalidad').value;
                 const n = document.getElementById('sNotas').value;
-                if (!t) {
-                    Swal.showValidationMessage('Debes seleccionar un terreno');
+                if (!t || !c || !m) {
+                    Swal.showValidationMessage('Debes seleccionar un terreno, el cultivo deseado y la modalidad.');
                     return false;
                 }
-                return { terreno_id: t, notas: n };
+                return { terreno_id: t, cultivo_deseado: c, modalidad: m, notas: n };
             }
         }).then((result) => {
             if (result.isConfirmed) {
@@ -175,6 +192,8 @@
                 
                 const fd = new FormData();
                 fd.append('terreno_id', result.value.terreno_id);
+                fd.append('cultivo_deseado', result.value.cultivo_deseado);
+                fd.append('modalidad', result.value.modalidad);
                 fd.append('notas', result.value.notas);
                 
                 fetch("{% url 'solicitudes_agricultor:crear_solicitud' %}", {
@@ -186,6 +205,34 @@
                 .then(data => {
                     if(data.mensaje) {
                         Swal.fire('¡Enviada!', data.mensaje, 'success').then(() => window.location.reload());
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                }).catch(() => Swal.fire('Error', 'Problema de conexión', 'error'));
+            }
+        });
+    }
+
+    function cancelarSolicitud(id) {
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Esta acción cancelará tu solicitud de análisis y no se puede deshacer.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Sí, cancelar solicitud',
+            cancelButtonText: 'Mantener'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/agricultor/solicitudes/cancelar/${id}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.mensaje) {
+                        Swal.fire('Cancelada', data.mensaje, 'success').then(() => window.location.reload());
                     } else {
                         Swal.fire('Error', data.error, 'error');
                     }

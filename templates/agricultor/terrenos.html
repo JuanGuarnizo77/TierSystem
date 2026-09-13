@@ -20,8 +20,11 @@
         {% for terreno in terrenos %}
         <div class="border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow group relative bg-gray-50 flex flex-col">
             <!-- Menú opciones -->
-            <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onclick="eliminarTerreno({{ terreno.id }}, '{{ terreno.nombre }}')" class="w-8 h-8 bg-white text-red-500 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors">
+            <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                <button onclick="editarTerreno({{ terreno.id }}, '{{ terreno.nombre|escapejs }}', '{{ terreno.ubicacion|escapejs }}', '{{ terreno.hectareas }}', '{{ terreno.cultivo_principal|escapejs|default:'' }}', '{{ terreno.coordenadas_poligono|escapejs }}')" class="w-8 h-8 bg-white text-blue-500 rounded-full flex items-center justify-center shadow hover:bg-blue-50 transition-colors">
+                    <i class="fa-solid fa-pen text-sm"></i>
+                </button>
+                <button onclick="eliminarTerreno({{ terreno.id }}, '{{ terreno.nombre|escapejs }}')" class="w-8 h-8 bg-white text-red-500 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors">
                     <i class="fa-solid fa-trash text-sm"></i>
                 </button>
             </div>
@@ -63,7 +66,23 @@
 </div>
 {% endblock %}
 
+{% block extra_css %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+<style>
+    /* Fix para el z-index de leaflet dentro de SweetAlert */
+    .leaflet-container { z-index: 10 !important; }
+    .swal2-html-container { overflow: visible !important; }
+</style>
+{% endblock %}
+
 {% block extra_js %}
+<!-- Leaflet & Turf.js -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+
 <script>
     function getCookie(name) {
         let cookieValue = null;
@@ -83,26 +102,34 @@
     function abrirModalTerreno() {
         Swal.fire({
             title: 'Nueva Finca / Lote',
+            width: '800px',
             html: `
-                <div class="space-y-4 text-left mt-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Nombre de la Finca</label>
-                        <input type="text" id="tNombre" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Ej. El Edén">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Ubicación</label>
-                        <input type="text" id="tUbicacion" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Ej. Vereda San Juan, Pitalito">
+                <div class="space-y-4 text-left mt-2">
+                    <p class="text-sm text-gray-500 mb-2">Dibuja un polígono en el mapa marcando las esquinas de tu terreno. El área se calculará automáticamente.</p>
+                    
+                    <div id="map" class="w-full border border-gray-300 rounded-lg" style="height: 350px;"></div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Nombre de la Finca</label>
+                            <input type="text" id="tNombre" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Ej. El Edén">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Ubicación</label>
+                            <input type="text" id="tUbicacion" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Ej. Vereda San Juan, Pitalito">
+                        </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Tamaño (Hectáreas)</label>
-                            <input type="number" step="0.1" id="tSize" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none" placeholder="0.0">
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Tamaño (Hectáreas calculadas)</label>
+                            <input type="number" step="0.01" id="tSize" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-500 cursor-not-allowed" placeholder="0.00" readonly>
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">Cultivo Principal</label>
                             <input type="text" id="tCultivo" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Ej. Café">
                         </div>
                     </div>
+                    <input type="hidden" id="tCoordenadas">
                 </div>
             `,
             showCancelButton: true,
@@ -110,17 +137,116 @@
             cancelButtonColor: '#6b7280',
             confirmButtonText: '<i class="fa-solid fa-save mr-1"></i> Guardar',
             cancelButtonText: 'Cancelar',
+            didOpen: () => {
+                // Inicializar mapa
+                const map = L.map('map').setView([1.85, -76.05], 13); // Default Pitalito approx
+                
+                // Usamos Esri World Imagery (Satélite) que es gratis y no bloquea localhost
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 21,
+                    maxNativeZoom: 17, // Estira los tiles existentes en lugar de pedir nuevos cuando te acercas demasiado
+                    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                }).addTo(map);
+
+                // Forzar resize para que cargue completo en el modal
+                setTimeout(() => { map.invalidateSize(); }, 100);
+
+                // Geolocalización del usuario
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(position => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        
+                        // Centrar mapa en la ubicación del usuario
+                        map.setView([lat, lon], 16);
+                        
+                        // Añadir marcador visual
+                        const userMarker = L.marker([lat, lon]).addTo(map);
+                        userMarker.bindPopup("<b>Buscando tu ubicación...</b>").openPopup();
+                        
+                        // Usar Nominatim para obtener Municipio/Departamento
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                const city = data.address.city || data.address.town || data.address.village || data.address.county || "";
+                                const state = data.address.state || "";
+                                const ubicacion = city ? `${city}, ${state}` : state;
+                                
+                                userMarker.bindPopup(`<b>Estás aquí</b><br>${ubicacion}`).openPopup();
+                                
+                                // Sugerir la ubicación en el campo de texto
+                                const inputUbi = document.getElementById('tUbicacion');
+                                if(inputUbi && inputUbi.value === '') {
+                                    inputUbi.value = ubicacion;
+                                }
+                            })
+                            .catch(() => {
+                                userMarker.bindPopup("<b>Tu ubicación actual</b>").openPopup();
+                            });
+                            
+                    }, error => {
+                        console.warn("Geolocalización denegada o falló:", error);
+                    });
+                }
+
+                // Herramientas de dibujo
+                const drawnItems = new L.FeatureGroup();
+                map.addLayer(drawnItems);
+                const drawControl = new L.Control.Draw({
+                    edit: { featureGroup: drawnItems },
+                    draw: {
+                        polygon: {
+                            allowIntersection: false,
+                            drawError: { color: '#e1e100', message: 'Los bordes no pueden cruzarse' },
+                            shapeOptions: { color: '#16a34a' }
+                        },
+                        polyline: false, circle: false, rectangle: false, marker: false, circlemarker: false
+                    }
+                });
+                map.addControl(drawControl);
+
+                // Al dibujar polígono
+                map.on(L.Draw.Event.CREATED, function (event) {
+                    const layer = event.layer;
+                    drawnItems.clearLayers(); // Solo permitir un terreno
+                    drawnItems.addLayer(layer);
+                    
+                    const geojson = layer.toGeoJSON();
+                    document.getElementById('tCoordenadas').value = JSON.stringify(geojson);
+                    
+                    // Calcular área en m2 y pasar a ha
+                    const areaSqMeters = turf.area(geojson);
+                    const hectareas = (areaSqMeters / 10000).toFixed(2);
+                    document.getElementById('tSize').value = hectareas;
+                });
+                
+                // Si el usuario edita o borra el polígono
+                map.on('draw:edited', function () {
+                    const layers = drawnItems.getLayers();
+                    if(layers.length > 0) {
+                        const geojson = layers[0].toGeoJSON();
+                        document.getElementById('tCoordenadas').value = JSON.stringify(geojson);
+                        const areaSqMeters = turf.area(geojson);
+                        document.getElementById('tSize').value = (areaSqMeters / 10000).toFixed(2);
+                    }
+                });
+                map.on('draw:deleted', function () {
+                    document.getElementById('tCoordenadas').value = '';
+                    document.getElementById('tSize').value = '';
+                });
+            },
             preConfirm: () => {
                 const n = document.getElementById('tNombre').value.trim();
                 const u = document.getElementById('tUbicacion').value.trim();
                 const s = document.getElementById('tSize').value.trim();
                 const c = document.getElementById('tCultivo').value.trim();
+                const coords = document.getElementById('tCoordenadas').value;
                 
-                if (!n || !u || !s) {
-                    Swal.showValidationMessage('Por favor completa todos los campos obligatorios');
+                if (!n || !u || !s || !coords) {
+                    Swal.showValidationMessage('Faltan datos obligatorios o no has dibujado el terreno en el mapa.');
                     return false;
                 }
-                return { nombre: n, ubicacion: u, hectareas: s, cultivo: c };
+                return { nombre: n, ubicacion: u, hectareas: s, cultivo: c, coordenadas_poligono: coords };
             }
         }).then((result) => {
             if (result.isConfirmed) {
@@ -131,6 +257,7 @@
                 fd.append('ubicacion', result.value.ubicacion);
                 fd.append('hectareas', result.value.hectareas);
                 fd.append('cultivo', result.value.cultivo);
+                fd.append('coordenadas_poligono', result.value.coordenadas_poligono);
                 
                 fetch("{% url 'terrenos:crear_terreno' %}", {
                     method: 'POST',
@@ -170,6 +297,145 @@
                 .then(data => {
                     if(data.mensaje) {
                         Swal.fire('Eliminada', data.mensaje, 'success').then(() => window.location.reload());
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                }).catch(() => Swal.fire('Error', 'Problema de conexión', 'error'));
+            }
+        });
+    }
+    function editarTerreno(id, nombre, ubicacion, hectareas, cultivo, coordenadas) {
+        Swal.fire({
+            title: 'Editar Finca / Lote',
+            width: '800px',
+            html: `
+                <div class="space-y-4 text-left mt-2">
+                    <p class="text-sm text-gray-500 mb-2">Puedes dibujar un nuevo polígono si lo deseas.</p>
+                    
+                    <div id="mapEdit" class="w-full border border-gray-300 rounded-lg" style="height: 350px;"></div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Nombre de la Finca</label>
+                            <input type="text" id="tNombreEdit" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none" value="${nombre}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Ubicación</label>
+                            <input type="text" id="tUbicacionEdit" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none" value="${ubicacion}">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Tamaño (Hectáreas)</label>
+                            <input type="number" step="0.01" id="tSizeEdit" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-500 cursor-not-allowed" value="${hectareas}" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Cultivo Principal</label>
+                            <input type="text" id="tCultivoEdit" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none" value="${cultivo}">
+                        </div>
+                    </div>
+                    <input type="hidden" id="tCoordenadasEdit">
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonColor: '#16a34a',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '<i class="fa-solid fa-save mr-1"></i> Guardar Cambios',
+            cancelButtonText: 'Cancelar',
+            didOpen: () => {
+                const map = L.map('mapEdit').setView([1.85, -76.05], 13);
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxZoom: 21,
+                    maxNativeZoom: 17
+                }).addTo(map);
+
+                setTimeout(() => { map.invalidateSize(); }, 100);
+
+                const drawnItems = new L.FeatureGroup();
+                map.addLayer(drawnItems);
+                
+                // Cargar polígono existente
+                if(coordenadas) {
+                    try {
+                        const geoJsonData = JSON.parse(coordenadas.replace(/&quot;/g, '"'));
+                        document.getElementById('tCoordenadasEdit').value = JSON.stringify(geoJsonData);
+                        const layer = L.geoJSON(geoJsonData, {
+                            style: { color: '#16a34a' }
+                        });
+                        layer.eachLayer(l => drawnItems.addLayer(l));
+                        map.fitBounds(drawnItems.getBounds());
+                    } catch(e) {
+                        console.error("Error parseando GeoJSON", e);
+                    }
+                }
+
+                const drawControl = new L.Control.Draw({
+                    edit: { featureGroup: drawnItems },
+                    draw: {
+                        polygon: { allowIntersection: false, shapeOptions: { color: '#16a34a' } },
+                        polyline: false, circle: false, rectangle: false, marker: false, circlemarker: false
+                    }
+                });
+                map.addControl(drawControl);
+
+                map.on(L.Draw.Event.CREATED, function (event) {
+                    const layer = event.layer;
+                    drawnItems.clearLayers();
+                    drawnItems.addLayer(layer);
+                    
+                    const geojson = layer.toGeoJSON();
+                    document.getElementById('tCoordenadasEdit').value = JSON.stringify(geojson);
+                    const areaSqMeters = turf.area(geojson);
+                    document.getElementById('tSizeEdit').value = (areaSqMeters / 10000).toFixed(2);
+                });
+                
+                map.on('draw:edited', function () {
+                    const layers = drawnItems.getLayers();
+                    if(layers.length > 0) {
+                        const geojson = layers[0].toGeoJSON();
+                        document.getElementById('tCoordenadasEdit').value = JSON.stringify(geojson);
+                        const areaSqMeters = turf.area(geojson);
+                        document.getElementById('tSizeEdit').value = (areaSqMeters / 10000).toFixed(2);
+                    }
+                });
+                map.on('draw:deleted', function () {
+                    document.getElementById('tCoordenadasEdit').value = '';
+                    document.getElementById('tSizeEdit').value = '';
+                });
+            },
+            preConfirm: () => {
+                const n = document.getElementById('tNombreEdit').value.trim();
+                const u = document.getElementById('tUbicacionEdit').value.trim();
+                const s = document.getElementById('tSizeEdit').value.trim();
+                const c = document.getElementById('tCultivoEdit').value.trim();
+                const coords = document.getElementById('tCoordenadasEdit').value;
+                
+                if (!n || !u || !s || !coords) {
+                    Swal.showValidationMessage('Faltan datos obligatorios o no has dibujado el terreno.');
+                    return false;
+                }
+                return { nombre: n, ubicacion: u, hectareas: s, cultivo: c, coordenadas_poligono: coords };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'Actualizando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                
+                const fd = new FormData();
+                fd.append('nombre', result.value.nombre);
+                fd.append('ubicacion', result.value.ubicacion);
+                fd.append('hectareas', result.value.hectareas);
+                fd.append('cultivo', result.value.cultivo);
+                fd.append('coordenadas_poligono', result.value.coordenadas_poligono);
+                
+                fetch(`/agricultor/fincas/editar/${id}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                    body: fd
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if(data.mensaje) {
+                        Swal.fire('¡Éxito!', data.mensaje, 'success').then(() => window.location.reload());
                     } else {
                         Swal.fire('Error', data.error, 'error');
                     }
