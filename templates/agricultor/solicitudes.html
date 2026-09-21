@@ -6,64 +6,64 @@
 {% block content %}
 <div class="mb-8 flex justify-between items-end">
     <div>
-        <h2 class="text-3xl font-bold text-gray-900">Solicitudes de Análisis</h2>
-        <p class="text-gray-500 mt-1">Pide un análisis para tus fincas y consulta los resultados aquí.</p>
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white font-heading">Solicitudes de Análisis</h2>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Pide un análisis para tus fincas y consulta los resultados aquí.</p>
     </div>
-    <button onclick="abrirModalSolicitud()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2.5 px-5 rounded-lg shadow-md transition-colors flex items-center gap-2">
+    <button onclick="abrirModalSolicitud()" class="bg-primary hover:bg-secondary text-white font-bold py-2.5 px-5 rounded-xl shadow-sm transition-all flex items-center gap-2">
         <i class="fa-solid fa-plus"></i> Solicitar Análisis
     </button>
 </div>
 
-<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+<div class="bento-card overflow-hidden">
     <div class="p-6">
         {% if solicitudes %}
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-gray-50 text-gray-600 text-sm font-semibold uppercase tracking-wider">
-                        <th class="p-4 border-b border-gray-200 rounded-tl-lg">ID</th>
-                        <th class="p-4 border-b border-gray-200">Terreno</th>
-                        <th class="p-4 border-b border-gray-200">Fecha Solicitud</th>
-                        <th class="p-4 border-b border-gray-200">Visita Programada</th>
-                        <th class="p-4 border-b border-gray-200">Estado</th>
-                        <th class="p-4 border-b border-gray-200 text-center rounded-tr-lg">Acción</th>
+                    <tr class="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-sm font-semibold uppercase tracking-wider">
+                        <th class="p-4 border-b border-gray-100 dark:border-gray-700 rounded-tl-xl">ID</th>
+                        <th class="p-4 border-b border-gray-100 dark:border-gray-700">Terreno</th>
+                        <th class="p-4 border-b border-gray-100 dark:border-gray-700">Fecha Solicitud</th>
+                        <th class="p-4 border-b border-gray-100 dark:border-gray-700">Visita Programada</th>
+                        <th class="p-4 border-b border-gray-100 dark:border-gray-700">Estado</th>
+                        <th class="p-4 border-b border-gray-100 dark:border-gray-700 text-center rounded-tr-xl">Acción</th>
                     </tr>
                 </thead>
                 <tbody class="text-sm">
                     {% for s in solicitudes %}
-                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                        <td class="p-4 font-bold text-gray-900">#{{ s.id }}</td>
-                        <td class="p-4 font-medium text-gray-800">{{ s.terreno.nombre }}</td>
-                        <td class="p-4 text-gray-600">{{ s.fecha_solicitud|date:"d M Y" }}</td>
-                        <td class="p-4 text-gray-600">
+                    <tr class="border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                        <td class="p-4 font-bold text-gray-900 dark:text-white">#{{ s.id }}</td>
+                        <td class="p-4 font-medium text-gray-800 dark:text-gray-200">{{ s.terreno.nombre }}</td>
+                        <td class="p-4 text-gray-600 dark:text-gray-400">{{ s.fecha_solicitud|date:"d M Y" }}</td>
+                        <td class="p-4 text-gray-600 dark:text-gray-400">
                             {% if s.fecha_visita %}
                                 {{ s.fecha_visita|date:"d M Y" }}
                             {% else %}
-                                <span class="text-gray-400 italic">Por definir</span>
+                                <span class="text-gray-400 dark:text-gray-500 italic">Por definir</span>
                             {% endif %}
                         </td>
                         <td class="p-4">
                             {% if s.estado == 'PENDIENTE' %}
-                                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-bold">PENDIENTE</span>
+                                <span class="bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-400 px-3 py-1 rounded-full text-xs font-bold border border-yellow-200 dark:border-yellow-800">PENDIENTE</span>
                             {% elif s.estado == 'ASIGNADA' or s.estado == 'EN_PROCESO' %}
-                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-bold">ASIGNADA</span>
+                                <span class="bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-bold border border-blue-200 dark:border-blue-800">ASIGNADA</span>
                             {% elif s.estado == 'COMPLETADA' %}
-                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">COMPLETADA</span>
+                                <span class="bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-400 px-3 py-1 rounded-full text-xs font-bold border border-green-200 dark:border-green-800">COMPLETADA</span>
                             {% else %}
-                                <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-bold">{{ s.estado }}</span>
+                                <span class="bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-400 px-3 py-1 rounded-full text-xs font-bold border border-red-200 dark:border-red-800">{{ s.estado }}</span>
                             {% endif %}
                         </td>
                         <td class="p-4 text-center">
                             {% if s.estado == 'COMPLETADA' %}
-                                <button onclick="verReporte('{{ s.analisis_resultado.diagnostico_ia|escapejs }}')" class="text-blue-600 hover:text-blue-800 font-bold bg-blue-50 px-3 py-1.5 rounded-lg flex items-center gap-2 mx-auto transition-colors">
+                                <button onclick="verReporte('{{ s.analisis_resultado.diagnostico_ia|escapejs }}')" class="text-primary dark:text-green-400 hover:text-white font-bold bg-green-50 dark:bg-green-900/30 hover:bg-primary px-3 py-1.5 rounded-lg flex items-center gap-2 mx-auto transition-colors border border-green-200 dark:border-green-800">
                                     <i class="fa-solid fa-file-invoice"></i> Ver Reporte
                                 </button>
                             {% elif s.estado == 'PENDIENTE' %}
-                                <button onclick="cancelarSolicitud({{ s.id }})" class="text-red-600 hover:text-red-800 font-bold bg-red-50 px-3 py-1.5 rounded-lg flex items-center gap-2 mx-auto transition-colors">
+                                <button onclick="cancelarSolicitud('{{ s.id }}')" class="text-red-600 dark:text-red-400 hover:text-white font-bold bg-red-50 dark:bg-red-900/30 hover:bg-red-500 px-3 py-1.5 rounded-lg flex items-center gap-2 mx-auto transition-colors border border-red-200 dark:border-red-800">
                                     <i class="fa-solid fa-xmark"></i> Cancelar
                                 </button>
                             {% else %}
-                                <span class="text-gray-400"><i class="fa-solid fa-clock"></i> En espera</span>
+                                <span class="text-gray-400 dark:text-gray-500"><i class="fa-solid fa-clock"></i> En espera</span>
                             {% endif %}
                         </td>
                     </tr>
@@ -73,12 +73,12 @@
         </div>
         {% else %}
         <div class="text-center py-16">
-            <div class="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-500 text-4xl">
+            <div class="w-24 h-24 bg-green-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 text-primary text-4xl shadow-sm border border-green-100 dark:border-gray-700">
                 <i class="fa-solid fa-flask"></i>
             </div>
-            <h3 class="text-xl font-bold text-gray-700">Aún no has solicitado un análisis</h3>
-            <p class="text-gray-500 mt-2 max-w-md mx-auto">Conocer la salud de tu suelo es el primer paso para mejorar tu cosecha.</p>
-            <button onclick="abrirModalSolicitud()" class="mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg shadow transition-colors">
+            <h3 class="text-xl font-bold text-gray-700 dark:text-gray-300 font-heading">Aún no has solicitado un análisis</h3>
+            <p class="text-gray-500 dark:text-gray-400 mt-2 max-w-md mx-auto">Conocer la salud de tu suelo es el primer paso para mejorar tu cosecha.</p>
+            <button onclick="abrirModalSolicitud()" class="mt-6 bg-primary hover:bg-secondary text-white font-bold py-2.5 px-6 rounded-xl shadow-sm transition-all">
                 Pedir mi primer análisis
             </button>
         </div>

@@ -1,11 +1,15 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-dummy-key-for-dev'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dummy-key-for-dev')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -114,6 +118,6 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 # REEMPLAZA ESTAS VARIABLES CON TUS CREDENCIALES REALES
-EMAIL_HOST_USER = 'guarnizoperez16@gmail.com' 
-EMAIL_HOST_PASSWORD = 'jgnuzfawjcgtbnun'
-DEFAULT_FROM_EMAIL = 'TierSystem Notificaciones <guarnizoperez16@gmail.com>'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = f'TierSystem Notificaciones <{EMAIL_HOST_USER}>'

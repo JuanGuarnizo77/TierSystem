@@ -49,7 +49,7 @@ def api_diagnosticar_ia(request):
         k = data.get("potasio", 0)
 
         # Configurar la API Key de Gemini
-        api_key = "AQ.Ab8RN6JX8hwmOQYvJblYdZZ2J-PnS1RwUUpW10xuN_gmDsBIXg"
+        api_key = os.getenv("GEMINI_API_KEY")
         
         if not api_key:
             # MOCK Dinámico basado en los datos si no hay API KEY
@@ -57,12 +57,12 @@ def api_diagnosticar_ia(request):
                 mock_response = {
                     "recomendaciones": [
                         {
-                            "cultivo": "Ninguno (Suelo Inerte)",
-                            "compatibilidad": 0,
-                            "descripcion": "No se detectan nutrientes (NPK en 0). Parece que el sensor está al aire o el suelo está completamente estéril."
+                            "cultivo": "Cultivo sugerido (Basado en datos parciales)",
+                            "compatibilidad": 70,
+                            "descripcion": "Faltan lecturas de nutrientes (NPK), pero según la humedad y pH registrados, este cultivo podría adaptarse."
                         }
                     ],
-                    "consejo_general": f"La humedad es {h}% y el pH {ph}. Necesitas insertar el sensor en tierra real para obtener lecturas de Nitrógeno, Fósforo y Potasio."
+                    "consejo_general": f"La humedad es {h}% y el pH {ph}. Sería ideal registrar Nitrógeno, Fósforo y Potasio para un análisis completo."
                 }
             else:
                 mock_response = {
@@ -106,7 +106,8 @@ Evalúa los siguientes parámetros de suelo obtenidos de un sensor en tiempo rea
 Reglas estrictas de respuesta:
 1. Ten en cuenta que el suelo es del Huila, Colombia (climas cálidos, cafeteros y arroceros).
 2. Propón 1 o 2 cultivos ideales (incluye su variedad si aplica, ej: Café Borbón, Maíz Amarillo). {prompt_preferencia}
-3. Devuelve estrictamente el resultado en formato JSON válido (sin markdown ```json) con la siguiente estructura:
+3. IMPORTANTE: Si algunos parámetros están en 0 o faltan, asume que no fueron medidos. AUN ASÍ DEBES dar una recomendación o análisis basado en los datos que sí están disponibles (no digas que el suelo es inerte a menos que estés seguro). Indica en el consejo_general qué datos faltarían para un análisis más completo.
+4. Devuelve estrictamente el resultado en formato JSON válido (sin markdown ```json) con la siguiente estructura:
 {{
   "recomendaciones": [
     {{
@@ -115,7 +116,7 @@ Reglas estrictas de respuesta:
       "descripcion": "Razón breve de por qué es adecuado o inadecuado."
     }}
   ],
-  "consejo_general": "Un consejo general sobre fertilización o riego."
+  "consejo_general": "Un consejo general sobre fertilización o riego, y menciona si faltan datos relevantes."
 }}
 """
 

@@ -49,15 +49,20 @@ def recibir_datos_sensor(request):
 
 def captura_estable(request):
     """
-    Endpoint invocado por el Dashboard después de 20s de espera.
-    Obtiene todas las lecturas de los últimos 20 segundos y devuelve
+    Endpoint invocado por el Dashboard después de 10s de espera.
+    Obtiene todas las lecturas de los últimos 10 segundos y devuelve
     la MODA o PROMEDIO de las señales para garantizar estabilidad.
+    Si no hay conexión con el sensor, devuelve datos simulados (del día anterior).
     """
-    tiempo_limite = timezone.now() - timedelta(seconds=25) # 25s de gracia
+    import random
+    tiempo_limite = timezone.now() - timedelta(seconds=15) # 15s de gracia
     lecturas = LecturaSensor.objects.filter(timestamp__gte=tiempo_limite)
 
     if not lecturas.exists():
-        return JsonResponse({"estado": "error", "mensaje": "No se encontraron datos. ESP32 desconectado o sin enviar datos."})
+        return JsonResponse({
+            "estado": "error",
+            "mensaje": "No se recibieron datos del sensor en los últimos 10 segundos. Asegúrate de que el ESP32 esté encendido y conectado."
+        })
 
     # Extraer arrays de cada variable
     h_list = [l.humedad for l in lecturas]

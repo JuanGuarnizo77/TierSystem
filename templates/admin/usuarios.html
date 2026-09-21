@@ -6,31 +6,31 @@
 {% block content %}
 <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
     <div>
-        <h2 class="text-2xl font-bold text-gray-800">Directorio de Usuarios</h2>
-        <p class="text-gray-500 mt-1">Administra los accesos, activa cuentas o elimina registros.</p>
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white font-heading">Directorio de Usuarios</h2>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Administra los accesos, activa cuentas o elimina registros.</p>
     </div>
     
-    <a href="{% url 'crear_laboratorista' %}" class="bg-primary hover:bg-secondary text-white font-medium py-2.5 px-5 rounded-xl transition-colors shadow-sm shadow-primary/30 flex items-center gap-2">
+    <button onclick="abrirModalCrear()" class="bg-primary hover:bg-secondary text-white font-bold py-2.5 px-5 rounded-xl transition-colors shadow-sm flex items-center gap-2">
         <i class="fa-solid fa-plus"></i>
         <span>Nuevo Laboratorista</span>
-    </a>
+    </button>
 </div>
 
 <!-- Tabs -->
-<div class="flex border-b border-gray-200 mb-6">
-    <button onclick="switchTab('laboratoristas')" id="tab-laboratoristas" class="px-6 py-3 font-medium text-primary border-b-2 border-primary transition-colors">
+<div class="flex border-b border-gray-100 dark:border-gray-700 mb-6 gap-2">
+    <button onclick="switchTab('laboratoristas')" id="tab-laboratoristas" class="px-6 py-3 font-bold text-primary border-b-2 border-primary transition-all bg-green-50 dark:bg-gray-800 rounded-t-lg">
         <i class="fa-solid fa-flask text-sm mr-2"></i> Laboratoristas
     </button>
-    <button onclick="switchTab('agricultores')" id="tab-agricultores" class="px-6 py-3 font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 transition-colors">
+    <button onclick="switchTab('agricultores')" id="tab-agricultores" class="px-6 py-3 font-medium text-gray-500 dark:text-gray-400 border-b-2 border-transparent hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600 transition-all rounded-t-lg bg-transparent">
         <i class="fa-solid fa-leaf text-sm mr-2"></i> Agricultores
     </button>
 </div>
 
-<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
-    <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+<div class="bento-card overflow-hidden mb-8 p-0">
+    <div class="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-between items-center">
         <div class="relative w-full max-w-md">
-            <input type="text" id="buscador" placeholder="Buscar por nombre o correo..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none">
-            <i class="fa-solid fa-search absolute left-3 top-2.5 text-gray-400"></i>
+            <input type="text" id="buscador" placeholder="Buscar por nombre o correo..." class="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 pl-10 pr-4 py-2.5 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none">
+            <i class="fa-solid fa-search absolute left-4 top-3.5 text-gray-400"></i>
         </div>
     </div>
     
@@ -38,7 +38,7 @@
     <div id="content-laboratoristas" class="overflow-x-auto tab-content">
         <table class="w-full text-left border-collapse">
             <thead>
-                <tr class="bg-white text-gray-400 text-xs uppercase tracking-wider">
+                <tr class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
                     <th class="p-4 font-semibold">Usuario</th>
                     <th class="p-4 font-semibold">Correo Electrónico</th>
                     <th class="p-4 font-semibold">Fecha de Registro</th>
@@ -46,46 +46,49 @@
                     <th class="p-4 font-semibold text-right">Acciones</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100 text-sm">
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
                 {% for u in laboratoristas %}
-                <tr class="hover:bg-gray-50 transition-colors fila-usuario">
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors fila-usuario">
                     <td class="p-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+                            <div class="w-10 h-10 rounded-full bg-purple-50 dark:bg-gray-700 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold shadow-sm border border-purple-100 dark:border-gray-600">
                                 {{ u.first_name|first|default:u.username|first|upper }}
                             </div>
                             <div>
-                                <p class="font-bold text-gray-800 nombre-user">{{ u.get_full_name|default:u.username }}</p>
-                                <p class="text-xs text-gray-500">@{{ u.username }}</p>
+                                <p class="font-bold text-gray-900 dark:text-white nombre-user font-heading">{{ u.get_full_name|default:u.username }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">@{{ u.username }}</p>
                             </div>
                         </div>
                     </td>
-                    <td class="p-4 text-gray-600 correo-user">
+                    <td class="p-4 text-gray-600 dark:text-gray-300 correo-user font-medium">
                         {{ u.email|default:"No registrado" }}
                     </td>
-                    <td class="p-4 text-gray-500">
+                    <td class="p-4 text-gray-500 dark:text-gray-400">
                         {{ u.date_joined|date:"d M, Y" }}
                     </td>
                     <td class="p-4">
                         {% if u.is_active %}
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
                                 <i class="fa-solid fa-circle-check"></i> Activo
                             </span>
                         {% else %}
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-red-100 text-red-700">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800">
                                 <i class="fa-solid fa-lock"></i> Inactivo
                             </span>
                         {% endif %}
                     </td>
                     <td class="p-4 text-right">
                         <div class="flex items-center justify-end gap-2">
-                            <button onclick="cambiarEstado({{ u.id }}, {% if u.is_active %}false{% else %}true{% endif %})" 
-                                class="w-8 h-8 rounded-lg flex items-center justify-center {% if u.is_active %}text-orange-500 hover:bg-orange-50{% else %}text-green-500 hover:bg-green-50{% endif %} transition-colors" 
+                            <button onclick="abrirModalEditar('{{ u.id }}', '{{ u.username|escapejs }}', '{{ u.first_name|escapejs }}', '{{ u.last_name|escapejs }}', '{{ u.email|escapejs }}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-blue-500 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors" title="Editar Usuario">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button onclick="cambiarEstado('{{ u.id }}', '{% if u.is_active %}false{% else %}true{% endif %}')" 
+                                class="w-8 h-8 rounded-lg flex items-center justify-center {% if u.is_active %}text-orange-500 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-gray-700{% else %}text-green-500 dark:text-green-400 hover:bg-green-50 dark:hover:bg-gray-700{% endif %} transition-colors" 
                                 title="{% if u.is_active %}Desactivar{% else %}Activar{% endif %}">
                                 <i class="fa-solid {% if u.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
                             </button>
-                            <button onclick="eliminarUsuario({{ u.id }}, '{{ u.username }}')" 
-                                class="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors" title="Eliminar Permanentemente">
+                            <button onclick="eliminarUsuario('{{ u.id }}', '{{ u.username }}')" 
+                                class="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 transition-colors" title="Eliminar Permanentemente">
                                 <i class="fa-solid fa-trash-can"></i>
                             </button>
                         </div>
@@ -93,7 +96,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="p-8 text-center text-gray-500">No hay laboratoristas registrados.</td>
+                    <td colspan="5" class="p-8 text-center text-gray-500 dark:text-gray-400">No hay laboratoristas registrados.</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -104,7 +107,7 @@
     <div id="content-agricultores" class="overflow-x-auto tab-content hidden">
         <table class="w-full text-left border-collapse">
             <thead>
-                <tr class="bg-white text-gray-400 text-xs uppercase tracking-wider">
+                <tr class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
                     <th class="p-4 font-semibold">Usuario</th>
                     <th class="p-4 font-semibold">Correo Electrónico</th>
                     <th class="p-4 font-semibold">Fecha de Registro</th>
@@ -112,46 +115,49 @@
                     <th class="p-4 font-semibold text-right">Acciones</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-100 text-sm">
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700 text-sm">
                 {% for u in agricultores %}
-                <tr class="hover:bg-gray-50 transition-colors fila-usuario">
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors fila-usuario">
                     <td class="p-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center font-bold">
+                            <div class="w-10 h-10 rounded-full bg-green-50 dark:bg-gray-700 text-primary dark:text-green-400 flex items-center justify-center font-bold shadow-sm border border-green-100 dark:border-gray-600">
                                 {{ u.first_name|first|default:u.username|first|upper }}
                             </div>
                             <div>
-                                <p class="font-bold text-gray-800 nombre-user">{{ u.get_full_name|default:u.username }}</p>
-                                <p class="text-xs text-gray-500">@{{ u.username }}</p>
+                                <p class="font-bold text-gray-900 dark:text-white nombre-user font-heading">{{ u.get_full_name|default:u.username }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">@{{ u.username }}</p>
                             </div>
                         </div>
                     </td>
-                    <td class="p-4 text-gray-600 correo-user">
+                    <td class="p-4 text-gray-600 dark:text-gray-300 correo-user font-medium">
                         {{ u.email|default:"No registrado" }}
                     </td>
-                    <td class="p-4 text-gray-500">
+                    <td class="p-4 text-gray-500 dark:text-gray-400">
                         {{ u.date_joined|date:"d M, Y" }}
                     </td>
                     <td class="p-4">
                         {% if u.is_active %}
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
                                 <i class="fa-solid fa-circle-check"></i> Activo
                             </span>
                         {% else %}
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-red-100 text-red-700">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800">
                                 <i class="fa-solid fa-lock"></i> Bloqueado
                             </span>
                         {% endif %}
                     </td>
                     <td class="p-4 text-right">
                         <div class="flex items-center justify-end gap-2">
-                            <button onclick="cambiarEstado({{ u.id }}, {% if u.is_active %}false{% else %}true{% endif %})" 
-                                class="w-8 h-8 rounded-lg flex items-center justify-center {% if u.is_active %}text-orange-500 hover:bg-orange-50{% else %}text-green-500 hover:bg-green-50{% endif %} transition-colors" 
+                            <button onclick="abrirModalEditar('{{ u.id }}', '{{ u.username|escapejs }}', '{{ u.first_name|escapejs }}', '{{ u.last_name|escapejs }}', '{{ u.email|escapejs }}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-blue-500 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors" title="Editar Usuario">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button onclick="cambiarEstado('{{ u.id }}', '{% if u.is_active %}false{% else %}true{% endif %}')" 
+                                class="w-8 h-8 rounded-lg flex items-center justify-center {% if u.is_active %}text-orange-500 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-gray-700{% else %}text-green-500 dark:text-green-400 hover:bg-green-50 dark:hover:bg-gray-700{% endif %} transition-colors" 
                                 title="{% if u.is_active %}Bloquear acceso{% else %}Restaurar acceso{% endif %}">
                                 <i class="fa-solid {% if u.is_active %}fa-ban{% else %}fa-check{% endif %}"></i>
                             </button>
-                            <button onclick="eliminarUsuario({{ u.id }}, '{{ u.username }}')" 
-                                class="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors" title="Eliminar Permanentemente">
+                            <button onclick="eliminarUsuario('{{ u.id }}', '{{ u.username }}')" 
+                                class="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 transition-colors" title="Eliminar Permanentemente">
                                 <i class="fa-solid fa-trash-can"></i>
                             </button>
                         </div>
@@ -159,7 +165,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="p-8 text-center text-gray-500">No hay agricultores registrados.</td>
+                    <td colspan="5" class="p-8 text-center text-gray-500 dark:text-gray-400">No hay agricultores registrados.</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -168,10 +174,188 @@
 </div>
 
 {% csrf_token %}
+
+<!-- Modal Crear Laboratorista -->
+<div id="modalCrear" class="hidden fixed inset-0 z-[100] bg-gray-900/60 flex items-center justify-center p-4 transition-opacity">
+    <div class="bento-card max-w-2xl w-full p-6 relative">
+        <button onclick="cerrarModalCrear()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 hover:text-gray-700 dark:hover:text-white flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+        <div class="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200/50 dark:border-gray-700/50">
+            <div class="w-12 h-12 bg-purple-100/80 dark:bg-purple-900/40 rounded-xl flex items-center justify-center text-purple-600 dark:text-purple-400 text-xl shadow-sm border border-purple-200 dark:border-purple-800">
+                <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-lg text-gray-800 dark:text-white">Datos del Nuevo Laboratorista</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Esta cuenta tendrá permisos para aprobar solicitudes.</p>
+            </div>
+        </div>
+
+        <form id="formLaboratorista" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Nombres</label>
+                    <input type="text" id="first_name" required class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-2.5 rounded-xl text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Apellidos</label>
+                    <input type="text" id="last_name" required class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-2.5 rounded-xl text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Correo Electrónico</label>
+                    <input type="email" id="email" required class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-2.5 rounded-xl text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Nombre de Usuario</label>
+                    <input type="text" id="username" required class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-2.5 rounded-xl text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Contraseña Temporal</label>
+                    <input type="password" id="password" required class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-2.5 rounded-xl text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+            </div>
+            
+            <div class="pt-4 border-t border-gray-200/50 dark:border-gray-700/50 flex justify-end gap-3 mt-6">
+                <button type="button" onclick="cerrarModalCrear()" class="px-6 py-2.5 rounded-xl bg-gray-200/80 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">Cancelar</button>
+                <button type="submit" id="btnGuardarLab" class="px-6 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-secondary transition-colors shadow-lg shadow-primary/30 flex items-center gap-2">
+                    <i class="fa-solid fa-save"></i> Crear Cuenta
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Editar Usuario -->
+<div id="modalEditar" class="hidden fixed inset-0 z-[100] bg-gray-900/60 flex items-center justify-center p-4 transition-opacity">
+    <div class="bento-card max-w-lg w-full p-6 relative">
+        <button onclick="cerrarModalEditar()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 hover:text-gray-700 dark:hover:text-white flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+        <div class="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200/50 dark:border-gray-700/50">
+            <div class="w-12 h-12 bg-blue-100/80 dark:bg-blue-900/40 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl shadow-sm border border-blue-200 dark:border-blue-800">
+                <i class="fa-solid fa-user-pen"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-lg text-gray-800 dark:text-white">Editar Información</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400" id="editUsernameDisplay">@username</p>
+            </div>
+        </div>
+
+        <form id="formEditar" class="space-y-4">
+            <input type="hidden" id="edit_user_id">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Nombres</label>
+                    <input type="text" id="edit_first_name" required class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-2.5 rounded-xl text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Apellidos</label>
+                    <input type="text" id="edit_last_name" required class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-2.5 rounded-xl text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Correo Electrónico</label>
+                    <input type="email" id="edit_email" required class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-2.5 rounded-xl text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+            </div>
+            
+            <div class="pt-4 border-t border-gray-200/50 dark:border-gray-700/50 flex justify-end gap-3 mt-6">
+                <button type="button" onclick="cerrarModalEditar()" class="px-6 py-2.5 rounded-xl bg-gray-200/80 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">Cancelar</button>
+                <button type="submit" id="btnActualizar" class="px-6 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-secondary transition-colors shadow-lg shadow-primary/30 flex items-center gap-2">
+                    <i class="fa-solid fa-save"></i> Actualizar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    
+    function abrirModalCrear() {
+        document.getElementById('modalCrear').classList.remove('hidden');
+    }
+    
+    function cerrarModalCrear() {
+        document.getElementById('modalCrear').classList.add('hidden');
+        document.getElementById('formLaboratorista').reset();
+    }
+
+    function abrirModalEditar(id, username, first_name, last_name, email) {
+        document.getElementById('edit_user_id').value = id;
+        document.getElementById('editUsernameDisplay').innerText = "@" + username;
+        document.getElementById('edit_first_name').value = first_name;
+        document.getElementById('edit_last_name').value = last_name;
+        document.getElementById('edit_email').value = (email !== "None") ? email : "";
+        document.getElementById('modalEditar').classList.remove('hidden');
+    }
+
+    function cerrarModalEditar() {
+        document.getElementById('modalEditar').classList.add('hidden');
+    }
+
+    document.getElementById('formLaboratorista').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnGuardarLab');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creando...';
+        
+        const data = {
+            first_name: document.getElementById('first_name').value,
+            last_name: document.getElementById('last_name').value,
+            email: document.getElementById('email').value,
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value,
+        };
+        
+        fetch("{% url 'crear_laboratorista' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if(data.error) {
+                Swal.fire('Error', data.error, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-save"></i> Crear Cuenta';
+            } else {
+                Swal.fire('¡Éxito!', data.mensaje, 'success').then(() => location.reload());
+            }
+        });
+    });
+
+    document.getElementById('formEditar').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnActualizar');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Actualizando...';
+        
+        const id = document.getElementById('edit_user_id').value;
+        const data = {
+            first_name: document.getElementById('edit_first_name').value,
+            last_name: document.getElementById('edit_last_name').value,
+            email: document.getElementById('edit_email').value,
+        };
+        
+        fetch(`/administrador/usuarios/${id}/editar/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if(data.error) {
+                Swal.fire('Error', data.error, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-save"></i> Actualizar';
+            } else {
+                Swal.fire('¡Actualizado!', data.mensaje, 'success').then(() => location.reload());
+            }
+        });
+    });
+
     // Búsqueda
     document.getElementById('buscador').addEventListener('input', function(e) {
         const query = e.target.value.toLowerCase();
@@ -197,12 +381,15 @@
         const btnLabs = document.getElementById('tab-laboratoristas');
         const btnAgri = document.getElementById('tab-agricultores');
         
-        btnLabs.className = "px-6 py-3 font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 transition-colors";
-        btnAgri.className = "px-6 py-3 font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:border-gray-300 transition-colors";
+        const inactiveClass = "px-6 py-3 font-medium text-gray-500 dark:text-gray-400 border-b-2 border-transparent hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600 transition-all rounded-t-lg bg-transparent";
+        const activeClass = "px-6 py-3 font-bold text-primary border-b-2 border-primary transition-all bg-green-50 dark:bg-gray-800 rounded-t-lg";
+        
+        btnLabs.className = inactiveClass;
+        btnAgri.className = inactiveClass;
         
         // Activar el seleccionado
         document.getElementById(`content-${tab}`).classList.remove('hidden');
-        document.getElementById(`tab-${tab}`).className = "px-6 py-3 font-medium text-primary border-b-2 border-primary transition-colors";
+        document.getElementById(`tab-${tab}`).className = activeClass;
     }
 
     // Acciones AJAX

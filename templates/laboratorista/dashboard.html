@@ -6,77 +6,77 @@
 <div class="space-y-6">
 
     <!-- Welcome Section -->
-    <div class="bg-gradient-to-r from-primary to-secondary rounded-2xl p-6 md:p-8 text-white shadow-lg relative overflow-hidden">
-        <div class="absolute right-0 top-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl transform translate-x-10 -translate-y-10"></div>
+    <div class="bg-primary rounded-3xl p-6 md:p-10 text-white shadow-md relative overflow-hidden">
+        <div class="absolute right-0 top-0 w-64 h-64 bg-white/10 rounded-full blur-3xl transform translate-x-10 -translate-y-10"></div>
         <div class="relative z-10">
-            <h2 class="text-2xl md:text-3xl font-bold mb-2">¡Hola, {{ request.user.username|title }}!</h2>
-            <p class="text-green-50 max-w-lg">Bienvenido a tu panel de control de campo. Aquí puedes gestionar las solicitudes de análisis, conectar con el sensor ESP32 y generar diagnósticos de suelo.</p>
+            <h2 class="text-2xl md:text-3xl font-bold mb-2 tracking-tight font-heading">¡Hola, {{ request.user.username|title }}!</h2>
+            <p class="text-green-50/90 max-w-lg leading-relaxed font-medium">Bienvenido a tu panel de control de campo. Aquí puedes gestionar las solicitudes de análisis, conectar con el sensor ESP32 y generar diagnósticos de suelo.</p>
         </div>
     </div>
 
     <!-- Quick Stats -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow">
+        <div class="bento-card p-6 flex items-center justify-between group hover:border-primary transition-colors">
             <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">Solicitudes Pendientes</p>
-                <h3 class="text-3xl font-bold text-gray-900">{{ total_pendientes }}</h3>
+                <p class="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Solicitudes Pendientes</p>
+                <h3 class="text-4xl font-bold text-gray-900 dark:text-white">{{ total_pendientes }}</h3>
             </div>
-            <div class="w-12 h-12 bg-red-50 text-red-500 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+            <div class="w-14 h-14 bg-red-50 dark:bg-gray-700 text-red-500 dark:text-red-400 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-sm border border-red-100 dark:border-gray-600">
                 <i class="fa-solid fa-clipboard-list"></i>
             </div>
         </div>
         
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow">
+        <div class="bento-card p-6 flex items-center justify-between group hover:border-primary transition-colors">
             <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">Análisis Completados</p>
-                <h3 class="text-3xl font-bold text-gray-900">{{ total_completados }}</h3>
+                <p class="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Análisis Completados</p>
+                <h3 class="text-4xl font-bold text-gray-900 dark:text-white">{{ total_completados }}</h3>
             </div>
-            <div class="w-12 h-12 bg-green-50 text-primary rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+            <div class="w-14 h-14 bg-green-50 dark:bg-gray-700 text-primary dark:text-green-400 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 group-hover:-rotate-3 transition-transform shadow-sm border border-green-100 dark:border-gray-600">
                 <i class="fa-solid fa-chart-pie"></i>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-md transition-shadow">
+        <div class="bento-card p-6 flex items-center justify-between group hover:border-accent transition-colors">
             <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">Estado de Batería (Último ESP32)</p>
-                <h3 class="text-3xl font-bold text-gray-900">100%</h3>
+                <p class="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Batería (ESP32)</p>
+                <h3 class="text-4xl font-bold text-gray-900 dark:text-white">100%</h3>
             </div>
-            <div class="w-12 h-12 bg-yellow-50 text-accent rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+            <div class="w-14 h-14 bg-yellow-50 dark:bg-gray-700 text-accent rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-sm border border-yellow-100 dark:border-gray-600">
                 <i class="fa-solid fa-battery-three-quarters"></i>
             </div>
         </div>
     </div>
 
     <!-- Main Actions Cards -->
-    <h3 class="text-xl font-bold text-gray-800 pt-4">Acciones Principales</h3>
+    <h3 class="text-xl font-bold text-gray-800 dark:text-white pt-4 font-heading">Acciones Principales</h3>
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Acceso a Solicitudes -->
-        <a href="{% url 'solicitudes:pendientes' %}" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-primary hover:shadow-lg transition-all group relative overflow-hidden">
-            <div class="absolute right-0 bottom-0 w-32 h-32 bg-gray-50 rounded-tl-full -z-0 group-hover:bg-green-50 transition-colors"></div>
+        <a href="{% url 'solicitudes:pendientes' %}" class="bento-card p-6 hover:border-primary group relative transition-all">
+            <div class="absolute right-0 bottom-0 w-32 h-32 bg-gray-50 dark:bg-gray-800 rounded-tl-full -z-0 group-hover:bg-green-50 dark:group-hover:bg-gray-700 transition-colors"></div>
             <div class="relative z-10 flex flex-col items-start">
-                <div class="w-14 h-14 bg-light text-primary rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
+                <div class="w-14 h-14 bg-green-50 dark:bg-gray-700 text-primary dark:text-green-400 border border-green-100 dark:border-gray-600 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all shadow-sm">
                     <i class="fa-solid fa-list-check"></i>
                 </div>
-                <h4 class="text-lg font-bold text-gray-900 mb-2">Gestionar Solicitudes</h4>
-                <p class="text-gray-500 text-sm">Revisa las solicitudes de los agricultores, acepta nuevas tareas y asigna fechas de visita al terreno.</p>
-                <div class="mt-4 flex items-center text-primary font-medium text-sm group-hover:translate-x-1 transition-transform">
+                <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-2 font-heading">Gestionar Solicitudes</h4>
+                <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Revisa las solicitudes de los agricultores, acepta nuevas tareas y asigna fechas de visita al terreno.</p>
+                <div class="mt-4 flex items-center text-primary dark:text-green-400 font-bold text-sm group-hover:translate-x-1 transition-transform">
                     Ver listado <i class="fa-solid fa-arrow-right ml-2"></i>
                 </div>
             </div>
         </a>
 
         {% if solicitud_activa %}
-        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg">
+        <div class="bg-blue-50 dark:bg-gray-800 border-l-4 border-blue-500 p-4 mb-6 rounded-r-2xl shadow-sm">
             <div class="flex">
                 <div class="flex-shrink-0">
                     <i class="fa-solid fa-clipboard-check text-blue-500 mt-1"></i>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-sm font-bold text-blue-800">
+                    <h3 class="text-sm font-bold text-blue-800 dark:text-blue-400 font-heading">
                         Analizando Solicitud #{{ solicitud_activa.id }}
                     </h3>
-                    <p class="text-sm text-blue-600 mt-1">
+                    <p class="text-sm text-blue-600 dark:text-gray-400 mt-1">
                         Terreno: {{ solicitud_activa.terreno.nombre }} | Agricultor: {{ solicitud_activa.agricultor.get_full_name|default:solicitud_activa.agricultor.username }}
                     </p>
                     <input type="hidden" id="solicitudIdActiva" value="{{ solicitud_activa.id }}">
@@ -89,15 +89,15 @@
         {% endif %}
 
         <!-- Acceso a ESP32 -->
-        <a href="javascript:void(0)" onclick="iniciarConexionESP32()" class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-accent hover:shadow-lg transition-all group relative overflow-hidden cursor-pointer">
-            <div class="absolute right-0 bottom-0 w-32 h-32 bg-gray-50 rounded-tl-full -z-0 group-hover:bg-yellow-50 transition-colors"></div>
+        <a href="javascript:void(0)" onclick="iniciarConexionESP32()" class="bento-card p-6 hover:border-accent group relative cursor-pointer transition-all">
+            <div class="absolute right-0 bottom-0 w-32 h-32 bg-gray-50 dark:bg-gray-800 rounded-tl-full -z-0 group-hover:bg-yellow-50 dark:group-hover:bg-gray-700 transition-colors"></div>
             <div class="relative z-10 flex flex-col items-start">
-                <div class="w-14 h-14 bg-yellow-50 text-accent rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-accent group-hover:text-white transition-colors">
+                <div class="w-14 h-14 bg-yellow-50 dark:bg-gray-700 text-accent border border-yellow-100 dark:border-gray-600 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-accent group-hover:text-white group-hover:border-accent transition-all shadow-sm">
                     <i class="fa-solid fa-satellite-dish"></i>
                 </div>
-                <h4 class="text-lg font-bold text-gray-900 mb-2">Capturar Datos (ESP32)</h4>
-                <p class="text-gray-500 text-sm">Conéctate al sensor en campo vía WiFi para realizar la captura de los 7 parámetros de suelo. Demora ~20s.</p>
-                <div class="mt-4 flex items-center text-accent font-medium text-sm group-hover:translate-x-1 transition-transform">
+                <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-2 font-heading">Capturar Datos (ESP32)</h4>
+                <p class="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">Conéctate al sensor en campo vía WiFi para realizar la captura de los 7 parámetros de suelo. Demora ~10s.</p>
+                <div class="mt-4 flex items-center text-accent font-bold text-sm group-hover:translate-x-1 transition-transform">
                     Iniciar conexión <i class="fa-solid fa-arrow-right ml-2"></i>
                 </div>
             </div>
@@ -107,31 +107,31 @@
 </div>
 
 <!-- Modal para Mostrar Resultados de Captura -->
-<div id="resultadosModal" class="hidden fixed inset-0 z-[100] bg-gray-900 bg-opacity-50 flex items-center justify-center px-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 relative">
-        <button onclick="cerrarModalResultados()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-            <i class="fa-solid fa-xmark text-xl"></i>
+<div id="resultadosModal" class="hidden fixed inset-0 z-[100] bg-gray-900/60 flex items-center justify-center p-4 transition-opacity">
+    <div class="bento-card max-w-lg w-full p-6 relative">
+        <button onclick="cerrarModalResultados()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 hover:text-gray-700 dark:hover:text-white flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-xmark text-lg"></i>
         </button>
         <div class="text-center mb-6">
-            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+            <div class="w-16 h-16 bg-green-50 dark:bg-gray-800 border border-green-100 dark:border-gray-700 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm">
                 <i class="fa-solid fa-check-double"></i>
             </div>
-            <h3 class="text-2xl font-bold text-gray-900">Lectura Exitosa</h3>
-            <p class="text-gray-500 text-sm mt-1">Datos capturados y estabilizados desde el ESP32</p>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight font-heading">Lectura Exitosa</h3>
+            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Datos capturados y estabilizados desde el ESP32</p>
         </div>
         
-        <div class="grid grid-cols-2 gap-4 mb-6">
-            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100"><span class="block text-xs text-gray-500">Humedad</span><span id="res_humedad" class="font-bold text-lg">0%</span></div>
-            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100"><span class="block text-xs text-gray-500">Temperatura</span><span id="res_temperatura" class="font-bold text-lg">0°C</span></div>
-            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100"><span class="block text-xs text-gray-500">Conductividad</span><span id="res_conductividad" class="font-bold text-lg">0</span></div>
-            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100"><span class="block text-xs text-gray-500">pH</span><span id="res_ph" class="font-bold text-lg">0</span></div>
-            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100"><span class="block text-xs text-gray-500">Nitrógeno (N)</span><span id="res_n" class="font-bold text-lg">0</span></div>
-            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100"><span class="block text-xs text-gray-500">Fósforo (P)</span><span id="res_p" class="font-bold text-lg">0</span></div>
-            <div class="bg-gray-50 p-3 rounded-lg border border-gray-100 col-span-2"><span class="block text-xs text-gray-500">Potasio (K)</span><span id="res_k" class="font-bold text-lg">0</span></div>
+        <div class="grid grid-cols-2 gap-3 mb-6">
+            <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Humedad</span><span id="res_humedad" class="font-bold text-lg text-gray-800 dark:text-gray-200">0%</span></div>
+            <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Temperatura</span><span id="res_temperatura" class="font-bold text-lg text-gray-800 dark:text-gray-200">0°C</span></div>
+            <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Conductividad</span><span id="res_conductividad" class="font-bold text-lg text-gray-800 dark:text-gray-200">0</span></div>
+            <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">pH</span><span id="res_ph" class="font-bold text-lg text-gray-800 dark:text-gray-200">0</span></div>
+            <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Nitrógeno (N)</span><span id="res_n" class="font-bold text-lg text-gray-800 dark:text-gray-200">0</span></div>
+            <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Fósforo (P)</span><span id="res_p" class="font-bold text-lg text-gray-800 dark:text-gray-200">0</span></div>
+            <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center col-span-2"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Potasio (K)</span><span id="res_k" class="font-bold text-lg text-gray-800 dark:text-gray-200">0</span></div>
         </div>
-        <div class="mt-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Cultivo de interés (Opcional)</label>
-            <input type="text" id="inputCultivo" list="listaCultivos" placeholder="Ej. Café, Maíz..." class="w-full border border-gray-300 rounded-lg px-4 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="actualizarVariedades()" oninput="actualizarVariedades()">
+        <div class="mt-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
+            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Cultivo de interés (Opcional)</label>
+            <input type="text" id="inputCultivo" list="listaCultivos" placeholder="Ej. Café, Maíz..." class="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 mb-4 focus:outline-none focus:ring-2 focus:ring-primary text-gray-700 dark:text-white" onchange="actualizarVariedades()" oninput="actualizarVariedades()">
             <datalist id="listaCultivos">
                 <option value="Café"></option>
                 <option value="Maíz"></option>
@@ -140,46 +140,46 @@
                 <option value="Papa"></option>
             </datalist>
 
-            <div id="containerVariedad" class="hidden">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Variedad Específica (Opcional)</label>
-                <input type="text" id="inputVariedad" list="listaVariedades" placeholder="Selecciona o escribe una variedad" class="w-full border border-gray-300 rounded-lg px-4 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div id="containerVariedad" class="hidden mb-4">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Variedad Específica (Opcional)</label>
+                <input type="text" id="inputVariedad" list="listaVariedades" placeholder="Selecciona o escribe una variedad" class="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary text-gray-700 dark:text-white">
                 <datalist id="listaVariedades">
                 </datalist>
             </div>
             
-            <button class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2" onclick="procesarDiagnosticoAutomatico()">
+            <button class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2" onclick="procesarDiagnosticoAutomatico()">
                 <i class="fa-solid fa-microchip"></i> Generar Diagnóstico Automático
             </button>
         </div>
-        <button class="w-full text-gray-500 hover:text-gray-700 font-bold py-3 mt-2 rounded-xl transition-colors" onclick="cerrarModalResultados()">
+        <button class="w-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white font-bold py-3 mt-2 rounded-xl transition-colors" onclick="cerrarModalResultados()">
             Guardar datos sin diagnosticar
         </button>
     </div>
 </div>
 
 <!-- Modal para Diagnóstico -->
-<div id="diagnosticoModal" class="hidden fixed inset-0 z-[110] bg-gray-900 bg-opacity-80 flex items-center justify-center px-4 overflow-y-auto py-10">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 relative">
-        <button onclick="cerrarModalDiagnostico()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-            <i class="fa-solid fa-xmark text-xl"></i>
+<div id="diagnosticoModal" class="hidden fixed inset-0 z-[110] bg-gray-900/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto py-10 transition-opacity">
+    <div class="bento-card max-w-2xl w-full p-6 relative">
+        <button onclick="cerrarModalDiagnostico()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-400 hover:text-gray-700 dark:hover:text-white flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-xmark text-lg"></i>
         </button>
         <div class="text-center mb-6">
-            <div id="diagnosticoIcon" class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+            <div id="diagnosticoIcon" class="w-16 h-16 bg-blue-100/80 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm">
                 <i class="fa-solid fa-brain"></i>
             </div>
-            <h3 id="diagnosticoTitle" class="text-2xl font-bold text-gray-900">Resultados del Diagnóstico</h3>
-            <p id="diagnosticoSub" class="text-gray-500 text-sm mt-1">Generado por Inteligencia Artificial</p>
+            <h3 id="diagnosticoTitle" class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Resultados del Diagnóstico</h3>
+            <p id="diagnosticoSub" class="text-gray-500 dark:text-gray-400 text-sm mt-1 font-medium">Generado por Inteligencia Artificial</p>
         </div>
         
         <div id="diagnosticoContent" class="space-y-4">
             <!-- Content gets injected here -->
         </div>
         
-        <div class="flex gap-3 mt-6">
-            <button class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-xl transition-colors" onclick="volverAResultados()">
+        <div class="flex flex-col sm:flex-row gap-3 mt-6 pt-6 border-t border-gray-100 dark:border-gray-800/50">
+            <button class="flex-1 bg-gray-200/80 dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-bold py-3 px-4 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2" onclick="volverAResultados()">
                 <i class="fa-solid fa-search"></i> Consultar otro
             </button>
-            <button class="w-full bg-primary hover:bg-dark text-white font-bold py-3 rounded-xl shadow-md transition-colors" onclick="cerrarModalDiagnostico()">
+            <button class="flex-1 bg-primary hover:bg-secondary text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-primary/30 transition-colors flex items-center justify-center" onclick="cerrarModalDiagnostico()">
                 Cerrar Reporte
             </button>
         </div>
@@ -191,8 +191,8 @@
         let timerInterval;
         Swal.fire({
             title: 'Conectando al ESP32...',
-            html: 'Por favor, enciende el sensor si no lo has hecho.<br><br>Estabilizando señales: <b>20</b> segundos.',
-            timer: 20000,
+            html: 'Por favor, enciende el sensor si no lo has hecho.<br><br>Estabilizando señales: <b>10</b> segundos.',
+            timer: 10000,
             timerProgressBar: true,
             allowOutsideClick: false,
             didOpen: () => {
@@ -207,7 +207,7 @@
             }
         }).then((result) => {
             if (result.dismiss === Swal.DismissReason.timer) {
-                // Al terminar los 20s, llamar a nuestra API
+                // Al terminar los 10s, llamar a nuestra API
                 verificarDatosEstables();
             }
         });

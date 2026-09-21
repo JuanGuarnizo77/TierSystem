@@ -6,45 +6,45 @@
 {% block content %}
 <div class="mb-8 flex justify-between items-end">
     <div>
-        <h2 class="text-3xl font-bold text-gray-900">Gestión de Terrenos</h2>
-        <p class="text-gray-500 mt-1">Registra y administra las fincas y lotes donde cultivas.</p>
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Gestión de Terrenos</h2>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Registra y administra las fincas y lotes donde cultivas.</p>
     </div>
-    <button onclick="abrirModalTerreno()" class="bg-primary hover:bg-secondary text-white font-bold py-2.5 px-5 rounded-lg shadow-md transition-colors flex items-center gap-2">
+    <button onclick="abrirModalTerreno()" class="bg-primary hover:bg-secondary text-white font-bold py-2.5 px-5 rounded-xl shadow-lg shadow-primary/30 transition-all flex items-center gap-2">
         <i class="fa-solid fa-plus"></i> Nueva Finca
     </button>
 </div>
 
-<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+<div class="bento-card p-6">
     {% if terrenos %}
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {% for terreno in terrenos %}
-        <div class="border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow group relative bg-gray-50 flex flex-col">
+        <div class="bento-card overflow-hidden group relative flex flex-col hover:!border-primary">
             <!-- Menú opciones -->
-            <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                <button onclick="editarTerreno({{ terreno.id }}, '{{ terreno.nombre|escapejs }}', '{{ terreno.ubicacion|escapejs }}', '{{ terreno.hectareas }}', '{{ terreno.cultivo_principal|escapejs|default:'' }}', '{{ terreno.coordenadas_poligono|escapejs }}')" class="w-8 h-8 bg-white text-blue-500 rounded-full flex items-center justify-center shadow hover:bg-blue-50 transition-colors">
+            <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 z-10">
+                <button onclick="editarTerreno('{{ terreno.id }}', '{{ terreno.nombre|escapejs }}', '{{ terreno.ubicacion|escapejs }}', '{{ terreno.hectareas }}', '{{ terreno.cultivo_principal|escapejs|default:',' }}', '{{ terreno.coordenadas_poligono|escapejs }}')" class="w-8 h-8 bg-white/90 dark:bg-gray-800/90 text-blue-500 rounded-full flex items-center justify-center shadow-sm hover:bg-white dark:hover:bg-gray-700 transition-colors">
                     <i class="fa-solid fa-pen text-sm"></i>
                 </button>
-                <button onclick="eliminarTerreno({{ terreno.id }}, '{{ terreno.nombre|escapejs }}')" class="w-8 h-8 bg-white text-red-500 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors">
+                <button onclick="eliminarTerreno('{{ terreno.id }}', '{{ terreno.nombre|escapejs }}')" class="w-8 h-8 bg-white/90 dark:bg-gray-800/90 text-red-500 rounded-full flex items-center justify-center shadow-sm hover:bg-white dark:hover:bg-gray-700 transition-colors">
                     <i class="fa-solid fa-trash text-sm"></i>
                 </button>
             </div>
             
-            <div class="h-32 bg-green-100 flex items-center justify-center text-green-600 text-5xl">
+            <div class="h-32 bg-green-100/50 dark:bg-green-900/20 flex items-center justify-center text-primary text-5xl">
                 <i class="fa-solid fa-mountain-sun"></i>
             </div>
             
             <div class="p-5 flex-1 flex flex-col">
-                <h3 class="text-xl font-bold text-gray-900 mb-1">{{ terreno.nombre }}</h3>
-                <p class="text-sm text-gray-500 mb-4"><i class="fa-solid fa-location-dot mr-1"></i> {{ terreno.ubicacion }}</p>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">{{ terreno.nombre }}</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4"><i class="fa-solid fa-location-dot mr-1 text-primary"></i> {{ terreno.ubicacion }}</p>
                 
                 <div class="space-y-2 mt-auto">
                     <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-500 font-semibold">Tamaño:</span>
-                        <span class="font-bold text-gray-800">{{ terreno.hectareas }} ha</span>
+                        <span class="text-gray-500 dark:text-gray-400 font-semibold">Tamaño:</span>
+                        <span class="font-bold text-gray-800 dark:text-white">{{ terreno.hectareas }} ha</span>
                     </div>
                     <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-500 font-semibold">Cultivo Act.:</span>
-                        <span class="bg-orange-100 text-orange-800 px-2 py-0.5 rounded font-bold">{{ terreno.cultivo_principal|default:"Ninguno" }}</span>
+                        <span class="text-gray-500 dark:text-gray-400 font-semibold">Cultivo Act.:</span>
+                        <span class="bg-orange-100/80 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-lg font-bold">{{ terreno.cultivo_principal|default:"Ninguno" }}</span>
                     </div>
                 </div>
             </div>
@@ -53,12 +53,12 @@
     </div>
     {% else %}
     <div class="text-center py-16">
-        <div class="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 text-primary text-4xl">
+        <div class="w-24 h-24 bg-green-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 text-primary text-4xl shadow-sm">
             <i class="fa-solid fa-seedling"></i>
         </div>
-        <h3 class="text-xl font-bold text-gray-700">Aún no tienes fincas registradas</h3>
-        <p class="text-gray-500 mt-2 max-w-md mx-auto">Para poder solicitar análisis de suelo, primero debes registrar al menos un terreno o lote.</p>
-        <button onclick="abrirModalTerreno()" class="mt-6 bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-lg shadow transition-colors">
+        <h3 class="text-xl font-bold text-gray-800 dark:text-white">Aún no tienes fincas registradas</h3>
+        <p class="text-gray-500 dark:text-gray-400 mt-2 max-w-md mx-auto">Para poder solicitar análisis de suelo, primero debes registrar al menos un terreno o lote.</p>
+        <button onclick="abrirModalTerreno()" class="mt-6 bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-xl shadow-lg transition-colors">
             Registrar mi primera finca
         </button>
     </div>
@@ -71,9 +71,11 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
 <style>
+
     /* Fix para el z-index de leaflet dentro de SweetAlert */
     .leaflet-container { z-index: 10 !important; }
     .swal2-html-container { overflow: visible !important; }
+
 </style>
 {% endblock %}
 
@@ -99,159 +101,250 @@
         return cookieValue;
     }
 
+    const modalTemplate = (isEdit, data = {}) => `
+<div class="flex flex-col lg:flex-row gap-8 text-left p-2 font-sans">
+    <!-- Left Column: Form -->
+    <div class="w-full lg:w-5/12 flex flex-col justify-between">
+        <div>
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-light text-primary flex items-center justify-center text-2xl shrink-0">
+                        <i class="fa-solid fa-leaf"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">${isEdit ? 'Editar Finca / Lote' : 'Nueva Finca / Lote'}</h2>
+                        <p class="text-[13px] text-gray-500 leading-tight mt-0.5">Registra la ubicación y los datos de tu terreno.</p>
+                    </div>
+                </div>
+                <button onclick="Swal.close()" class="text-gray-400 hover:text-gray-600 transition-colors"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="space-y-5 mt-6">
+                <div>
+                    <label class="block text-[13px] font-bold text-gray-700 mb-1.5">Nombre de la Finca / Lote <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                            <i class="fa-solid fa-seedling text-sm"></i>
+                        </div>
+                        <input type="text" id="tNombre" class="w-full pl-11 pr-4 py-3 rounded-xl text-sm border border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none" placeholder="Ej. La Esperanza" value="${data.nombre || ''}">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[13px] font-bold text-gray-700 mb-1.5">Tamaño (Hectáreas) <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                                <i class="fa-solid fa-vector-square text-sm"></i>
+                            </div>
+                            <input type="number" step="0.01" id="tSize" class="w-full pl-11 pr-4 py-3 rounded-xl text-sm border border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed outline-none" placeholder="Ej. 2.5" value="${data.hectareas || ''}" readonly>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[13px] font-bold text-gray-700 mb-1.5">Cultivo Principal <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                                <i class="fa-solid fa-leaf text-sm"></i>
+                            </div>
+                            <input type="text" id="tCultivo" class="w-full pl-11 pr-4 py-3 rounded-xl text-sm border border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none" placeholder="Selecciona un cultivo" value="${data.cultivo || ''}">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[13px] font-bold text-gray-700 mb-1.5">Ubicación <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                            <i class="fa-solid fa-location-dot text-sm"></i>
+                        </div>
+                        <input type="text" id="tUbicacion" class="w-full pl-11 pr-10 py-3 rounded-xl text-sm border border-gray-200 focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none" placeholder="Busca o selecciona la ubicación en el mapa" value="${data.ubicacion || ''}">
+                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 cursor-pointer hover:text-primary">
+                            <i class="fa-solid fa-crosshairs text-sm"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Box -->
+                <div class="bg-light border border-primary/20 rounded-xl p-4 flex gap-3 mt-4 items-start">
+                    <div class="text-primary mt-0.5"><i class="fa-solid fa-location-dot"></i></div>
+                    <div>
+                        <h4 class="font-bold text-primary text-sm mb-0.5">Consejo</h4>
+                        <p class="text-[12px] text-gray-600 leading-relaxed">Puedes buscar una dirección, o usar la herramienta de polígono en el mapa para delimitar tu finca.</p>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" id="tCoordenadas" value='${data.coordenadas ? data.coordenadas.replace(/'/g, "&#39;") : ""}'>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 mt-8">
+            <button type="button" onclick="Swal.close()" class="px-6 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold rounded-xl transition-colors text-sm flex items-center gap-2">
+                <i class="fa-solid fa-xmark"></i> Cancelar
+            </button>
+            <button type="button" onclick="Swal.clickConfirm()" class="px-6 py-2.5 bg-primary hover:bg-secondary text-white font-bold rounded-xl shadow-md transition-colors text-sm flex items-center gap-2">
+                <i class="fa-solid fa-save"></i> Guardar Finca
+            </button>
+        </div>
+    </div>
+
+    <!-- Right Column: Map -->
+    <div class="w-full lg:w-7/12 flex flex-col bg-gray-50 rounded-[2rem] p-4 border border-gray-100">
+        <div class="flex items-center gap-3 mb-4 px-2">
+            <div class="w-10 h-10 rounded-full bg-white text-primary flex items-center justify-center text-lg shrink-0 shadow-sm">
+                <i class="fa-solid fa-map-location-dot"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-gray-900 text-sm">Selecciona la ubicación en el mapa</h3>
+                <p class="text-xs text-gray-500">Arrastra el marcador o haz clic en el punto exacto de tu terreno.</p>
+            </div>
+        </div>
+
+        <div id="mapContainer" class="w-full flex-1 min-h-[350px] lg:min-h-[400px] border-4 border-white shadow-sm rounded-2xl overflow-hidden z-10 relative">
+            <!-- Leaflet map goes here -->
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mt-4 px-2">
+            <div class="bg-white rounded-xl p-3 flex items-center gap-3 shadow-sm border border-gray-100">
+                <div class="text-primary text-xl shrink-0"><i class="fa-solid fa-location-dot"></i></div>
+                <div class="overflow-hidden">
+                    <p class="text-[10px] font-bold text-gray-400">Coordenadas</p>
+                    <p class="text-xs font-bold text-gray-700 truncate" id="coord-display">--</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl p-3 flex items-center gap-3 shadow-sm border border-gray-100">
+                <div class="text-gray-400 text-xl shrink-0"><i class="fa-solid fa-compass"></i></div>
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400">Área Calculada</p>
+                    <p class="text-xs font-bold text-gray-700" id="area-display">-- ha</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+`;
+
+    function initMap(mapId, coordsData = null) {
+        const map = L.map(mapId).setView([1.85, -76.05], 13);
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 21,
+            maxNativeZoom: 17
+        }).addTo(map);
+
+        setTimeout(() => { map.invalidateSize(); }, 200);
+
+        const drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+        
+        const updateDisplays = () => {
+            const layers = drawnItems.getLayers();
+            if(layers.length > 0) {
+                const geojson = layers[0].toGeoJSON();
+                document.getElementById('tCoordenadas').value = JSON.stringify(geojson);
+                
+                const areaSqMeters = turf.area(geojson);
+                const hectareas = (areaSqMeters / 10000).toFixed(2);
+                document.getElementById('tSize').value = hectareas;
+                document.getElementById('area-display').innerText = hectareas + ' ha';
+                
+                const center = turf.center(geojson);
+                const lat = center.geometry.coordinates[1].toFixed(4);
+                const lng = center.geometry.coordinates[0].toFixed(4);
+                document.getElementById('coord-display').innerText = `${lat}° N, ${lng}° W`;
+            } else {
+                document.getElementById('tCoordenadas').value = '';
+                document.getElementById('tSize').value = '';
+                document.getElementById('area-display').innerText = '-- ha';
+                document.getElementById('coord-display').innerText = '--';
+            }
+        };
+
+        if(coordsData) {
+            try {
+                const geoJsonData = JSON.parse(coordsData.replace(/&quot;/g, '"'));
+                const layer = L.geoJSON(geoJsonData, { style: { color: '#16a34a' } });
+                layer.eachLayer(l => drawnItems.addLayer(l));
+                map.fitBounds(drawnItems.getBounds());
+                updateDisplays();
+            } catch(e) { console.error(e); }
+        } else {
+            // Geolocalización
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    map.setView([lat, lon], 16);
+                    
+                    const userMarker = L.marker([lat, lon]).addTo(map);
+                    userMarker.bindPopup("<b>Buscando tu ubicación...</b>").openPopup();
+                    
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            const city = data.address.city || data.address.town || data.address.village || data.address.county || "";
+                            const state = data.address.state || "";
+                            const ubicacion = city ? `${city}, ${state}` : state;
+                            
+                            userMarker.bindPopup(`<b>Estás aquí</b><br>${ubicacion}`).openPopup();
+                            
+                            const inputUbi = document.getElementById('tUbicacion');
+                            if(inputUbi && inputUbi.value === '') {
+                                inputUbi.value = ubicacion;
+                            }
+                        })
+                        .catch(() => {
+                            userMarker.bindPopup("<b>Tu ubicación actual</b>").openPopup();
+                        });
+                });
+            }
+        }
+
+        const drawControl = new L.Control.Draw({
+            edit: { featureGroup: drawnItems },
+            draw: {
+                polygon: { allowIntersection: false, shapeOptions: { color: '#16a34a' } },
+                polyline: false, circle: false, rectangle: false, marker: false, circlemarker: false
+            }
+        });
+        map.addControl(drawControl);
+
+        map.on(L.Draw.Event.CREATED, function (e) {
+            drawnItems.clearLayers();
+            drawnItems.addLayer(e.layer);
+            updateDisplays();
+        });
+        map.on('draw:edited', updateDisplays);
+        map.on('draw:deleted', updateDisplays);
+    }
+
+    function customPreConfirm() {
+        const n = document.getElementById('tNombre').value.trim();
+        const u = document.getElementById('tUbicacion').value.trim();
+        const s = document.getElementById('tSize').value.trim();
+        const c = document.getElementById('tCultivo').value.trim();
+        const coords = document.getElementById('tCoordenadas').value;
+        
+        if (!n || !u || !s || !coords) {
+            Swal.showValidationMessage('Faltan datos obligatorios o no has dibujado el terreno en el mapa.');
+            return false;
+        }
+        return { nombre: n, ubicacion: u, hectareas: s, cultivo: c, coordenadas_poligono: coords };
+    }
+
     function abrirModalTerreno() {
         Swal.fire({
-            title: 'Nueva Finca / Lote',
-            width: '800px',
-            html: `
-                <div class="space-y-4 text-left mt-2">
-                    <p class="text-sm text-gray-500 mb-2">Dibuja un polígono en el mapa marcando las esquinas de tu terreno. El área se calculará automáticamente.</p>
-                    
-                    <div id="map" class="w-full border border-gray-300 rounded-lg" style="height: 350px;"></div>
-                    
-                    <div class="grid grid-cols-2 gap-4 mt-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Nombre de la Finca</label>
-                            <input type="text" id="tNombre" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Ej. El Edén">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Ubicación</label>
-                            <input type="text" id="tUbicacion" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Ej. Vereda San Juan, Pitalito">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Tamaño (Hectáreas calculadas)</label>
-                            <input type="number" step="0.01" id="tSize" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-500 cursor-not-allowed" placeholder="0.00" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Cultivo Principal</label>
-                            <input type="text" id="tCultivo" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Ej. Café">
-                        </div>
-                    </div>
-                    <input type="hidden" id="tCoordenadas">
-                </div>
-            `,
-            showCancelButton: true,
-            confirmButtonColor: '#16a34a',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: '<i class="fa-solid fa-save mr-1"></i> Guardar',
-            cancelButtonText: 'Cancelar',
-            didOpen: () => {
-                // Inicializar mapa
-                const map = L.map('map').setView([1.85, -76.05], 13); // Default Pitalito approx
-                
-                // Usamos Esri World Imagery (Satélite) que es gratis y no bloquea localhost
-                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                    maxZoom: 21,
-                    maxNativeZoom: 17, // Estira los tiles existentes en lugar de pedir nuevos cuando te acercas demasiado
-                    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-                }).addTo(map);
-
-                // Forzar resize para que cargue completo en el modal
-                setTimeout(() => { map.invalidateSize(); }, 100);
-
-                // Geolocalización del usuario
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(position => {
-                        const lat = position.coords.latitude;
-                        const lon = position.coords.longitude;
-                        
-                        // Centrar mapa en la ubicación del usuario
-                        map.setView([lat, lon], 16);
-                        
-                        // Añadir marcador visual
-                        const userMarker = L.marker([lat, lon]).addTo(map);
-                        userMarker.bindPopup("<b>Buscando tu ubicación...</b>").openPopup();
-                        
-                        // Usar Nominatim para obtener Municipio/Departamento
-                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
-                            .then(res => res.json())
-                            .then(data => {
-                                const city = data.address.city || data.address.town || data.address.village || data.address.county || "";
-                                const state = data.address.state || "";
-                                const ubicacion = city ? `${city}, ${state}` : state;
-                                
-                                userMarker.bindPopup(`<b>Estás aquí</b><br>${ubicacion}`).openPopup();
-                                
-                                // Sugerir la ubicación en el campo de texto
-                                const inputUbi = document.getElementById('tUbicacion');
-                                if(inputUbi && inputUbi.value === '') {
-                                    inputUbi.value = ubicacion;
-                                }
-                            })
-                            .catch(() => {
-                                userMarker.bindPopup("<b>Tu ubicación actual</b>").openPopup();
-                            });
-                            
-                    }, error => {
-                        console.warn("Geolocalización denegada o falló:", error);
-                    });
-                }
-
-                // Herramientas de dibujo
-                const drawnItems = new L.FeatureGroup();
-                map.addLayer(drawnItems);
-                const drawControl = new L.Control.Draw({
-                    edit: { featureGroup: drawnItems },
-                    draw: {
-                        polygon: {
-                            allowIntersection: false,
-                            drawError: { color: '#e1e100', message: 'Los bordes no pueden cruzarse' },
-                            shapeOptions: { color: '#16a34a' }
-                        },
-                        polyline: false, circle: false, rectangle: false, marker: false, circlemarker: false
-                    }
-                });
-                map.addControl(drawControl);
-
-                // Al dibujar polígono
-                map.on(L.Draw.Event.CREATED, function (event) {
-                    const layer = event.layer;
-                    drawnItems.clearLayers(); // Solo permitir un terreno
-                    drawnItems.addLayer(layer);
-                    
-                    const geojson = layer.toGeoJSON();
-                    document.getElementById('tCoordenadas').value = JSON.stringify(geojson);
-                    
-                    // Calcular área en m2 y pasar a ha
-                    const areaSqMeters = turf.area(geojson);
-                    const hectareas = (areaSqMeters / 10000).toFixed(2);
-                    document.getElementById('tSize').value = hectareas;
-                });
-                
-                // Si el usuario edita o borra el polígono
-                map.on('draw:edited', function () {
-                    const layers = drawnItems.getLayers();
-                    if(layers.length > 0) {
-                        const geojson = layers[0].toGeoJSON();
-                        document.getElementById('tCoordenadas').value = JSON.stringify(geojson);
-                        const areaSqMeters = turf.area(geojson);
-                        document.getElementById('tSize').value = (areaSqMeters / 10000).toFixed(2);
-                    }
-                });
-                map.on('draw:deleted', function () {
-                    document.getElementById('tCoordenadas').value = '';
-                    document.getElementById('tSize').value = '';
-                });
+            html: modalTemplate(false),
+            width: '1050px',
+            showConfirmButton: false,
+            showCloseButton: false,
+            padding: '1.5rem',
+            customClass: {
+                popup: 'bg-white rounded-[2rem] shadow-2xl border border-gray-100',
+                htmlContainer: 'm-0 p-0',
             },
-            preConfirm: () => {
-                const n = document.getElementById('tNombre').value.trim();
-                const u = document.getElementById('tUbicacion').value.trim();
-                const s = document.getElementById('tSize').value.trim();
-                const c = document.getElementById('tCultivo').value.trim();
-                const coords = document.getElementById('tCoordenadas').value;
-                
-                if (!n || !u || !s || !coords) {
-                    Swal.showValidationMessage('Faltan datos obligatorios o no has dibujado el terreno en el mapa.');
-                    return false;
-                }
-                return { nombre: n, ubicacion: u, hectareas: s, cultivo: c, coordenadas_poligono: coords };
-            }
+            didOpen: () => initMap('mapContainer'),
+            preConfirm: customPreConfirm
         }).then((result) => {
             if (result.isConfirmed) {
                 Swal.fire({ title: 'Guardando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                
                 const fd = new FormData();
                 fd.append('nombre', result.value.nombre);
                 fd.append('ubicacion', result.value.ubicacion);
@@ -263,163 +356,30 @@
                     method: 'POST',
                     headers: { 'X-CSRFToken': getCookie('csrftoken') },
                     body: fd
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if(data.mensaje) {
-                        Swal.fire('¡Éxito!', data.mensaje, 'success').then(() => window.location.reload());
-                    } else {
-                        Swal.fire('Error', data.error, 'error');
-                    }
-                }).catch(() => Swal.fire('Error', 'Problema de conexión', 'error'));
+                }).then(r => r.json()).then(data => {
+                    if(data.mensaje) Swal.fire('¡Éxito!', data.mensaje, 'success').then(() => window.location.reload());
+                    else Swal.fire('Error', data.error, 'error');
+                });
             }
         });
     }
 
-    function eliminarTerreno(id, nombre) {
-        Swal.fire({
-            title: '¿Eliminar finca?',
-            html: `Estás a punto de eliminar <b>${nombre}</b>.<br>Se borrarán también las solicitudes asociadas a este terreno.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({ title: 'Eliminando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                fetch(`/agricultor/fincas/eliminar/${id}/`, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': getCookie('csrftoken') }
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if(data.mensaje) {
-                        Swal.fire('Eliminada', data.mensaje, 'success').then(() => window.location.reload());
-                    } else {
-                        Swal.fire('Error', data.error, 'error');
-                    }
-                }).catch(() => Swal.fire('Error', 'Problema de conexión', 'error'));
-            }
-        });
-    }
     function editarTerreno(id, nombre, ubicacion, hectareas, cultivo, coordenadas) {
         Swal.fire({
-            title: 'Editar Finca / Lote',
-            width: '800px',
-            html: `
-                <div class="space-y-4 text-left mt-2">
-                    <p class="text-sm text-gray-500 mb-2">Puedes dibujar un nuevo polígono si lo deseas.</p>
-                    
-                    <div id="mapEdit" class="w-full border border-gray-300 rounded-lg" style="height: 350px;"></div>
-                    
-                    <div class="grid grid-cols-2 gap-4 mt-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Nombre de la Finca</label>
-                            <input type="text" id="tNombreEdit" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none" value="${nombre}">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Ubicación</label>
-                            <input type="text" id="tUbicacionEdit" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none" value="${ubicacion}">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Tamaño (Hectáreas)</label>
-                            <input type="number" step="0.01" id="tSizeEdit" class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 text-gray-500 cursor-not-allowed" value="${hectareas}" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Cultivo Principal</label>
-                            <input type="text" id="tCultivoEdit" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none" value="${cultivo}">
-                        </div>
-                    </div>
-                    <input type="hidden" id="tCoordenadasEdit">
-                </div>
-            `,
-            showCancelButton: true,
-            confirmButtonColor: '#16a34a',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: '<i class="fa-solid fa-save mr-1"></i> Guardar Cambios',
-            cancelButtonText: 'Cancelar',
-            didOpen: () => {
-                const map = L.map('mapEdit').setView([1.85, -76.05], 13);
-                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                    maxZoom: 21,
-                    maxNativeZoom: 17
-                }).addTo(map);
-
-                setTimeout(() => { map.invalidateSize(); }, 100);
-
-                const drawnItems = new L.FeatureGroup();
-                map.addLayer(drawnItems);
-                
-                // Cargar polígono existente
-                if(coordenadas) {
-                    try {
-                        const geoJsonData = JSON.parse(coordenadas.replace(/&quot;/g, '"'));
-                        document.getElementById('tCoordenadasEdit').value = JSON.stringify(geoJsonData);
-                        const layer = L.geoJSON(geoJsonData, {
-                            style: { color: '#16a34a' }
-                        });
-                        layer.eachLayer(l => drawnItems.addLayer(l));
-                        map.fitBounds(drawnItems.getBounds());
-                    } catch(e) {
-                        console.error("Error parseando GeoJSON", e);
-                    }
-                }
-
-                const drawControl = new L.Control.Draw({
-                    edit: { featureGroup: drawnItems },
-                    draw: {
-                        polygon: { allowIntersection: false, shapeOptions: { color: '#16a34a' } },
-                        polyline: false, circle: false, rectangle: false, marker: false, circlemarker: false
-                    }
-                });
-                map.addControl(drawControl);
-
-                map.on(L.Draw.Event.CREATED, function (event) {
-                    const layer = event.layer;
-                    drawnItems.clearLayers();
-                    drawnItems.addLayer(layer);
-                    
-                    const geojson = layer.toGeoJSON();
-                    document.getElementById('tCoordenadasEdit').value = JSON.stringify(geojson);
-                    const areaSqMeters = turf.area(geojson);
-                    document.getElementById('tSizeEdit').value = (areaSqMeters / 10000).toFixed(2);
-                });
-                
-                map.on('draw:edited', function () {
-                    const layers = drawnItems.getLayers();
-                    if(layers.length > 0) {
-                        const geojson = layers[0].toGeoJSON();
-                        document.getElementById('tCoordenadasEdit').value = JSON.stringify(geojson);
-                        const areaSqMeters = turf.area(geojson);
-                        document.getElementById('tSizeEdit').value = (areaSqMeters / 10000).toFixed(2);
-                    }
-                });
-                map.on('draw:deleted', function () {
-                    document.getElementById('tCoordenadasEdit').value = '';
-                    document.getElementById('tSizeEdit').value = '';
-                });
+            html: modalTemplate(true, {nombre, ubicacion, hectareas, cultivo, coordenadas}),
+            width: '1050px',
+            showConfirmButton: false,
+            showCloseButton: false,
+            padding: '1.5rem',
+            customClass: {
+                popup: 'bg-white rounded-[2rem] shadow-2xl border border-gray-100',
+                htmlContainer: 'm-0 p-0',
             },
-            preConfirm: () => {
-                const n = document.getElementById('tNombreEdit').value.trim();
-                const u = document.getElementById('tUbicacionEdit').value.trim();
-                const s = document.getElementById('tSizeEdit').value.trim();
-                const c = document.getElementById('tCultivoEdit').value.trim();
-                const coords = document.getElementById('tCoordenadasEdit').value;
-                
-                if (!n || !u || !s || !coords) {
-                    Swal.showValidationMessage('Faltan datos obligatorios o no has dibujado el terreno.');
-                    return false;
-                }
-                return { nombre: n, ubicacion: u, hectareas: s, cultivo: c, coordenadas_poligono: coords };
-            }
+            didOpen: () => initMap('mapContainer', coordenadas),
+            preConfirm: customPreConfirm
         }).then((result) => {
             if (result.isConfirmed) {
                 Swal.fire({ title: 'Actualizando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                
                 const fd = new FormData();
                 fd.append('nombre', result.value.nombre);
                 fd.append('ubicacion', result.value.ubicacion);
@@ -431,15 +391,37 @@
                     method: 'POST',
                     headers: { 'X-CSRFToken': getCookie('csrftoken') },
                     body: fd
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if(data.mensaje) {
-                        Swal.fire('¡Éxito!', data.mensaje, 'success').then(() => window.location.reload());
-                    } else {
-                        Swal.fire('Error', data.error, 'error');
-                    }
-                }).catch(() => Swal.fire('Error', 'Problema de conexión', 'error'));
+                }).then(r => r.json()).then(data => {
+                    if(data.mensaje) Swal.fire('¡Éxito!', data.mensaje, 'success').then(() => window.location.reload());
+                    else Swal.fire('Error', data.error, 'error');
+                });
+            }
+        });
+    }
+
+    function eliminarTerreno(id, nombre) {
+        Swal.fire({
+            title: '¿Eliminar finca?',
+            html: `Estás a punto de eliminar <b>${nombre}</b>.<br>Se borrarán también las solicitudes asociadas.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            customClass: {
+                popup: 'bg-white rounded-[2rem] shadow-2xl border border-gray-100',
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'Eliminando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                fetch(`/agricultor/fincas/eliminar/${id}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') }
+                }).then(r => r.json()).then(data => {
+                    if(data.mensaje) Swal.fire('Eliminada', data.mensaje, 'success').then(() => window.location.reload());
+                    else Swal.fire('Error', data.error, 'error');
+                });
             }
         });
     }

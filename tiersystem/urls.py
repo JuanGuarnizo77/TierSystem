@@ -1,12 +1,14 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
-
+from django.shortcuts import redirect
 def api_root(request):
     return JsonResponse({"message": "TierSystem API Root"})
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('superadmin/', admin.site.urls),
+    # Redirigir /admin normal al panel del administrador
+    path('admin/', lambda r: redirect('dashboard_admin')),
     # Rutas API
     path('api/', api_root, name='api-root'),
     path('', include('apps.usuarios.urls')),

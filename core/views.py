@@ -127,7 +127,40 @@ def crear_laboratorista(request):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
             
-    return render(request, 'admin/nuevo_laboratorista.html')
+    return redirect('lista_usuarios')
+
+
+@login_required(login_url='login')
+def editar_usuario(request, user_id):
+    if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'ADMIN':
+        from django.http import JsonResponse
+        return JsonResponse({'error': 'No autorizado'}, status=403)
+        
+    if request.method == 'POST':
+        from django.contrib.auth.models import User
+        from django.http import JsonResponse
+        import json
+        
+        try:
+            data = json.loads(request.body)
+            first_name = data.get('first_name', '')
+            last_name = data.get('last_name', '')
+            email = data.get('email', '')
+            
+            usuario = User.objects.get(id=user_id)
+            usuario.first_name = first_name
+            usuario.last_name = last_name
+            usuario.email = email
+            usuario.save()
+            
+            return JsonResponse({'mensaje': 'Información de usuario actualizada'})
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+            
+    from django.http import JsonResponse
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 @login_required(login_url='login')
 def cambiar_estado_usuario(request, user_id):

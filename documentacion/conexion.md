@@ -4,17 +4,20 @@ Codigo de C++ para el sensor que ya esta en arduido IDE:
 
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include <WiFiManager.h> // <-- NUEVA LIBRERÍA: Instálala en Arduino IDE
+#include <WiFiMulti.h> // <-- Librería nativa para múltiples redes
+
+// Instanciamos el objeto WiFiMulti
+WiFiMulti wifiMulti;
 
 // ============================================================
 // CONFIGURACIÓN DJANGO
 // ============================================================
 
-// Cambiar por la IP del computador donde está Django
-// Ejemplo:
-// http://192.168.1.100:8000/api/lecturas/
+// Esta es la IP actual de tu computadora en tu red local WiFi.
+// Si en el futuro cambia, deberás actualizarla aquí.
+// Ejemplo: http://192.168.100.78:8000/api/lecturas/
 
-const char* DJANGO_URL = "http://192.168.1.100:8000/api/lecturas/";
+const char* DJANGO_URL = "http://10.3.249.123:8000/api/lecturas/";
 
 // ============================================================
 // PINES ESP32 + HW-097
@@ -273,7 +276,7 @@ void enviarADjango(uint16_t *datos)
 {
   if (WiFi.status() != WL_CONNECTED)
   {
-    Serial.println("WiFi desconectado.");
+    Serial.println("WiFi desconectado. No se envían datos.");
     return;
   }
 
@@ -359,32 +362,32 @@ void enviarADjango(uint16_t *datos)
 
 
 // ============================================================
-// CONECTAR WIFI (NUEVO MÉTODO DINÁMICO)
+// CONECTAR WIFI (MÚLTIPLES REDES)
 // ============================================================
 
-void conectarWiFi()
+void conectarWiFiMulti()
 {
   Serial.println();
-  Serial.println("Iniciando Gestor de WiFi...");
+  Serial.println("Iniciando WiFi Multi...");
 
-  // Inicializar WiFiManager
-  WiFiManager wifiManager;
+  // Descomenta y agrega aquí todas las redes que quieras que el sensor recuerde:
+  // wifiMulti.addAP("Nombre_Red", "Contraseña");
+  
+  // Puedes tener 3, 4, o las redes que necesites al mismo tiempo:
+  wifiMulti.addAP("APRENDICES", "Apr3nd1z2025**");
 
-  // Descomentar la siguiente línea si quieres borrar el WiFi guardado para probar
-  // wifiManager.resetSettings();
+  Serial.print("Conectando a la red con mejor señal");
 
-  // Esto crea una red WiFi abierta llamada "TierSystem-Sensor"
-  // Si el ESP32 no encuentra un WiFi conocido, emitirá esta red.
-  // Conéctate a ella con tu celular, y automáticamente se abrirá un portal
-  // para que escribas la contraseña de la nueva red.
-  if (!wifiManager.autoConnect("TierSystem-Sensor")) {
-    Serial.println("Error: No se pudo conectar al WiFi y se agotó el tiempo.");
-    ESP.restart(); // Reiniciar si falla
-    delay(1000);
+  // Esperar a que se conecte
+  while (wifiMulti.run() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
   }
 
   Serial.println();
   Serial.println("¡WiFi conectado exitosamente!");
+  Serial.print("Conectado a la red: ");
+  Serial.println(WiFi.SSID());
   Serial.print("IP del ESP32: ");
   Serial.println(WiFi.localIP());
 }
@@ -429,10 +432,10 @@ void setup()
   Serial.println("RS485 iniciado correctamente.");
 
   // ========================================================
-  // WIFI
+  // WIFI (MÚLTIPLES REDES)
   // ========================================================
 
-  conectarWiFi();
+  conectarWiFiMulti();
 }
 
 
@@ -486,8 +489,9 @@ void loop()
   if (WiFi.status() != WL_CONNECTED)
   {
     Serial.println("WiFi perdido. Intentando reconectar...");
-
-    conectarWiFi();
+    
+    // wifiMulti.run() intenta conectar de nuevo automáticamente a la mejor red
+    wifiMulti.run();
   }
 }
 
@@ -593,4 +597,4 @@ urlpatterns = [
 En el código del ESP32 que te di anteriormente teníamos:
 
 const char* DJANGO_URL =
-    "http://192.168.1.100:8000/api/lecturas/";
+    "http://10.3.249.123:8000/api/lecturas/";

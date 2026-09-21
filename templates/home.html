@@ -1,109 +1,227 @@
-{% extends 'base.html' %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TierSystem - Análisis de Suelo Inteligente</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0a4d3c',
+                        secondary: '#0d624d',
+                        accent: '#10b981',
+                        dark: '#0f172a',
+                        light: '#f4fbf7',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts: Inter & Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; }
+        .font-heading { font-family: 'Outfit', sans-serif; }
+    </style>
+</head>
+<body class="bg-white text-gray-800 antialiased min-h-screen flex flex-col">
 
-{% block content %}
-<!-- Hero Section -->
-<section class="relative bg-white overflow-hidden min-h-[90vh] flex items-center">
-    <!-- Background Decoration -->
-    <div class="absolute inset-y-0 right-0 w-1/2 bg-light rounded-l-[150px] opacity-50 transform translate-x-20 z-0 hidden lg:block"></div>
-    <div class="absolute top-20 right-20 w-64 h-64 bg-secondary rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-    <div class="absolute bottom-20 left-20 w-72 h-72 bg-accent rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style="animation-delay: 2s;"></div>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+    <!-- Navbar -->
+    <nav class="sticky top-0 w-full z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 py-4 px-6 md:px-12">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <!-- Logo -->
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-md">
+                    <i class="fa-solid fa-leaf text-xl"></i>
+                </div>
+                <span class="text-xl font-bold font-heading text-gray-900 tracking-tight">Tier<span class="text-primary">System</span></span>
+            </div>
             
-            <!-- Text Content -->
-            <div class="text-center lg:text-left">
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-light text-primary font-medium text-sm mb-6 border border-secondary border-opacity-30">
-                    <i class="fa-solid fa-microchip"></i> Tecnología agrícola para el Huila
+            <!-- Nav Links -->
+            <div class="hidden md:flex space-x-8">
+                <a href="#" class="text-gray-900 font-medium relative group">
+                    Inicio
+                    <span class="absolute -bottom-1 left-0 w-full h-0.5 bg-primary rounded-full"></span>
+                </a>
+                <a href="#caracteristicas" class="text-gray-500 hover:text-gray-900 font-medium transition-colors">Mas Información</a>
+                <a href="#sobre-nosotros" class="text-gray-500 hover:text-gray-900 font-medium transition-colors">Sobre nosotros</a>
+            </div>
+            
+            <!-- Auth Icons -->
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'login' %}" class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-light hover:text-primary transition-all duration-300 hover:scale-110 transform" title="Iniciar Sesión">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                </a>
+                <a href="{% url 'registro' %}" class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white hover:bg-secondary shadow-md transition-all duration-300 hover:scale-110 transform" title="Registrarse">
+                    <i class="fa-solid fa-user-plus"></i>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow">
+        <!-- Hero Section -->
+        <section class="max-w-7xl mx-auto px-6 md:px-12 py-16 md:py-24 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            
+            <!-- Hero Text -->
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-light text-primary font-medium text-xs mb-6 border border-primary/20">
+                    <i class="fa-solid fa-leaf"></i> Tecnología al servicio del campo
                 </div>
                 
-                <h1 class="text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight mb-6">
-                    Análisis de suelo <br />
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-                        rápido y preciso
-                    </span>
+                <h1 class="text-4xl md:text-5xl font-extrabold font-heading text-gray-900 leading-[1.15] mb-6">
+                    Análisis de suelo inteligente para una agricultura <span class="text-primary">más rentable</span>
                 </h1>
                 
-                <p class="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                    Conecta a agricultores y laboratoristas a través de sensores IoT e Inteligencia Artificial. Optimiza tus cultivos conociendo exactamente qué necesita tu tierra, incluso sin conexión a internet en el campo.
+                <p class="text-gray-600 mb-8 text-base md:text-lg leading-relaxed max-w-lg">
+                    TierSystem integra sensores IoT, inteligencia artificial y datos agrícolas para ofrecer recomendaciones precisas sobre el uso del suelo y los cultivos.
                 </p>
                 
-                <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                    <a href="#" class="px-8 py-4 text-lg font-bold rounded-full text-white bg-primary hover:bg-dark shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
-                        Solicitar Análisis <i class="fa-solid fa-arrow-right"></i>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <a href="{% url 'login' %}" class="px-6 py-3 rounded-xl text-white bg-primary hover:bg-secondary shadow-lg shadow-primary/20 font-medium transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-right-to-bracket"></i> Ingresar
                     </a>
-                    <a href="#" class="px-8 py-4 text-lg font-bold rounded-full text-primary bg-white border-2 border-primary hover:bg-light shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
-                        Soy Laboratorista <i class="fa-solid fa-flask"></i>
+                    <a href="{% url 'registro' %}" class="px-6 py-3 rounded-xl text-primary bg-white border border-gray-200 hover:border-primary hover:bg-light font-medium transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-user-plus"></i> Registrarse
                     </a>
                 </div>
             </div>
+            
+            <!-- Hero Image / Illustration -->
+            <div class="relative flex items-center justify-center min-h-[400px] w-full p-4 lg:p-0">
+                <!-- Cultivo Image -->
+                <div class="relative z-10 w-full h-80 sm:h-96 lg:h-[450px] rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(10,77,60,0.3)] border-[6px] border-white/50 backdrop-blur-sm">
+                    <img src="{% static 'img/cultivo.jpg' %}" alt="Campo de Cultivo" class="w-full h-full object-cover">
+                </div>
+                <!-- Subtle background glow -->
+                <div class="absolute inset-0 bg-primary/10 rounded-[3rem] filter blur-3xl transform scale-90 z-0"></div>
+            </div>
+        </section>
 
-            <!-- Image / Mockup -->
-            <div class="relative hidden lg:block">
-                <!-- Marco abstracto simulando una tablet/app -->
-                <div class="relative rounded-2xl bg-white shadow-2xl border border-gray-100 p-2 transform rotate-2 hover:rotate-0 transition-transform duration-500 ease-out">
-                    <div class="absolute -top-4 -right-4 w-20 h-20 bg-accent rounded-full -z-10 shadow-lg"></div>
-                    <div class="absolute -bottom-6 -left-6 w-32 h-32 bg-primary rounded-full -z-10 opacity-60 blur-md"></div>
+        <hr class="border-gray-100 max-w-7xl mx-auto">
+
+        <!-- Features Cards -->
+        <section id="caracteristicas" class="max-w-7xl mx-auto px-6 md:px-12 py-16">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <!-- Card 1 -->
+                <div class="bento-card p-6 border-t-4 border-t-primary hover:border-t-accent transition-colors">
+                    <div class="w-10 h-10 bg-light rounded-lg flex items-center justify-center text-primary mb-4">
+                        <i class="fa-solid fa-seedling"></i>
+                    </div>
+                    <h3 class="font-bold font-heading text-gray-900 mb-2">Mejores cultivos</h3>
+                    <p class="text-sm text-gray-500 leading-relaxed">Conoce qué puedes sembrar según las condiciones de tu suelo.</p>
+                </div>
+                <!-- Card 2 -->
+                <div class="bento-card p-6 border-t-4 border-t-primary hover:border-t-accent transition-colors">
+                    <div class="w-10 h-10 bg-light rounded-lg flex items-center justify-center text-primary mb-4">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <h3 class="font-bold font-heading text-gray-900 mb-2">Recomendaciones precisas</h3>
+                    <p class="text-sm text-gray-500 leading-relaxed">Recibe sugerencias de fertilización y mejoras agronómicas.</p>
+                </div>
+                <!-- Card 3 -->
+                <div class="bento-card p-6 border-t-4 border-t-primary hover:border-t-accent transition-colors">
+                    <div class="w-10 h-10 bg-light rounded-lg flex items-center justify-center text-primary mb-4">
+                        <i class="fa-solid fa-arrow-trend-up"></i>
+                    </div>
+                    <h3 class="font-bold font-heading text-gray-900 mb-2">Mercado agrícola</h3>
+                    <p class="text-sm text-gray-500 leading-relaxed">Consulta precios, tendencias y compradores en tu región.</p>
+                </div>
+                <!-- Card 4 -->
+                <div class="bento-card p-6 border-t-4 border-t-primary hover:border-t-accent transition-colors">
+                    <div class="w-10 h-10 bg-light rounded-lg flex items-center justify-center text-primary mb-4">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h3 class="font-bold font-heading text-gray-900 mb-2">Funciona online y offline</h3>
+                    <p class="text-sm text-gray-500 leading-relaxed">Accede a la información cuando y donde la necesites.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer / About Section -->
+        <section id="sobre-nosotros" class="bg-gray-50 py-20 border-t border-gray-100">
+            <div class="max-w-7xl mx-auto px-6 md:px-12">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold font-heading text-gray-900 mb-4">Conoce Nuestro Proyecto</h2>
+                    <div class="w-20 h-1 bg-primary mx-auto rounded-full"></div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
                     
-                    <div class="bg-light rounded-xl h-[500px] overflow-hidden relative flex flex-col items-center justify-center border border-gray-200">
-                        <i class="fa-solid fa-seedling text-9xl text-secondary opacity-20 mb-4 animate-bounce" style="animation-duration: 3s;"></i>
-                        <h3 class="text-2xl font-bold text-dark text-center">TierSystem App</h3>
-                        <p class="text-gray-500 mt-2">Módulo Offline Preparado</p>
-                        
-                        <!-- Floating Card Mockup -->
-                        <div class="absolute bottom-8 left-8 right-8 bg-white p-4 rounded-lg shadow-lg flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xl">
-                                <i class="fa-solid fa-wifi"></i>
+                    <!-- Misión -->
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                        <div class="w-12 h-12 bg-light rounded-xl flex items-center justify-center text-primary mb-6">
+                            <i class="fa-solid fa-bullseye text-xl"></i>
+                        </div>
+                        <h3 class="font-bold font-heading text-xl text-gray-900 mb-4">Misión</h3>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            Brindar a los agricultores del Huila y zonas rurales similares una herramienta tecnológica accesible que les permita conocer con precisión las condiciones reales de su suelo y tomar decisiones agronómicas y comerciales informadas, integrando sensórica de bajo costo, inteligencia artificial y datos de mercado en una sola plataforma capaz de funcionar incluso sin conexión a internet.
+                        </p>
+                    </div>
+
+                    <!-- Visión -->
+                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                        <div class="w-12 h-12 bg-light rounded-xl flex items-center justify-center text-primary mb-6">
+                            <i class="fa-solid fa-eye text-xl"></i>
+                        </div>
+                        <h3 class="font-bold font-heading text-xl text-gray-900 mb-4">Visión</h3>
+                        <p class="text-sm text-gray-600 leading-relaxed text-justify">
+                            Para 2028, ser la plataforma de referencia en análisis inteligente de suelos para pequeños y medianos agricultores del suroccidente colombiano, reconocida por reducir la dependencia de laboratorios externos, fortalecer la trazabilidad técnica del suelo y mejorar la capacidad de negociación de los agricultores frente al mercado agrícola regional y nacional.
+                        </p>
+                    </div>
+
+                    <!-- Sobre Nosotros -->
+                    <div class="bg-primary p-8 rounded-[2rem] shadow-lg text-white relative overflow-hidden">
+                        <div class="absolute -right-4 -bottom-4 opacity-10">
+                            <i class="fa-solid fa-leaf text-9xl"></i>
+                        </div>
+                        <div class="relative z-10">
+                            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-white mb-6 backdrop-blur-sm">
+                                <i class="fa-solid fa-users text-xl"></i>
                             </div>
-                            <div>
-                                <p class="font-bold text-gray-800">Sensor ESP32</p>
-                                <p class="text-sm text-green-600">Conectado y listo</p>
-                            </div>
+                            <h3 class="font-bold font-heading text-xl mb-4">Sobre Nosotros</h3>
+                            <p class="text-sm text-white/90 leading-relaxed text-justify">
+                                El proyecto surge al identificar que los agricultores del Huila toman decisiones de siembra basadas casi exclusivamente en la experiencia, sin acceso ágil a análisis técnicos de suelo ni a información actualizada del mercado. TierSystem combina un sensor multiparamétrico portátil (ESP32 + sonda RS485), un servicio externo de Inteligencia Artificial y un módulo de inteligencia de mercado, todo pensado para operar en las condiciones reales del campo huilense, incluyendo zonas sin conectividad estable.
+                            </p>
                         </div>
                     </div>
+                    
                 </div>
             </div>
+        </section>
+        
+    </main>
 
-        </div>
-    </div>
-</section>
-
-<!-- Features Section -->
-<section class="py-20 bg-gray-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-            <h2 class="text-3xl font-bold text-gray-900 mb-4">¿Cómo funciona TierSystem?</h2>
-            <div class="w-24 h-1 bg-secondary mx-auto rounded-full"></div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- Card 1 -->
-            <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl transition-shadow duration-300 group border border-gray-100 border-t-4 border-t-primary">
-                <div class="w-16 h-16 bg-light rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary transition-all duration-300">
-                    <i class="fa-solid fa-map-location-dot text-2xl text-primary group-hover:text-white transition-colors"></i>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">1. Solicita</h3>
-                <p class="text-gray-600">El agricultor registra su terreno y solicita un análisis especificando el cultivo que desea plantar.</p>
+    <!-- Footer -->
+    <footer class="bg-primary text-white py-8 border-t border-secondary/50 mt-auto">
+        <div class="max-w-7xl mx-auto px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-2 opacity-90 hover:opacity-100 transition-opacity">
+                <i class="fa-solid fa-leaf text-accent text-lg"></i>
+                <span class="font-bold font-heading tracking-tight text-lg">TierSystem</span>
             </div>
-
-            <!-- Card 2 -->
-            <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl transition-shadow duration-300 group border border-gray-100 border-t-4 border-t-accent">
-                <div class="w-16 h-16 bg-yellow-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-accent transition-all duration-300">
-                    <i class="fa-solid fa-satellite-dish text-2xl text-yellow-600 group-hover:text-white transition-colors"></i>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">2. Captura</h3>
-                <p class="text-gray-600">El laboratorista visita el campo y usa el sensor ESP32 para capturar los 7 parámetros clave del suelo de forma offline.</p>
-            </div>
-
-            <!-- Card 3 -->
-            <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-xl transition-shadow duration-300 group border border-gray-100 border-t-4 border-t-secondary">
-                <div class="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-secondary transition-all duration-300">
-                    <i class="fa-solid fa-chart-pie text-2xl text-secondary group-hover:text-white transition-colors"></i>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-3">3. Analiza</h3>
-                <p class="text-gray-600">El sistema procesa los datos con IA o con el motor local y genera recomendaciones para mejorar la compatibilidad del cultivo.</p>
+            <p class="text-sm text-gray-300/80 text-center md:text-left">
+                &copy; 2026 TierSystem. Todos los derechos reservados.
+            </p>
+            <div class="flex gap-4">
+                <a href="#" class="text-gray-300 hover:text-white transition-colors"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="#" class="text-gray-300 hover:text-white transition-colors"><i class="fa-brands fa-x-twitter"></i></a>
+                <a href="#" class="text-gray-300 hover:text-white transition-colors"><i class="fa-brands fa-instagram"></i></a>
             </div>
         </div>
-    </div>
-</section>
-{% endblock %}
+    </footer>
+
+</body>
+</html>
