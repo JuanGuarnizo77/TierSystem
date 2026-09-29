@@ -441,3 +441,29 @@ def eliminar_cultivo_admin(request, cultivo_id):
             
     from django.http import JsonResponse
     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+@login_required(login_url='login')
+def estado_hardware(request):
+    if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'ADMIN':
+        return redirect('home')
+        
+    from apps.sensores.models import LecturaSensor
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    ultima_lectura = LecturaSensor.objects.order_by('-timestamp').first()
+    
+    estado_conexion = 'Inactivo'
+    bateria = 85.0 # Mock de batería del sistema solar
+    
+    if ultima_lectura:
+        tiempo_limite = timezone.now() - timedelta(minutes=15)
+        if ultima_lectura.timestamp >= tiempo_limite:
+            estado_conexion = 'Activo'
+            
+    context = {
+        'ultima_lectura': ultima_lectura,
+        'estado_conexion': estado_conexion,
+        'bateria': bateria,
+    }
+    return render(request, 'admin/hardware.html', context)

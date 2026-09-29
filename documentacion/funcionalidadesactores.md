@@ -52,7 +52,7 @@ El sistema debe funcionar **offline** en campo (sin internet), sincronizando des
 - Registrar cuentas de Laboratoristas (quedan **inactivas** hasta que el Administrador las active).
 - Activar / desactivar / eliminar permanentemente cuentas de Laboratoristas y Agricultores.
 - Consultar todos los análisis del sistema, generar reportes filtrados (usuario, fecha, cultivo) y exportarlos en **PDF y Excel**.
-- Ver el estado del hardware (sensor y componentes) con indicadores visuales.
+- Ver el estado del hardware (sensor y componentes) con indicadores visuales. **(✅ Implementado)**
 - Gestionar la base de datos local de cultivos (agregar, editar, eliminar) y configurar los **rangos agronómicos de referencia** (usados también por el motor offline).
 - Configurar el comportamiento del sistema ante fallos del servicio de IA (fallback).
 - Consultar la actividad de los Laboratoristas.

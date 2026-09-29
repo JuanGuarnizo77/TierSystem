@@ -1,0 +1,82 @@
+{% extends 'admin/base_admin.html' %}
+
+{% block title %}TierSystem - Estado del Hardware{% endblock %}
+
+{% block header_title %}Estado del Hardware (Sensores){% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="glass-panel p-6">
+        <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-6">Monitoreo del Sistema Físico</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Estado de Conexión -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center justify-center text-center">
+                <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 
+                    {% if estado_conexion == 'Activo' %}bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400
+                    {% else %}bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400{% endif %}">
+                    <i class="fa-solid fa-wifi text-2xl"></i>
+                </div>
+                <h4 class="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase tracking-wider mb-1">Conexión ESP32</h4>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ estado_conexion }}</p>
+                {% if estado_conexion == 'Activo' %}
+                    <p class="text-xs text-green-500 mt-2"><i class="fa-solid fa-circle-check mr-1"></i>Comunicación estable</p>
+                {% else %}
+                    <p class="text-xs text-red-500 mt-2"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Sin señal reciente</p>
+                {% endif %}
+            </div>
+
+            <!-- Nivel de Batería -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center justify-center text-center">
+                <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400">
+                    <i class="fa-solid fa-solar-panel text-2xl"></i>
+                </div>
+                <h4 class="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase tracking-wider mb-1">Batería (Panel Solar)</h4>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ bateria }}%</p>
+                
+                <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-3">
+                  <div class="bg-yellow-400 h-2.5 rounded-full" style="width: {{ bateria }}%"></div>
+                </div>
+            </div>
+
+            <!-- Última Lectura -->
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col items-center justify-center text-center">
+                <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                    <i class="fa-solid fa-clock-rotate-left text-2xl"></i>
+                </div>
+                <h4 class="text-gray-500 dark:text-gray-400 text-sm font-bold uppercase tracking-wider mb-1">Última Lectura</h4>
+                {% if ultima_lectura %}
+                    <p class="text-lg font-bold text-gray-900 dark:text-white">{{ ultima_lectura.timestamp|date:"d M Y" }}</p>
+                    <p class="text-sm font-medium text-gray-500 mt-1">{{ ultima_lectura.timestamp|time:"H:i:s" }}</p>
+                {% else %}
+                    <p class="text-lg font-bold text-gray-900 dark:text-white">Sin registros</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if ultima_lectura %}
+        <div class="mt-8 border-t border-gray-100 dark:border-gray-700 pt-6">
+            <h4 class="text-sm font-bold text-gray-600 dark:text-gray-300 mb-4 uppercase tracking-wider">Últimos Datos Capturados</h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
+                    <p class="text-xs text-gray-500 uppercase font-bold">Humedad</p>
+                    <p class="text-lg font-bold text-gray-800 dark:text-gray-200">{{ ultima_lectura.humedad }}%</p>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
+                    <p class="text-xs text-gray-500 uppercase font-bold">Temperatura</p>
+                    <p class="text-lg font-bold text-gray-800 dark:text-gray-200">{{ ultima_lectura.temperatura }}°C</p>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
+                    <p class="text-xs text-gray-500 uppercase font-bold">pH</p>
+                    <p class="text-lg font-bold text-gray-800 dark:text-gray-200">{{ ultima_lectura.ph }}</p>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl">
+                    <p class="text-xs text-gray-500 uppercase font-bold">NPK (mg/kg)</p>
+                    <p class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ ultima_lectura.nitrogeno }} | {{ ultima_lectura.fosforo }} | {{ ultima_lectura.potasio }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
