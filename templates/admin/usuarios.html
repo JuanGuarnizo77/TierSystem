@@ -79,6 +79,11 @@
                     </td>
                     <td class="p-4 text-right">
                         <div class="flex items-center justify-end gap-2">
+                            {% with last_login_str=u.last_login|date:"d M, Y H:i" %}
+                            <button onclick="abrirModalActividad('{{ u.username|escapejs }}', '{{ u.solicitudes_atendidas|default:0 }}', '{{ u.analisis_finalizados|default:0 }}', '{{ last_login_str|escapejs }}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-purple-500 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-gray-700 transition-colors" title="Ver Actividad">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </button>
+                            {% endwith %}
                             <button onclick="abrirModalEditar('{{ u.id }}', '{{ u.username|escapejs }}', '{{ u.first_name|escapejs }}', '{{ u.last_name|escapejs }}', '{{ u.email|escapejs }}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-blue-500 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors" title="Editar Usuario">
                                 <i class="fa-solid fa-pen"></i>
                             </button>
@@ -268,6 +273,47 @@
     </div>
 </div>
 
+<!-- Modal Actividad Laboratorista -->
+<div id="modalActividad" class="hidden fixed inset-0 z-[100] bg-gray-900/60 flex items-center justify-center p-4 transition-opacity">
+    <div class="bento-card max-w-lg w-full p-6 relative">
+        <button onclick="cerrarModalActividad()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 hover:text-gray-700 dark:hover:text-white flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+        <div class="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200/50 dark:border-gray-700/50">
+            <div class="w-12 h-12 bg-purple-100/80 dark:bg-purple-900/40 rounded-xl flex items-center justify-center text-purple-600 dark:text-purple-400 text-xl shadow-sm border border-purple-200 dark:border-purple-800">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-lg text-gray-800 dark:text-white">Actividad del Laboratorista</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400" id="actividadUsernameDisplay">@username</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 text-center border border-gray-100 dark:border-gray-700">
+                <p class="text-3xl font-bold text-gray-800 dark:text-white" id="statAtendidas">0</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase font-semibold">Solicitudes Atendidas</p>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 text-center border border-gray-100 dark:border-gray-700">
+                <p class="text-3xl font-bold text-primary" id="statFinalizadas">0</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase font-semibold">Análisis Finalizados</p>
+            </div>
+        </div>
+        
+        <div class="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30 flex items-center gap-3">
+            <i class="fa-solid fa-clock-rotate-left text-xl opacity-70"></i>
+            <div id="statLastLoginContainer">
+                <p class="font-bold text-sm">Último acceso al sistema:</p>
+                <p class="text-sm" id="statLastLogin">Nunca</p>
+            </div>
+        </div>
+        
+        <div class="pt-4 border-t border-gray-200/50 dark:border-gray-700/50 flex justify-end gap-3 mt-6">
+            <button type="button" onclick="cerrarModalActividad()" class="px-6 py-2.5 rounded-xl bg-gray-200/80 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">Cerrar</button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -293,6 +339,27 @@
 
     function cerrarModalEditar() {
         document.getElementById('modalEditar').classList.add('hidden');
+    }
+
+    function abrirModalActividad(username, atendidas, finalizadas, lastLogin) {
+        atendidas = Number(atendidas) || 0;
+        finalizadas = Number(finalizadas) || 0;
+        document.getElementById('actividadUsernameDisplay').innerText = "@" + username;
+        document.getElementById('statAtendidas').innerText = atendidas;
+        document.getElementById('statFinalizadas').innerText = finalizadas;
+        
+        const container = document.getElementById('statLastLoginContainer');
+        if (atendidas === 0 && finalizadas === 0) {
+            container.innerHTML = '<p class="font-bold text-sm">Estado de Actividad:</p><p class="text-sm">Este Laboratorista aún no ha atendido solicitudes.</p>';
+        } else {
+            container.innerHTML = `<p class="font-bold text-sm">Último acceso al sistema:</p><p class="text-sm" id="statLastLogin">${lastLogin ? lastLogin : "Nunca"}</p>`;
+        }
+        
+        document.getElementById('modalActividad').classList.remove('hidden');
+    }
+
+    function cerrarModalActividad() {
+        document.getElementById('modalActividad').classList.add('hidden');
     }
 
     document.getElementById('formLaboratorista').addEventListener('submit', function(e) {
@@ -323,6 +390,11 @@
             } else {
                 Swal.fire('¡Éxito!', data.mensaje, 'success').then(() => location.reload());
             }
+        })
+        .catch(err => {
+            Swal.fire('Error', 'Hubo un error de conexión o interno en el servidor.', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-save"></i> Crear Cuenta';
         });
     });
 
@@ -353,6 +425,11 @@
             } else {
                 Swal.fire('¡Actualizado!', data.mensaje, 'success').then(() => location.reload());
             }
+        })
+        .catch(err => {
+            Swal.fire('Error', 'Hubo un error de conexión o interno en el servidor.', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-save"></i> Actualizar';
         });
     });
 
@@ -396,6 +473,7 @@
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
     function cambiarEstado(userId, activar) {
+        activar = (activar === true || activar === 'true');
         const accion = activar ? "activar" : "desactivar";
         Swal.fire({
             title: `¿Estás seguro?`,
@@ -415,9 +493,17 @@
                     },
                     body: JSON.stringify({ is_active: activar })
                 })
-                .then(res => res.json())
+                .then(async res => {
+                    const text = await res.text();
+                    try {
+                        const data = JSON.parse(text);
+                        if(data.error) throw new Error(data.error);
+                        return data;
+                    } catch(e) {
+                        throw new Error(text.includes('html') ? 'Error interno del servidor (500).' : e.message);
+                    }
+                })
                 .then(data => {
-                    if(data.error) throw new Error(data.error);
                     Swal.fire('¡Éxito!', data.mensaje, 'success').then(() => location.reload());
                 })
                 .catch(err => Swal.fire('Error', err.message, 'error'));

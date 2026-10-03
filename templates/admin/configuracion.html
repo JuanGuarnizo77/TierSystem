@@ -1,0 +1,254 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Configuración Global - TierSystem{% endblock %}
+{% block header_title %}Configuración Global{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Ocultar flechas nativas de inputs numéricos para reemplazarlas por botones personalizados */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        appearance: none;
+        margin: 0;
+    }
+    input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Ajustes del Sistema</h2>
+    <p class="text-gray-500 dark:text-gray-400">Gestiona los parámetros de tolerancia globales de los sensores y el comportamiento de la IA.</p>
+</div>
+
+<form id="formConfig" class="space-y-6">
+    {% csrf_token %}
+    
+    <!-- Sección de Comportamiento de IA (US-0039) -->
+    <div class="bento-card p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white">Comportamiento de Inteligencia Artificial</h3>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tiempo de espera máximo (segundos)</label>
+                <input type="number" id="tiempo_espera_ia" value="{{ config.tiempo_espera_ia }}" min="5" max="120" step="1">
+                <p class="text-xs text-gray-500 mt-1">Tiempo máximo a esperar antes de declarar error de conexión con la IA.</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Acción en caso de fallo</label>
+                <select id="accion_fallo_ia" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-2.5 rounded-xl text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary transition-colors">
+                    <option value="DB_LOCAL" {% if config.accion_fallo_ia == 'DB_LOCAL' %}selected{% endif %}>Usar base de datos local automáticamente</option>
+                    <option value="CANCELAR" {% if config.accion_fallo_ia == 'CANCELAR' %}selected{% endif %}>Notificar al usuario y cancelar el análisis</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Comportamiento si la IA tarda demasiado o devuelve un error.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sección de Rangos del Sensor (US-0038) -->
+    <div class="bento-card p-6">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-green-100 dark:bg-green-900/40 rounded-xl flex items-center justify-center text-green-600 dark:text-green-400">
+                <i class="fa-solid fa-gauge-high"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-gray-800 dark:text-white">Rangos Físicos de Operación del Sensor</h3>
+                <p class="text-sm text-gray-500">Limites absolutos permitidos. Valores fuera de este rango se considerarán lecturas erróneas de hardware.</p>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- pH -->
+            <div class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Potencial de Hidrógeno (pH)</label>
+                <div class="flex items-center gap-2">
+                    <input type="number" step="0.1" id="rango_ph_min" value="{{ config.rango_ph_min|stringformat:'s' }}">
+                    <span class="text-gray-400">-</span>
+                    <input type="number" step="0.1" id="rango_ph_max" value="{{ config.rango_ph_max|stringformat:'s' }}">
+                </div>
+            </div>
+            
+            <!-- Nitrógeno -->
+            <div class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Nitrógeno (N) - mg/kg</label>
+                <div class="flex items-center gap-2">
+                    <input type="number" step="0.1" id="rango_n_min" value="{{ config.rango_n_min|stringformat:'s' }}">
+                    <span class="text-gray-400">-</span>
+                    <input type="number" step="0.1" id="rango_n_max" value="{{ config.rango_n_max|stringformat:'s' }}">
+                </div>
+            </div>
+            
+            <!-- Fósforo -->
+            <div class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Fósforo (P) - mg/kg</label>
+                <div class="flex items-center gap-2">
+                    <input type="number" step="0.1" id="rango_p_min" value="{{ config.rango_p_min|stringformat:'s' }}">
+                    <span class="text-gray-400">-</span>
+                    <input type="number" step="0.1" id="rango_p_max" value="{{ config.rango_p_max|stringformat:'s' }}">
+                </div>
+            </div>
+            
+            <!-- Potasio -->
+            <div class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Potasio (K) - mg/kg</label>
+                <div class="flex items-center gap-2">
+                    <input type="number" step="0.1" id="rango_k_min" value="{{ config.rango_k_min|stringformat:'s' }}">
+                    <span class="text-gray-400">-</span>
+                    <input type="number" step="0.1" id="rango_k_max" value="{{ config.rango_k_max|stringformat:'s' }}">
+                </div>
+            </div>
+            
+            <!-- Humedad -->
+            <div class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Humedad (%)</label>
+                <div class="flex items-center gap-2">
+                    <input type="number" step="0.1" id="rango_humedad_min" value="{{ config.rango_humedad_min|stringformat:'s' }}">
+                    <span class="text-gray-400">-</span>
+                    <input type="number" step="0.1" id="rango_humedad_max" value="{{ config.rango_humedad_max|stringformat:'s' }}">
+                </div>
+            </div>
+            
+            <!-- CE -->
+            <div class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Conductividad E. (dS/m)</label>
+                <div class="flex items-center gap-2">
+                    <input type="number" step="0.1" id="rango_ce_min" value="{{ config.rango_ce_min|stringformat:'s' }}">
+                    <span class="text-gray-400">-</span>
+                    <input type="number" step="0.1" id="rango_ce_max" value="{{ config.rango_ce_max|stringformat:'s' }}">
+                </div>
+            </div>
+            
+            <!-- Temperatura -->
+            <div class="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Temperatura (°C)</label>
+                <div class="flex items-center gap-2">
+                    <input type="number" step="0.1" id="rango_temp_min" value="{{ config.rango_temp_min|stringformat:'s' }}">
+                    <span class="text-gray-400">-</span>
+                    <input type="number" step="0.1" id="rango_temp_max" value="{{ config.rango_temp_max|stringformat:'s' }}">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="flex justify-end pt-4">
+        <button type="submit" id="btnGuardar" class="btn-primary px-8 py-3 w-full md:w-auto">
+            <i class="fa-solid fa-save"></i> Guardar Cambios
+        </button>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Inicializar inputs numéricos con botones personalizados +/-
+    document.querySelectorAll('input[type="number"]').forEach(input => {
+        // Asignar clases base de Tailwind al input
+        input.className = "w-full bg-white dark:bg-gray-700 border-y border-gray-200 dark:border-gray-600 text-center py-2 text-gray-800 dark:text-white focus:outline-none focus:ring-0 appearance-none m-0";
+        
+        // Envolver el input
+        const wrapper = document.createElement('div');
+        wrapper.className = 'relative flex items-center w-full shadow-sm rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all';
+        input.parentNode.insertBefore(wrapper, input);
+        
+        const step = parseFloat(input.getAttribute('step')) || 1;
+        
+        // Botón menos
+        const btnMinus = document.createElement('button');
+        btnMinus.type = 'button';
+        btnMinus.className = 'px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors focus:outline-none flex-shrink-0';
+        btnMinus.innerHTML = '<i class="fa-solid fa-minus text-xs"></i>';
+        
+        // Botón más
+        const btnPlus = document.createElement('button');
+        btnPlus.type = 'button';
+        btnPlus.className = 'px-3 py-2 bg-gray-100 dark:bg-gray-600 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors focus:outline-none flex-shrink-0';
+        btnPlus.innerHTML = '<i class="fa-solid fa-plus text-xs"></i>';
+        
+        wrapper.appendChild(btnMinus);
+        wrapper.appendChild(input);
+        wrapper.appendChild(btnPlus);
+        
+        btnMinus.onclick = () => {
+            let val = parseFloat(input.value || 0) - step;
+            input.value = val.toFixed(step < 1 ? 1 : 0);
+        };
+        btnPlus.onclick = () => {
+            let val = parseFloat(input.value || 0) + step;
+            input.value = val.toFixed(step < 1 ? 1 : 0);
+        };
+    });
+
+    document.getElementById('formConfig').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('btnGuardar');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+        
+        const data = {
+            tiempo_espera_ia: document.getElementById('tiempo_espera_ia').value,
+            accion_fallo_ia: document.getElementById('accion_fallo_ia').value,
+            
+            rango_ph_min: document.getElementById('rango_ph_min').value,
+            rango_ph_max: document.getElementById('rango_ph_max').value,
+            
+            rango_n_min: document.getElementById('rango_n_min').value,
+            rango_n_max: document.getElementById('rango_n_max').value,
+            
+            rango_p_min: document.getElementById('rango_p_min').value,
+            rango_p_max: document.getElementById('rango_p_max').value,
+            
+            rango_k_min: document.getElementById('rango_k_min').value,
+            rango_k_max: document.getElementById('rango_k_max').value,
+            
+            rango_humedad_min: document.getElementById('rango_humedad_min').value,
+            rango_humedad_max: document.getElementById('rango_humedad_max').value,
+            
+            rango_ce_min: document.getElementById('rango_ce_min').value,
+            rango_ce_max: document.getElementById('rango_ce_max').value,
+            
+            rango_temp_min: document.getElementById('rango_temp_min').value,
+            rango_temp_max: document.getElementById('rango_temp_max').value,
+        };
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        fetch("{% url 'configuracion_global' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(data)
+        })
+        .then(async res => {
+            const text = await res.text();
+            try {
+                const json = JSON.parse(text);
+                if(json.error) throw new Error(json.error);
+                return json;
+            } catch(e) {
+                throw new Error(text.includes('html') ? 'Error interno del servidor (500).' : e.message);
+            }
+        })
+        .then(data => {
+            Swal.fire('¡Guardado!', data.mensaje, 'success').then(() => location.reload());
+        })
+        .catch(err => {
+            Swal.fire('Error', err.message, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-save"></i> Guardar Cambios';
+        });
+    });
+</script>
+{% endblock %}

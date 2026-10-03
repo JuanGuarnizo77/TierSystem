@@ -26,4 +26,7 @@ urlpatterns = [
     
     # Hardware (Sensores)
     path('administrador/hardware/', views.estado_hardware, name='estado_hardware'),
+    
+    # Configuración Global (IA y Sensores)
+    path('administrador/configuracion/', views.configuracion_global_view, name='configuracion_global'),
 ]
