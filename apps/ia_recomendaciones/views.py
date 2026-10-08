@@ -86,7 +86,7 @@ def api_diagnosticar_ia(request):
         preferencia = data.get("preferencia", "").strip()
 
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-3.6-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         # Lógica de prompt basada en la preferencia y región
         prompt_preferencia = f"\n- IMPORTANTE: El usuario tiene un interés especial en cultivar: '{preferencia}'. DEBES evaluar la compatibilidad de ese cultivo y sus variedades. Si la compatibilidad es muy mala (<40%), dilo claramente y sugiere otra alternativa más viable, pero de todas formas DEBES mostrar la evaluación del cultivo solicitado." if preferencia else ""
