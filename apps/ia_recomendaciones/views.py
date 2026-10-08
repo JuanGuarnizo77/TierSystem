@@ -2,6 +2,7 @@ import json
 import os
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 from .models import CultivoIdeal
 
 # Intentar importar google.generativeai, manejando si aún no está instalado
@@ -26,7 +27,7 @@ def api_obtener_cultivos(request):
         "cultivos": datos
     })
 
-@csrf_exempt
+@login_required(login_url='login')
 def api_diagnosticar_ia(request):
     """
     MODO ONLINE:

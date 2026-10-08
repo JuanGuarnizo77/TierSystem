@@ -467,7 +467,14 @@ def comparar_analisis_agricultor(request):
         
     s1 = get_object_or_404(SolicitudAnalisis, id=id1, agricultor=request.user)
     s2 = get_object_or_404(SolicitudAnalisis, id=id2, agricultor=request.user)
-    
+
+    if not hasattr(s1, 'analisis_resultado') or not hasattr(s2, 'analisis_resultado'):
+        return render(request, 'agricultor/comparar.html', {
+            'insuficientes': True,
+            'solicitudes': solicitudes_disponibles,
+            'error_msg': 'Una de las solicitudes seleccionadas no tiene análisis completado.'
+        })
+
     a1 = s1.analisis_resultado
     a2 = s2.analisis_resultado
     

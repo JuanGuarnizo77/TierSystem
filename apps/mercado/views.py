@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.core.cache import cache
 import requests
 import json
 from datetime import datetime
@@ -270,17 +271,22 @@ def precios_sipsa(request):
     datos_cultivo = dict(datos_cultivo)  # shallow copy to avoid mutating dict
     datos_cultivo["compradores"] = _get_compradores_for_cultivo(cultivo_key)
 
-    # Try connecting to live DANE open data API (Datos.gov.co)
-    estado_conexion = 'online'
-    mensaje_conexion = 'Conectado en tiempo real a los servidores de SIPSA / DANE.'
-
-    try:
-        response = requests.get('https://www.datos.gov.co/resource/mqa9-ndae.json?$limit=10', timeout=2)
-        if response.status_code != 200:
+    # Try connecting to live DANE open data API (Datos.gov.co) — cached 5 minutes
+    estado_conexion = cache.get('dane_api_status')
+    if estado_conexion is None:
+        try:
+            response = requests.get('https://www.datos.gov.co/resource/mqa9-ndae.json?$limit=10', timeout=2)
+            if response.status_code == 200:
+                estado_conexion = 'online'
+            else:
+                estado_conexion = 'offline'
+        except Exception:
             estado_conexion = 'offline'
-            mensaje_conexion = 'Sin conexión a DANE/SIPSA. Mostrando datos de referencia regional almacenados localmente.'
-    except Exception:
-        estado_conexion = 'offline'
+        cache.set('dane_api_status', estado_conexion, 300)
+
+    if estado_conexion == 'online':
+        mensaje_conexion = 'Conectado en tiempo real a los servidores de SIPSA / DANE.'
+    else:
         mensaje_conexion = 'Sin conexión a DANE/SIPSA. Mostrando datos de referencia regional almacenados localmente.'
 
     # Max price calculation for bar height scaling

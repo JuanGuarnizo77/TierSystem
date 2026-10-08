@@ -121,6 +121,8 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 # REEMPLAZA ESTAS VARIABLES CON TUS CREDENCIALES REALES
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+_email_user = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_USER = _email_user
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = f'TierSystem Notificaciones <{EMAIL_HOST_USER}>'
+DEFAULT_FROM_EMAIL = f'TierSystem Notificaciones <{_email_user}>' if _email_user else 'TierSystem Notificaciones <noreply@tiersystem.co>'
+SENSOR_API_KEY = os.getenv('SENSOR_API_KEY', 'tiersystem-sensor-key-dev')
