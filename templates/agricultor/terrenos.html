@@ -86,6 +86,19 @@
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
 <script>
+    function showToast(icon, title, text = '') {
+        Swal.fire({
+            toast: true,
+            position: 'bottom-end',
+            icon: icon,
+            title: title,
+            text: text,
+            showConfirmButton: false,
+            timer: 3500,
+            timerProgressBar: true,
+        });
+    }
+
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -223,13 +236,114 @@
 `;
 
     function initMap(mapId, coordsData = null) {
-        const map = L.map(mapId).setView([1.85, -76.05], 13);
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        const map = L.map(mapId, { zoomControl: false }).setView([1.85, -76.05], 13);
+
+        // Capa satelital de alta resolución (Google Satellite vía proxy)
+        const satelital = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
             maxZoom: 21,
-            maxNativeZoom: 17
-        }).addTo(map);
+            maxNativeZoom: 21,
+            attribution: '© Google'
+        });
+
+        // Capa híbrida: satelital + etiquetas de calles/lugares
+        const hibrido = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+            maxZoom: 21,
+            maxNativeZoom: 21,
+            attribution: '© Google'
+        });
+
+        // Capa de calles (OpenStreetMap, fallback claro)
+        const calles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        });
+
+        // Capa activa por defecto: híbrida (satelital + etiquetas)
+        hibrido.addTo(map);
+
+        // Control de capas
+        L.control.layers(
+            { 'Híbrido (Satélite + Calles)': hibrido, 'Satélite': satelital, 'Calles': calles },
+            {},
+            { position: 'topright' }
+        ).addTo(map);
+
+        // Control de zoom reposicionado
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        // Botón "Mi ubicación"
+        const locBtn = L.control({ position: 'bottomright' });
+        locBtn.onAdd = function() {
+            const btn = L.DomUtil.create('button', '');
+            btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>';
+            btn.title = 'Ir a mi ubicación';
+            btn.style.cssText = 'background:#fff;border:2px solid rgba(0,0,0,.2);border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:#16a34a;margin-bottom:4px;';
+            btn.onclick = function(e) {
+                L.DomEvent.stopPropagation(e);
+                centerOnUser(map);
+            };
+            return btn;
+        };
+        locBtn.addTo(map);
 
         setTimeout(() => { map.invalidateSize(); }, 200);
+
+        // --- Función reutilizable de geolocalización ---
+        function centerOnUser(mapInstance, onSuccess) {
+            if (!navigator.geolocation) return;
+            const btn = mapInstance.getContainer().querySelector('button[title="Ir a mi ubicación"]');
+            if (btn) btn.style.color = '#f59e0b'; // indicador de carga
+
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    mapInstance.setView([lat, lon], 17);
+
+                    // Marcador de posición actual (pulsante)
+                    const pulseIcon = L.divIcon({
+                        html: `<div style="width:16px;height:16px;border-radius:50%;background:#3b82f6;border:3px solid #fff;box-shadow:0 0 0 4px rgba(59,130,246,.4);animation:pulse 1.5s infinite;"></div>`,
+                        iconAnchor: [8, 8], className: ''
+                    });
+                    if (mapInstance._userMarker) mapInstance._userMarker.remove();
+                    mapInstance._userMarker = L.marker([lat, lon], { icon: pulseIcon })
+                        .addTo(mapInstance)
+                        .bindPopup('<b>📍 Estás aquí</b>');
+
+                    // Geocodificación inversa para rellenar el campo de ubicación
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            const a = data.address;
+                            const lugar = a.city || a.town || a.village || a.county || '';
+                            const estado = a.state || '';
+                            const ubicacion = lugar ? `${lugar}, ${estado}` : estado;
+                            mapInstance._userMarker.bindPopup(`<b>📍 Estás aquí</b><br>${ubicacion}`).openPopup();
+                            const inputUbi = document.getElementById('tUbicacion');
+                            if (inputUbi && inputUbi.value === '') inputUbi.value = ubicacion;
+                            if (onSuccess) onSuccess(lat, lon, ubicacion);
+                        })
+                        .catch(() => {
+                            mapInstance._userMarker.bindPopup('<b>📍 Tu ubicación actual</b>').openPopup();
+                        });
+
+                    if (btn) btn.style.color = '#16a34a';
+                },
+                () => {
+                    if (btn) btn.style.color = '#ef4444';
+                    setTimeout(() => { if (btn) btn.style.color = '#16a34a'; }, 2000);
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+
+        // Inyectar animación de pulso en el head (solo una vez)
+        if (!document.getElementById('pulse-style')) {
+            const s = document.createElement('style');
+            s.id = 'pulse-style';
+            s.textContent = '@keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(59,130,246,.4)}50%{box-shadow:0 0 0 8px rgba(59,130,246,.1)}}';
+            document.head.appendChild(s);
+        }
 
         const drawnItems = new L.FeatureGroup();
         map.addLayer(drawnItems);
@@ -262,39 +376,14 @@
                 const geoJsonData = JSON.parse(coordsData.replace(/&quot;/g, '"'));
                 const layer = L.geoJSON(geoJsonData, { style: { color: '#16a34a' } });
                 layer.eachLayer(l => drawnItems.addLayer(l));
-                map.fitBounds(drawnItems.getBounds());
+                map.fitBounds(drawnItems.getBounds(), { padding: [30, 30] });
                 updateDisplays();
             } catch(e) { console.error(e); }
+            // Siempre colocar marcador de ubicación actual (útil para editar)
+            centerOnUser(map);
         } else {
-            // Geolocalización
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => {
-                    const lat = pos.coords.latitude;
-                    const lon = pos.coords.longitude;
-                    map.setView([lat, lon], 16);
-                    
-                    const userMarker = L.marker([lat, lon]).addTo(map);
-                    userMarker.bindPopup("<b>Buscando tu ubicación...</b>").openPopup();
-                    
-                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
-                        .then(res => res.json())
-                        .then(data => {
-                            const city = data.address.city || data.address.town || data.address.village || data.address.county || "";
-                            const state = data.address.state || "";
-                            const ubicacion = city ? `${city}, ${state}` : state;
-                            
-                            userMarker.bindPopup(`<b>Estás aquí</b><br>${ubicacion}`).openPopup();
-                            
-                            const inputUbi = document.getElementById('tUbicacion');
-                            if(inputUbi && inputUbi.value === '') {
-                                inputUbi.value = ubicacion;
-                            }
-                        })
-                        .catch(() => {
-                            userMarker.bindPopup("<b>Tu ubicación actual</b>").openPopup();
-                        });
-                });
-            }
+            // Nueva finca: centrar en ubicación actual
+            centerOnUser(map);
         }
 
         const drawControl = new L.Control.Draw({
@@ -357,8 +446,12 @@
                     headers: { 'X-CSRFToken': getCookie('csrftoken') },
                     body: fd
                 }).then(r => r.json()).then(data => {
-                    if(data.mensaje) Swal.fire('¡Éxito!', data.mensaje, 'success').then(() => window.location.reload());
-                    else Swal.fire('Error', data.error, 'error');
+                    if(data.mensaje) {
+                        showToast('success', data.mensaje);
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        showToast('error', 'Error', data.error);
+                    }
                 });
             }
         });
@@ -392,8 +485,12 @@
                     headers: { 'X-CSRFToken': getCookie('csrftoken') },
                     body: fd
                 }).then(r => r.json()).then(data => {
-                    if(data.mensaje) Swal.fire('¡Éxito!', data.mensaje, 'success').then(() => window.location.reload());
-                    else Swal.fire('Error', data.error, 'error');
+                    if(data.mensaje) {
+                        showToast('success', data.mensaje);
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        showToast('error', 'Error', data.error);
+                    }
                 });
             }
         });
@@ -419,8 +516,12 @@
                     method: 'POST',
                     headers: { 'X-CSRFToken': getCookie('csrftoken') }
                 }).then(r => r.json()).then(data => {
-                    if(data.mensaje) Swal.fire('Eliminada', data.mensaje, 'success').then(() => window.location.reload());
-                    else Swal.fire('Error', data.error, 'error');
+                    if(data.mensaje) {
+                        showToast('success', data.mensaje);
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        showToast('error', 'Error', data.error);
+                    }
                 });
             }
         });

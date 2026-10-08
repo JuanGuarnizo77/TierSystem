@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}TierSystem - Agricultor{% endblock %}</title>
+    <title>{% block title %}TierSystem — Panel Agricultor{% endblock %}</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -25,10 +25,11 @@
         }
     </script>
     
-    <!-- FontAwesome -->
+    <!-- FontAwesome & Tabler Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
     
-    <!-- Custom CSS para Clean SaaS UI -->
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     
     <!-- SweetAlert2 -->
@@ -45,18 +46,18 @@
 
     {% block extra_css %}{% endblock %}
 </head>
-<body class="mesh-bg text-gray-800 dark:text-gray-200 h-screen flex overflow-hidden transition-colors duration-300">
+<body class="mesh-bg text-gray-800 dark:text-gray-200 h-screen flex overflow-hidden transition-colors duration-300 font-sans">
 
     <!-- Sidebar -->
-    <aside class="w-64 glass-panel flex flex-col z-20">
+    <aside class="w-64 glass-panel flex flex-col z-20 shrink-0">
         <!-- Logo -->
         <div class="h-20 flex items-center px-6 border-b border-gray-100 dark:border-gray-800">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-md">
-                    <i class="fa-solid fa-leaf text-xl"></i>
+                    <i class="fa-solid fa-seedling text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Tier<span class="text-primary">System</span></h1>
+                    <h1 class="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Tier<span class="text-emerald-600">System</span></h1>
                     <p class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-widest font-bold">Agricultor</p>
                 </div>
             </div>
@@ -64,7 +65,7 @@
 
         <!-- Navigation Links -->
         <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-            <p class="px-3 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Módulos</p>
+            <p class="px-3 text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Módulos del Sistema</p>
             
             <a href="{% url 'dashboard_agricultor' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-[#e8f5e9] hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary transition-all font-medium {% if request.resolver_match.url_name == 'dashboard_agricultor' %}menu-active{% endif %}">
                 <i class="fa-solid fa-house w-5 text-center"></i>
@@ -76,9 +77,22 @@
                 <span>Mis Fincas</span>
             </a>
             
-            <a href="{% url 'solicitudes_agricultor:mis_solicitudes' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-[#e8f5e9] hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary transition-all font-medium {% if 'solicitudes' in request.resolver_match.url_name %}menu-active{% endif %}">
+            <a href="{% url 'solicitudes_agricultor:mis_solicitudes' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-[#e8f5e9] hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary transition-all font-medium {% if request.resolver_match.url_name == 'mis_solicitudes' or request.resolver_match.url_name == 'crear_solicitud' %}menu-active{% endif %}">
                 <i class="fa-solid fa-flask w-5 text-center"></i>
                 <span>Solicitudes</span>
+                {% if solicitud_activa_sidebar %}
+                <span class="ml-auto w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                {% endif %}
+            </a>
+
+            <a href="{% url 'solicitudes_agricultor:historial' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-[#e8f5e9] hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary transition-all font-medium {% if request.resolver_match.url_name == 'historial' or request.resolver_match.url_name == 'resultado_detalle' %}menu-active{% endif %}">
+                <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+                <span>Resultados & Historial</span>
+            </a>
+
+            <a href="{% url 'solicitudes_agricultor:comparar_analisis' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-[#e8f5e9] hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary transition-all font-medium {% if request.resolver_match.url_name == 'comparar_analisis' %}menu-active{% endif %}">
+                <i class="fa-solid fa-code-compare w-5 text-center"></i>
+                <span>Comparar Análisis</span>
             </a>
             
             <a href="{% url 'catalogo_cultivos' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-[#e8f5e9] hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary transition-all font-medium {% if request.resolver_match.url_name == 'catalogo_cultivos' %}menu-active{% endif %}">
@@ -86,7 +100,7 @@
                 <span>Catálogo Cultivos</span>
             </a>
             
-            <a href="{% url 'mercado:precios_sipsa' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-[#e8f5e9] hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary transition-all font-medium {% if request.resolver_match.url_name == 'precios_sipsa' %}menu-active{% endif %}">
+            <a href="{% url 'mercado:precios_sipsa' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-[#e8f5e9] hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary transition-all font-medium {% if 'mercado' in request.resolver_match.url_name or request.resolver_match.url_name == 'precios_sipsa' %}menu-active{% endif %}">
                 <i class="fa-solid fa-chart-line w-5 text-center"></i>
                 <span>Mercado SIPSA</span>
             </a>
@@ -98,9 +112,9 @@
                 <i class="fa-solid fa-user-gear w-5 text-center"></i>
                 <span>Mi Perfil</span>
             </a>
-            <form action="{% url 'logout' %}" method="post">
+            <form id="logout-form" action="{% url 'logout' %}" method="post">
                 {% csrf_token %}
-                <button type="submit" class="flex items-center gap-3 px-3 py-2.5 w-full rounded-xl text-gray-600 dark:text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-all font-medium">
+                <button type="submit" onclick="confirmarLogout(event)" class="flex items-center gap-3 px-3 py-2.5 w-full rounded-xl text-gray-600 dark:text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-all font-medium">
                     <i class="fa-solid fa-right-from-bracket w-5 text-center"></i>
                     <span>Cerrar Sesión</span>
                 </button>
@@ -109,37 +123,40 @@
     </aside>
 
     <!-- Main Content Area -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative min-w-0">
         <!-- Topbar -->
-        <header class="h-20 glass-panel flex items-center justify-between px-8 z-10 sticky top-0 border-b border-gray-100 dark:border-gray-800">
-            <div>
-                <h2 class="text-xl font-bold text-gray-800 dark:text-white">{% block header_title %}Panel{% endblock %}</h2>
+        <header class="h-20 glass-panel flex items-center justify-between px-6 md:px-8 z-10 sticky top-0 border-b border-gray-100 dark:border-gray-800">
+            <div class="flex items-center gap-3">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-white font-heading">{% block header_title %}Panel{% endblock %}</h2>
+                <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Sistema Activo
+                </span>
             </div>
             
-            <div class="flex items-center gap-5">
+            <div class="flex items-center gap-4">
                 
                 <!-- Dark Mode Toggle Button -->
-                <button id="theme-toggle" type="button" class="text-gray-400 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full text-sm p-2 transition-colors">
+                <button id="theme-toggle" type="button" class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full text-sm p-2.5 transition-colors" title="Cambiar tema">
                     <i id="theme-toggle-dark-icon" class="fa-solid fa-moon hidden text-lg"></i>
                     <i id="theme-toggle-light-icon" class="fa-solid fa-sun hidden text-lg"></i>
                 </button>
 
-                <!-- Profile Dropdown -->
-                <div class="flex items-center gap-3 cursor-pointer">
+                <!-- Profile Badge -->
+                <a href="{% url 'perfil' %}" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
                     <div class="text-right hidden md:block">
-                        <p class="text-sm font-bold text-gray-800 dark:text-white">{{ request.user.get_full_name|default:request.user.username }}</p>
-                        <p class="text-xs text-gray-500 font-medium">Agricultor</p>
+                        <p class="text-sm font-bold text-gray-800 dark:text-white leading-tight">{{ request.user.get_full_name|default:request.user.username }}</p>
+                        <p class="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Agricultor</p>
                     </div>
-                    <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700">
-                        <i class="fa-solid fa-user text-sm"></i>
+                    <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm border border-emerald-200 dark:border-emerald-800">
+                        {{ request.user.username|slice:":2"|upper }}
                     </div>
-                </div>
+                </a>
             </div>
         </header>
 
         <!-- Scrollable Content -->
         <div class="flex-1 overflow-y-auto p-4 md:p-8">
-            <div class="max-w-7xl mx-auto">
+            <div class="max-w-7xl mx-auto pb-12">
                 {% block content %}
                 {% endblock %}
             </div>
@@ -151,7 +168,6 @@
         var themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
         var themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
 
-        // Change the icons inside the button based on previous settings
         if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             themeToggleLightIcon.classList.remove('hidden');
         } else {
@@ -161,12 +177,9 @@
         var themeToggleBtn = document.getElementById('theme-toggle');
 
         themeToggleBtn.addEventListener('click', function() {
-
-            // toggle icons inside button
             themeToggleDarkIcon.classList.toggle('hidden');
             themeToggleLightIcon.classList.toggle('hidden');
 
-            // if set via local storage previously
             if (localStorage.getItem('color-theme')) {
                 if (localStorage.getItem('color-theme') === 'light') {
                     document.documentElement.classList.add('dark');
@@ -185,6 +198,25 @@
                 }
             }
         });
+    </script>
+    <script>
+        function confirmarLogout(e) {
+            e.preventDefault();
+            Swal.fire({
+                title: '\u00bfCerrar sesi\u00f3n?',
+                text: 'Se cerrar\u00e1 tu sesi\u00f3n actual.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'S\u00ed, salir',
+                cancelButtonText: 'Cancelar',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('logout-form').submit();
+                }
+            });
+        }
     </script>
     {% block extra_js %}{% endblock %}
 </body>
