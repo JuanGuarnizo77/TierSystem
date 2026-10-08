@@ -79,9 +79,13 @@ def dashboard_admin(request):
 def lista_usuarios(request):
     if hasattr(request.user, 'perfil') and request.user.perfil.rol == 'ADMIN':
         from django.contrib.auth.models import User
+        from django.db.models import Count
         
         agricultores = User.objects.filter(perfil__rol='AGRICULTOR').select_related('perfil').order_by('-date_joined')
-        laboratoristas = User.objects.filter(perfil__rol='LABORATORISTA').select_related('perfil').order_by('-date_joined')
+        laboratoristas = User.objects.filter(perfil__rol='LABORATORISTA').select_related('perfil').annotate(
+            solicitudes_atendidas=Count('solicitudes_asignadas', distinct=True),
+            analisis_finalizados=Count('solicitudes_asignadas__analisis_resultado', distinct=True)
+        ).order_by('-date_joined')
         
         return render(request, 'admin/usuarios.html', {
             'agricultores': agricultores,
@@ -97,7 +101,7 @@ def crear_laboratorista(request):
         
     if request.method == 'POST':
         from django.contrib.auth.models import User
-        from apps.usuarios.models import PerfilUsuario
+        from apps.usuarios.models import Perfil
         from django.http import JsonResponse
         import json
         
@@ -119,9 +123,13 @@ def crear_laboratorista(request):
                 first_name=first_name,
                 last_name=last_name
             )
-            user.is_active = False
+            # Se agrega activo por defecto según la solicitud
+            user.is_active = True
             user.save()
-            PerfilUsuario.objects.create(user=user, rol='LABORATORISTA')
+            
+            # El signal 'crear_perfil_usuario' ya creó el Perfil por defecto, lo actualizamos.
+            user.perfil.rol = 'LABORATORISTA'
+            user.perfil.save()
             
             return JsonResponse({'mensaje': 'Laboratorista creado exitosamente'})
         except Exception as e:
@@ -441,3 +449,70 @@ def eliminar_cultivo_admin(request, cultivo_id):
             
     from django.http import JsonResponse
     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+@login_required(login_url='login')
+def estado_hardware(request):
+    if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'ADMIN':
+        return redirect('home')
+        
+    from apps.sensores.models import LecturaSensor
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    ultima_lectura = LecturaSensor.objects.order_by('-timestamp').first()
+    
+    estado_conexion = 'Inactivo'
+    bateria = 85.0 # Mock de batería del sistema solar
+    
+    if ultima_lectura:
+        tiempo_limite = timezone.now() - timedelta(minutes=15)
+        if ultima_lectura.timestamp >= tiempo_limite:
+            estado_conexion = 'Activo'
+            
+    context = {
+        'ultima_lectura': ultima_lectura,
+        'estado_conexion': estado_conexion,
+        'bateria': bateria,
+    }
+    return render(request, 'admin/hardware.html', context)
+
+@login_required(login_url='login')
+def configuracion_global_view(request):
+    if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'ADMIN':
+        return redirect('home')
+        
+    from apps.ia_recomendaciones.models import ConfiguracionGlobal
+    import json
+    from django.http import JsonResponse
+    
+    config = ConfiguracionGlobal.load()
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            # IA
+            config.tiempo_espera_ia = data.get('tiempo_espera_ia', config.tiempo_espera_ia)
+            config.accion_fallo_ia = data.get('accion_fallo_ia', config.accion_fallo_ia)
+            
+            # Rangos
+            config.rango_ph_min = data.get('rango_ph_min', config.rango_ph_min)
+            config.rango_ph_max = data.get('rango_ph_max', config.rango_ph_max)
+            config.rango_n_min = data.get('rango_n_min', config.rango_n_min)
+            config.rango_n_max = data.get('rango_n_max', config.rango_n_max)
+            config.rango_p_min = data.get('rango_p_min', config.rango_p_min)
+            config.rango_p_max = data.get('rango_p_max', config.rango_p_max)
+            config.rango_k_min = data.get('rango_k_min', config.rango_k_min)
+            config.rango_k_max = data.get('rango_k_max', config.rango_k_max)
+            config.rango_humedad_min = data.get('rango_humedad_min', config.rango_humedad_min)
+            config.rango_humedad_max = data.get('rango_humedad_max', config.rango_humedad_max)
+            config.rango_ce_min = data.get('rango_ce_min', config.rango_ce_min)
+            config.rango_ce_max = data.get('rango_ce_max', config.rango_ce_max)
+            config.rango_temp_min = data.get('rango_temp_min', config.rango_temp_min)
+            config.rango_temp_max = data.get('rango_temp_max', config.rango_temp_max)
+            
+            config.save()
+            return JsonResponse({'mensaje': 'Configuración guardada exitosamente'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+            
+    return render(request, 'admin/configuracion.html', {'config': config})

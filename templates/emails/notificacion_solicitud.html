@@ -41,10 +41,22 @@
         }
         .status-box {
             background-color: #f8fafc;
-            border-left: 4px solid {% if estado == 'ASIGNADA' %}#3b82f6{% else %}#ef4444{% endif %};
+            border-left: 4px solid transparent;
             padding: 20px;
             border-radius: 0 8px 8px 0;
             margin: 25px 0;
+        }
+        .status-box.asignada {
+            border-left-color: #3b82f6;
+        }
+        .status-box.rechazada {
+            border-left-color: #ef4444;
+        }
+        .text-asignada {
+            color: #3b82f6;
+        }
+        .text-rechazada {
+            color: #ef4444;
         }
         .status-box h2 {
             margin: 0 0 10px 0;
@@ -101,8 +113,8 @@
             <p>Hola <strong>{{ nombre_agricultor }}</strong>,</p>
             <p>Queremos informarte que ha habido una actualización en tu solicitud de análisis de suelo para la finca <strong>"{{ nombre_finca }}"</strong>.</p>
             
-            <div class="status-box">
-                <h2>Estado de tu Solicitud: <span style="color: {% if estado == 'ASIGNADA' %}#3b82f6{% else %}#ef4444{% endif %}">
+            <div class="status-box {% if estado == 'ASIGNADA' %}asignada{% else %}rechazada{% endif %}">
+                <h2>Estado de tu Solicitud: <span class="{% if estado == 'ASIGNADA' %}text-asignada{% else %}text-rechazada{% endif %}">
                     {% if estado == 'ASIGNADA' %}Aceptada y Asignada{% else %}Rechazada{% endif %}
                 </span></h2>
                 

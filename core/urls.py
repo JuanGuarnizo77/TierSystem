@@ -23,4 +23,10 @@ urlpatterns = [
     path('administrador/cultivos/', views.gestion_cultivos_admin, name='gestion_cultivos_admin'),
     path('administrador/cultivos/guardar/', views.guardar_cultivo_admin, name='guardar_cultivo_admin'),
     path('administrador/cultivos/<int:cultivo_id>/eliminar/', views.eliminar_cultivo_admin, name='eliminar_cultivo_admin'),
+    
+    # Hardware (Sensores)
+    path('administrador/hardware/', views.estado_hardware, name='estado_hardware'),
+    
+    # Configuración Global (IA y Sensores)
+    path('administrador/configuracion/', views.configuracion_global_view, name='configuracion_global'),
 ]

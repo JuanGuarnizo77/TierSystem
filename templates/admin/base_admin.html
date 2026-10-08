@@ -85,11 +85,20 @@
                 <span>Base de Datos Cultivos</span>
             </a>
             
+            <a href="{% url 'estado_hardware' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-[#e8f5e9] hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary transition-all font-medium {% if request.resolver_match.url_name == 'estado_hardware' %}menu-active{% endif %}">
+                <i class="fa-solid fa-microchip w-5 text-center"></i>
+                <span>Estado Hardware</span>
+            </a>
+            
             <a href="{% url 'lista_usuarios' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-[#e8f5e9] hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary transition-all font-medium {% if 'usuarios' in request.resolver_match.url_name %}menu-active{% endif %}">
                 <i class="fa-solid fa-users w-5 text-center"></i>
                 <span>Usuarios</span>
             </a>
             
+            <a href="{% url 'configuracion_global' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-[#e8f5e9] hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary transition-all font-medium {% if 'configuracion' in request.resolver_match.url_name %}menu-active{% endif %}">
+                <i class="fa-solid fa-sliders w-5 text-center"></i>
+                <span>Configuración Global</span>
+            </a>
 
         </nav>
 
