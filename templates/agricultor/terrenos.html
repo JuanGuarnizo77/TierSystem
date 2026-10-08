@@ -86,6 +86,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
 <script>
+    const URL_BASE_EDITAR_TERRENO = "{% url 'terrenos:editar_terreno' 0 %}".replace('/0/', '/');
+    const URL_BASE_ELIMINAR_TERRENO = "{% url 'terrenos:eliminar_terreno' 0 %}".replace('/0/', '/');
+
     function showToast(icon, title, text = '') {
         Swal.fire({
             toast: true,
@@ -480,7 +483,7 @@
                 fd.append('cultivo', result.value.cultivo);
                 fd.append('coordenadas_poligono', result.value.coordenadas_poligono);
                 
-                fetch(`/agricultor/fincas/editar/${id}/`, {
+                fetch(`${URL_BASE_EDITAR_TERRENO}${id}/`, {
                     method: 'POST',
                     headers: { 'X-CSRFToken': getCookie('csrftoken') },
                     body: fd
@@ -512,7 +515,7 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 Swal.fire({ title: 'Eliminando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                fetch(`/agricultor/fincas/eliminar/${id}/`, {
+                fetch(`${URL_BASE_ELIMINAR_TERRENO}${id}/`, {
                     method: 'POST',
                     headers: { 'X-CSRFToken': getCookie('csrftoken') }
                 }).then(r => r.json()).then(data => {

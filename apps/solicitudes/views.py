@@ -432,10 +432,13 @@ def historial_analisis_agricultor(request):
                 'color': eval_data['color_compatibilidad'],
                 'nivel': eval_data['nivel_compatibilidad']
             })
-            
+
+    omitidas = sum(1 for s in solicitudes if not hasattr(s, 'analisis_resultado'))
+
     return render(request, 'agricultor/historial.html', {
         'historial_lista': historial_lista,
-        'total_analisis': len(historial_lista)
+        'total_analisis': len(historial_lista),
+        'solicitudes_sin_analisis': omitidas
     })
 
 @login_required(login_url='login')

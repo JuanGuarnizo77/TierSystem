@@ -144,6 +144,8 @@
 
 {% block extra_js %}
 <script>
+    const URL_BASE_CANCELAR = "{% url 'solicitudes_agricultor:cancelar_solicitud' 0 %}".replace('/0/', '/');
+
     function showToast(icon, title, text = '') {
         Swal.fire({
             toast: true,
@@ -280,7 +282,7 @@
             cancelButtonText: 'No, mantener'
         }).then((result) => {
             if (result.isConfirmed) {
-                fetch(`/agricultor/solicitudes/cancelar/${id}/`, {
+                fetch(`${URL_BASE_CANCELAR}${id}/`, {
                     method: 'POST',
                     headers: { 'X-CSRFToken': getCookie('csrftoken') }
                 })
