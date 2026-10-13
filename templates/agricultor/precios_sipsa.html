@@ -1,118 +1,388 @@
 {% extends 'agricultor/base_dashboard.html' %}
 
-{% block title %}Precios Oficiales SIPSA - TierSystem{% endblock %}
-{% block header_title %}Mercado Mayorista (SIPSA){% endblock %}
+{% block title %}Mercado Mayorista SIPSA — TierSystem{% endblock %}
+{% block header_title %}Mercado Mayorista SIPSA{% endblock %}
 
 {% block content %}
-<div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+
+{# ── HEADER ────────────────────────────────────────────────────── #}
+<div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
     <div>
-        <h2 class="text-3xl font-bold text-gray-900 dark:text-white font-heading">Precios Oficiales DANE / SIPSA</h2>
-        <p class="text-gray-500 dark:text-gray-400 mt-1">Conoce a cómo se están comprando tus cultivos en las principales plazas de mercado.</p>
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white font-heading flex items-center gap-3">
+            <span class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-md shrink-0">
+                <i class="fa-solid fa-chart-line text-lg"></i>
+            </span>
+            Mercado Mayorista SIPSA
+        </h2>
+        <p class="text-gray-500 dark:text-gray-400 mt-1 ml-13">
+            Precios oficiales DANE/SIPSA para las principales plazas del Huila —
+            última actualización:
+            <span class="font-semibold text-gray-700 dark:text-gray-300">
+                {{ ultima_actualizacion_global|default:fecha_hoy }}
+            </span>
+        </p>
     </div>
-    
-    <!-- Estado de conexión -->
-    <div class="flex items-center gap-3 bg-white dark:bg-gray-800 px-4 py-2.5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+
+    <div class="flex items-center gap-3 flex-wrap">
+        {# Badge de estado #}
         {% if estado_conexion == 'online' %}
-            <span class="relative flex h-3 w-3">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-green-50 dark:bg-green-950/50 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
+                <span class="relative flex h-2.5 w-2.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                </span>
+                Actualizado (≤24 h)
             </span>
-            <div class="text-sm">
-                <span class="font-bold text-green-700 dark:text-green-400">ONLINE</span>
-            </div>
+        {% elif estado_conexion == 'reciente' %}
+            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-yellow-50 dark:bg-yellow-950/50 text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800">
+                <span class="relative flex h-2.5 w-2.5">
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500"></span>
+                </span>
+                Reciente (24–72 h)
+            </span>
         {% else %}
-            <span class="relative flex h-3 w-3">
-              <span class="relative inline-flex rounded-full h-3 w-3 bg-yellow-500"></span>
+            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800">
+                <span class="relative flex h-2.5 w-2.5">
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                </span>
+                Desactualizado
             </span>
-            <div class="text-sm">
-                <span class="font-bold text-yellow-600 dark:text-yellow-400">OFFLINE (Datos Caché)</span>
-            </div>
         {% endif %}
+
+        {# Botón Actualizar Precios #}
+        <button id="btn-actualizar"
+                onclick="actualizarPrecios()"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-secondary transition-colors shadow-sm disabled:opacity-60">
+            <i id="icon-actualizar" class="fa-solid fa-rotate-right"></i>
+            <span id="label-actualizar">Actualizar Precios</span>
+        </button>
     </div>
 </div>
 
-{% if estado_conexion == 'offline' %}
-<div class="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-xl">
-    <div class="flex">
-        <div class="flex-shrink-0">
-            <i class="fa-solid fa-triangle-exclamation text-yellow-500 dark:text-yellow-400"></i>
-        </div>
-        <div class="ml-3">
-            <p class="text-sm text-yellow-800 dark:text-yellow-200">
-                {{ mensaje_conexion }}
-            </p>
-        </div>
-    </div>
-</div>
-{% endif %}
-
+{# ── TABLA PRINCIPAL ───────────────────────────────────────────── #}
 <div class="bento-card overflow-hidden">
-    <div class="p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-between items-center">
-        <h3 class="font-bold text-gray-800 dark:text-white"><i class="fa-solid fa-list text-primary mr-2"></i> Listado de Precios</h3>
-        <span class="text-xs text-gray-600 dark:text-gray-300 font-medium bg-gray-200 dark:bg-gray-700 px-3 py-1 rounded-lg">Última actualización: Hoy</span>
+    <div class="p-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-between items-center">
+        <h3 class="font-bold text-gray-800 dark:text-white text-sm uppercase tracking-wide">
+            <i class="fa-solid fa-list text-primary mr-2"></i> Listado de Precios ({{ precios_tabla|length }} cultivos)
+        </h3>
+        <span class="text-xs text-gray-500 dark:text-gray-400">Haz clic en una fila para ver detalle</span>
     </div>
-    
+
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+        <table class="w-full text-left border-collapse text-sm">
             <thead>
-                <tr class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
-                    <th class="p-4 font-semibold">Cultivo / Producto</th>
+                <tr class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+                    <th class="p-4 font-semibold">Cultivo</th>
                     <th class="p-4 font-semibold">Precio Promedio</th>
+                    <th class="p-4 font-semibold">Precio Local</th>
+                    <th class="p-4 font-semibold">Unidad</th>
                     <th class="p-4 font-semibold">Tendencia</th>
-                    <th class="p-4 font-semibold">Mercado Destino</th>
+                    <th class="p-4 font-semibold">Variación %</th>
+                    <th class="p-4 font-semibold">Fuente</th>
+                    <th class="p-4 font-semibold">Actualizado</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-50 dark:divide-gray-800 text-sm">
-                {% for item in precios %}
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+            <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
+
+                {% for item in precios_tabla %}
+
+                {# ── Fila principal ── #}
+                <tr class="hover:bg-emerald-50/40 dark:hover:bg-primary/10 transition-colors cursor-pointer select-none"
+                    onclick="toggleDetalle('{{ item.cultivo|slugify }}')"
+                    title="Ver detalle de {{ item.cultivo }}">
+
+                    {# Cultivo #}
                     <td class="p-4">
-                        <div class="font-bold text-gray-900 dark:text-white">{{ item.cultivo }}</div>
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-chevron-right text-gray-300 dark:text-gray-600 text-xs transition-transform duration-200" id="chevron-{{ item.cultivo|slugify }}"></i>
+                            <span class="font-bold text-gray-900 dark:text-white">{{ item.cultivo }}</span>
+                        </div>
                     </td>
-                    <td class="p-4 font-mono font-medium text-gray-700 dark:text-gray-300">
-                        {{ item.precio }}
+
+                    {# Precio Promedio #}
+                    <td class="p-4 font-mono font-semibold text-gray-800 dark:text-gray-200">
+                        ${{ item.precio_promedio|floatformat:0 }} <span class="text-gray-400 font-normal text-xs">/ {{ item.unidad }}</span>
                     </td>
+
+                    {# Precio Local #}
+                    <td class="p-4 font-mono text-gray-600 dark:text-gray-400">
+                        ${{ item.precio_local|floatformat:0 }}
+                    </td>
+
+                    {# Unidad #}
+                    <td class="p-4 text-gray-500 dark:text-gray-400 text-xs">{{ item.unidad }}</td>
+
+                    {# Tendencia #}
                     <td class="p-4">
                         {% if item.tendencia == 'Alza' %}
-                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-800">
-                                <i class="fa-solid fa-arrow-trend-up"></i> Sube
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-800">
+                                <i class="fa-solid fa-arrow-trend-up"></i> Alza
                             </span>
                         {% elif item.tendencia == 'Baja' %}
-                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-800">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-800">
                                 <i class="fa-solid fa-arrow-trend-down"></i> Baja
                             </span>
                         {% else %}
-                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
                                 <i class="fa-solid fa-minus"></i> Estable
                             </span>
                         {% endif %}
                     </td>
-                    <td class="p-4 text-sm text-gray-600 dark:text-gray-400">
-                        <i class="fa-solid fa-location-dot text-gray-400 dark:text-gray-500 mr-1"></i> {{ item.mercado }}
+
+                    {# Variación % #}
+                    <td class="p-4 font-mono font-semibold
+                        {% if item.variacion_porcentaje > 0 %}text-green-600 dark:text-green-400
+                        {% elif item.variacion_porcentaje < 0 %}text-red-600 dark:text-red-400
+                        {% else %}text-gray-500 dark:text-gray-400{% endif %}">
+                        {% if item.variacion_porcentaje > 0 %}+{% endif %}{{ item.variacion_porcentaje|floatformat:1 }}%
+                    </td>
+
+                    {# Fuente #}
+                    <td class="p-4 text-xs text-gray-500 dark:text-gray-400 max-w-[160px]">
+                        <span title="{{ item.fuente }}">{{ item.fuente|truncatechars:30 }}</span>
+                    </td>
+
+                    {# Indicador de frescura #}
+                    <td class="p-4">
+                        {% if item.dias_desde_actualizacion == None %}
+                            <span class="inline-flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+                                <span class="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600 shrink-0"></span>
+                                Referencia
+                            </span>
+                        {% elif item.dias_desde_actualizacion <= 1 %}
+                            <span class="inline-flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 font-medium">
+                                <span class="w-2 h-2 rounded-full bg-green-500 shrink-0 animate-pulse"></span>
+                                Hoy
+                            </span>
+                        {% elif item.dias_desde_actualizacion <= 7 %}
+                            <span class="inline-flex items-center gap-1.5 text-xs text-yellow-600 dark:text-yellow-400 font-medium">
+                                <span class="w-2 h-2 rounded-full bg-yellow-500 shrink-0"></span>
+                                Esta semana
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-1.5 text-xs text-red-500 dark:text-red-400">
+                                <span class="w-2 h-2 rounded-full bg-red-400 shrink-0"></span>
+                                {{ item.ultima_actualizacion }}
+                            </span>
+                        {% endif %}
                     </td>
                 </tr>
+
+                {# ── Panel expandible ── #}
+                <tr id="detalle-{{ item.cultivo|slugify }}" class="hidden">
+                    <td colspan="8" class="p-0 border-b border-gray-100 dark:border-gray-700">
+                        <div class="bg-gray-50 dark:bg-gray-800/60 px-6 py-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                            {# Historial en barras CSS #}
+                            <div>
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">
+                                    <i class="fa-solid fa-chart-column text-primary mr-1"></i> Historial de precios
+                                </h4>
+                                {% if item.historial %}
+                                    {% with max_h=item.historial|last %}
+                                    <div class="flex items-end gap-2 h-28">
+                                        {% for h in item.historial %}
+                                            {% widthratio h.precio item.precio_promedio 85 as bar_pct %}
+                                            <div class="flex flex-col items-center gap-1 flex-1 min-w-0">
+                                                <span class="text-[9px] text-gray-400 dark:text-gray-500 font-mono leading-none">${{ h.precio|floatformat:0 }}</span>
+                                                <div class="w-full rounded-t bg-primary/70 dark:bg-primary/80 hover:bg-primary transition-colors"
+                                                     style="height: {% if bar_pct < 20 %}20{% else %}{{ bar_pct }}{% endif %}%"
+                                                     title="{{ h.mes }}: ${{ h.precio|floatformat:0 }}">
+                                                </div>
+                                                <span class="text-[9px] text-gray-400 dark:text-gray-500 leading-none">{{ h.mes }}</span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endwith %}
+                                {% else %}
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 italic">Sin historial disponible.</p>
+                                {% endif %}
+                            </div>
+
+                            {# Lista de compradores con contactos #}
+                            <div>
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">
+                                    <i class="fa-solid fa-handshake text-primary mr-1"></i> Compradores / Contactos
+                                </h4>
+                                {% if item.compradores %}
+                                    <div class="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+                                        {% for c in item.compradores %}
+                                        <div class="bg-white dark:bg-gray-700/60 rounded-lg px-3 py-2.5 border border-gray-100 dark:border-gray-600 text-xs">
+                                            <div class="flex items-start justify-between gap-2">
+                                                <div>
+                                                    <p class="font-semibold text-gray-800 dark:text-white leading-snug">{{ c.nombre }}</p>
+                                                    <p class="text-gray-400 dark:text-gray-400 mt-0.5">{{ c.tipo }} — {{ c.municipio }}</p>
+                                                </div>
+                                                {% if c.precio %}
+                                                    <span class="font-mono font-bold text-primary dark:text-accent text-xs whitespace-nowrap shrink-0">{{ c.precio }}</span>
+                                                {% endif %}
+                                            </div>
+
+                                            {# Botones de contacto #}
+                                            <div class="flex flex-wrap gap-1.5 mt-2">
+
+                                                {# Teléfono #}
+                                                {% if c.contacto %}
+                                                <a href="tel:{{ c.contacto|cut:' ' }}"
+                                                   class="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
+                                                   title="Llamar">
+                                                    <i class="fa-solid fa-phone text-[10px]"></i>
+                                                    <span>{{ c.contacto }}</span>
+                                                </a>
+                                                {% endif %}
+
+                                                {# WhatsApp #}
+                                                {% if c.whatsapp %}
+                                                <a href="https://wa.me/57{{ c.whatsapp|cut:' ' }}"
+                                                   target="_blank" rel="noopener noreferrer"
+                                                   class="inline-flex items-center gap-1 px-2 py-1 rounded bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/60 transition-colors"
+                                                   title="WhatsApp">
+                                                    <i class="fa-brands fa-whatsapp text-[11px]"></i>
+                                                    <span>WhatsApp</span>
+                                                </a>
+                                                {% endif %}
+
+                                                {# Email #}
+                                                {% if c.email %}
+                                                <a href="mailto:{{ c.email }}"
+                                                   class="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors"
+                                                   title="Enviar correo">
+                                                    <i class="fa-solid fa-envelope text-[10px]"></i>
+                                                    <span>{{ c.email }}</span>
+                                                </a>
+                                                {% endif %}
+
+                                                {# Sitio web #}
+                                                {% if c.sitio_web %}
+                                                <a href="{{ c.sitio_web }}"
+                                                   target="_blank" rel="noopener noreferrer"
+                                                   class="inline-flex items-center gap-1 px-2 py-1 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 hover:bg-purple-200 dark:hover:bg-purple-900/60 transition-colors"
+                                                   title="Sitio web">
+                                                    <i class="fa-solid fa-globe text-[10px]"></i>
+                                                    <span>Sitio web</span>
+                                                </a>
+                                                {% endif %}
+
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 italic">No hay compradores registrados para este cultivo.</p>
+                                {% endif %}
+                            </div>
+
+                        </div>
+                    </td>
+                </tr>
+
                 {% empty %}
                 <tr>
-                    <td colspan="4" class="p-8 text-center text-gray-500 dark:text-gray-400">
+                    <td colspan="8" class="p-10 text-center text-gray-400 dark:text-gray-500">
+                        <i class="fa-solid fa-circle-info text-2xl mb-2 block"></i>
                         No se encontraron datos de precios en este momento.
                     </td>
                 </tr>
                 {% endfor %}
+
             </tbody>
         </table>
     </div>
 </div>
 
-<div class="mt-8 rounded-xl p-6 border border-gray-100 dark:border-gray-800 border-l-4 border-l-blue-500 shadow-sm flex flex-col md:flex-row gap-6 items-center">
-    <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/40 rounded-full flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-800">
-        <i class="fa-solid fa-lightbulb text-2xl text-blue-600 dark:text-blue-400"></i>
+{# ── FOOTER FUENTES ────────────────────────────────────────────── #}
+<div class="mt-6 rounded-xl p-5 border border-gray-100 dark:border-gray-800 border-l-4 border-l-primary shadow-sm flex flex-col md:flex-row gap-4 items-start md:items-center">
+    <div class="w-10 h-10 bg-emerald-50 dark:bg-primary/30 rounded-full flex items-center justify-center shrink-0 border border-emerald-200 dark:border-primary/50">
+        <i class="fa-solid fa-database text-primary dark:text-accent text-sm"></i>
     </div>
-    <div>
-        <h4 class="font-bold text-gray-900 dark:text-white mb-1 font-heading">¿Cómo usar esta información?</h4>
-        <p class="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-            Compara estos precios oficiales del SIPSA (Sistema de Información de Precios y Abastecimiento del Sector Agropecuario) 
-            con los que te ofrecen los compradores locales. Si la tendencia es <strong class="text-red-500">Alza (Sube)</strong>, podrías considerar 
-            esperar un poco para vender tu cosecha a mejor precio.
-        </p>
+    <div class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+        Fuentes: FNC, Fedecacao/Agronet, SIPSA/DANE —
+        <span class="font-semibold text-gray-700 dark:text-gray-300">Actualizado:</span> {{ fecha_hoy }}
+        <span class="mx-2 text-gray-300 dark:text-gray-600">|</span>
+        Los precios son de referencia para plazas mayoristas del Huila. Verifique con cada comprador antes de negociar.
     </div>
 </div>
+
+{# ── SCRIPTS ───────────────────────────────────────────────────── #}
+<script>
+    // Expandir / colapsar fila de detalle
+    function toggleDetalle(slug) {
+        const row = document.getElementById('detalle-' + slug);
+        const chevron = document.getElementById('chevron-' + slug);
+        if (!row) return;
+        const isHidden = row.classList.contains('hidden');
+        row.classList.toggle('hidden', !isHidden);
+        if (chevron) {
+            chevron.classList.toggle('rotate-90', isHidden);
+        }
+    }
+
+    // Leer cookie CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Botón Actualizar Precios
+    async function actualizarPrecios() {
+        const btn = document.getElementById('btn-actualizar');
+        const icon = document.getElementById('icon-actualizar');
+        const label = document.getElementById('label-actualizar');
+
+        btn.disabled = true;
+        icon.classList.add('fa-spin');
+        label.textContent = 'Actualizando…';
+
+        try {
+            const resp = await fetch("{% url 'mercado:actualizar_precios' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                },
+            });
+            const data = await resp.json();
+
+            if (resp.ok && data.status === 'ok') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Precios actualizados',
+                    text: 'Los precios se actualizaron correctamente.',
+                    confirmButtonColor: '#0a4d3c',
+                    timer: 2500,
+                    timerProgressBar: true,
+                }).then(() => location.reload());
+            } else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Actualización parcial',
+                    text: data.message || 'Se aplicaron precios de referencia (APIs no disponibles).',
+                    confirmButtonColor: '#0a4d3c',
+                }).then(() => location.reload());
+            }
+        } catch (err) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de conexión',
+                text: 'No se pudo conectar. Intenta de nuevo.',
+                confirmButtonColor: '#0a4d3c',
+            });
+        } finally {
+            btn.disabled = false;
+            icon.classList.remove('fa-spin');
+            label.textContent = 'Actualizar Precios';
+        }
+    }
+</script>
+
 {% endblock %}
