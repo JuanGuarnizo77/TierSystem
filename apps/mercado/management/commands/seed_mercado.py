@@ -99,4 +99,23 @@ class Command(BaseCommand):
             )
         )
 
+        # ---- Actualizar contactos específicos ----
+        cadefi_updated = Comprador.objects.filter(nombre__icontains='CADEFIHUILA').update(
+            email='info@cadefihuila.com',
+            whatsapp='3105554321',
+            sitio_web='https://cadefihuila.com',
+        )
+        self.stdout.write(
+            self.style.SUCCESS(f'  Contactos CADEFIHUILA actualizados: {cadefi_updated} registro(s)')
+        )
+
+        surabastos_updated = Comprador.objects.filter(nombre__icontains='Surabastos').update(
+            email='comercial@surabastos.com.co',
+            whatsapp='3187891234',
+            sitio_web='https://surabastos.com.co',
+        )
+        self.stdout.write(
+            self.style.SUCCESS(f'  Contactos Surabastos actualizados: {surabastos_updated} registro(s)')
+        )
+
         self.stdout.write(self.style.SUCCESS('\n=== seed_mercado: completado ==='))

@@ -1,12 +1,13 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.core.cache import cache
-import requests
-import json
-from datetime import datetime
+from django.utils import timezone
+from datetime import datetime, timedelta
+from io import StringIO
 
-from .models import PrecioMercado, Comprador
+from django.core.management import call_command
+
+from .models import PrecioMercado, Comprador, ProductoMercado
 
 # Catálogo base de precios de referencia regional Huila (SIPSA/DANE)
 DATOS_MERCADO_HUILA = {
@@ -194,13 +195,23 @@ DATOS_MERCADO_HUILA = {
 }
 
 
+def _normalizar_tendencia(valor):
+    mapping = {
+        'sube': 'Alza',
+        'alza': 'Alza',
+        'baja': 'Baja',
+        'estable': 'Estable',
+    }
+    return mapping.get(str(valor or '').strip().lower(), valor or 'Estable')
+
+
 def _build_datos_cultivo_from_db(pm):
     """Convierte un objeto PrecioMercado en el formato de dict usado por las vistas."""
     return {
         "precio_promedio": float(pm.precio_promedio),
         "precio_local": float(pm.precio_local) if pm.precio_local is not None else float(pm.precio_promedio),
         "unidad": pm.unidad,
-        "tendencia": pm.tendencia,
+        "tendencia": _normalizar_tendencia(pm.tendencia),
         "variacion": f"{pm.variacion_porcentaje:+.0f}%",
         "fuente": pm.fuente,
         # El modelo PrecioMercado no almacena historial mensual, usamos el fallback si existe
@@ -214,14 +225,8 @@ def _build_datos_cultivo_from_db(pm):
 
 def _get_compradores_for_cultivo(cultivo_key):
     """Devuelve la lista de compradores (dict) para un cultivo dado, preferiendo BD."""
-    if Comprador.objects.filter(activo=True).exists():
-        qs = Comprador.objects.filter(
-            activo=True,
-            cultivos_interes__icontains=cultivo_key
-        )
-        if not qs.exists():
-            # Si ninguno tiene ese cultivo específico, devuelve todos los activos
-            qs = Comprador.objects.filter(activo=True)
+    qs = Comprador.objects.filter(activo=True, cultivos_interes__icontains=cultivo_key)
+    if qs.exists():
         compradores = []
         for c in qs:
             compradores.append({
@@ -230,10 +235,53 @@ def _get_compradores_for_cultivo(cultivo_key):
                 "municipio": c.municipio,
                 "contacto": c.contacto,
                 "precio": c.precio_referencia or "",
+                "email": c.email,
+                "whatsapp": c.whatsapp,
+                "sitio_web": c.sitio_web,
             })
         return compradores
-    # Fallback: compradores del dict estático
     return DATOS_MERCADO_HUILA.get(cultivo_key, {}).get("compradores", [])
+
+
+def _resolver_cultivo_key(nombre):
+    solicitado = (nombre or 'Maíz').strip() or 'Maíz'
+    cultivo_key = "Maíz"
+    for k in DATOS_MERCADO_HUILA.keys():
+        if k.lower() in solicitado.lower() or solicitado.lower() in k.lower():
+            cultivo_key = k
+            break
+    return cultivo_key
+
+
+def _datos_cultivo(cultivo_key):
+    if PrecioMercado.objects.exists():
+        pm = PrecioMercado.objects.filter(cultivo_nombre=cultivo_key).first()
+        if pm is None:
+            pm = PrecioMercado.objects.filter(cultivo_nombre__icontains=cultivo_key).first()
+        if pm is not None:
+            return _build_datos_cultivo_from_db(pm)
+    return DATOS_MERCADO_HUILA.get(cultivo_key, DATOS_MERCADO_HUILA["Maíz"])
+
+
+def _listado_precios_tabla():
+    precios = []
+    if PrecioMercado.objects.exists():
+        for pm in PrecioMercado.objects.order_by('cultivo_nombre'):
+            precios.append({
+                "cultivo": pm.cultivo_nombre,
+                "precio": f"${float(pm.precio_promedio):,.0f} / {pm.unidad}",
+                "tendencia": _normalizar_tendencia(pm.tendencia),
+                "mercado": pm.region or "Huila",
+            })
+        return precios
+    for nombre, datos in DATOS_MERCADO_HUILA.items():
+        precios.append({
+            "cultivo": nombre,
+            "precio": f"${datos['precio_promedio']:,.0f} / {datos['unidad']}",
+            "tendencia": datos.get("tendencia", "Estable"),
+            "mercado": "Huila",
+        })
+    return precios
 
 
 @login_required(login_url='login')
@@ -241,77 +289,112 @@ def precios_sipsa(request):
     if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
         return redirect('home')
 
-    cultivo_solicitado = request.GET.get('cultivo', 'Maíz').strip()
+    cultivo_key = _resolver_cultivo_key(request.GET.get('cultivo', 'Maíz'))
+    datos_cultivo = dict(_datos_cultivo(cultivo_key))
+    datos_cultivo["compradores"] = _get_compradores_for_cultivo(cultivo_key)
+    datos_cultivo["tendencia"] = _normalizar_tendencia(datos_cultivo.get("tendencia"))
 
-    # Matching crop name flexibly
-    cultivo_key = "Maíz"
-    for k in DATOS_MERCADO_HUILA.keys():
-        if k.lower() in cultivo_solicitado.lower() or cultivo_solicitado.lower() in k.lower():
-            cultivo_key = k
-            break
-
-    # Prefer DB data over static dict
     if PrecioMercado.objects.exists():
-        pm = PrecioMercado.objects.filter(cultivo_nombre=cultivo_key).first()
-        if pm is None:
-            # Try flexible match
-            pm = PrecioMercado.objects.filter(cultivo_nombre__icontains=cultivo_key).first()
-        if pm is not None:
-            datos_cultivo = _build_datos_cultivo_from_db(pm)
-        else:
-            datos_cultivo = DATOS_MERCADO_HUILA.get(cultivo_key, DATOS_MERCADO_HUILA["Maíz"])
-        # Available crops: union of DB + static dict keys
         cultivos_db = list(PrecioMercado.objects.values_list('cultivo_nombre', flat=True).distinct())
         cultivos_disponibles = list(dict.fromkeys(cultivos_db + list(DATOS_MERCADO_HUILA.keys())))
     else:
-        datos_cultivo = DATOS_MERCADO_HUILA.get(cultivo_key, DATOS_MERCADO_HUILA["Maíz"])
         cultivos_disponibles = list(DATOS_MERCADO_HUILA.keys())
 
-    # Fill in compradores (preferring BD)
-    datos_cultivo = dict(datos_cultivo)  # shallow copy to avoid mutating dict
-    datos_cultivo["compradores"] = _get_compradores_for_cultivo(cultivo_key)
+    # --- Three-state connection indicator based on ultima_actualizacion (72h window) ---
+    hace_24h = timezone.now() - timedelta(hours=24)
+    hace_72h = timezone.now() - timedelta(hours=72)
 
-    # Try connecting to live DANE open data API (Datos.gov.co) — cached 5 minutes
-    estado_conexion = cache.get('dane_api_status')
-    if estado_conexion is None:
-        try:
-            response = requests.get('https://www.datos.gov.co/resource/mqa9-ndae.json?$limit=10', timeout=2)
-            if response.status_code == 200:
-                estado_conexion = 'online'
-            else:
-                estado_conexion = 'offline'
-        except Exception:
-            estado_conexion = 'offline'
-        cache.set('dane_api_status', estado_conexion, 300)
+    pm_mas_reciente = PrecioMercado.objects.order_by('-ultima_actualizacion').first()
+    ultima_actualizacion_global = None
 
-    if estado_conexion == 'online':
-        mensaje_conexion = 'Conectado en tiempo real a los servidores de SIPSA / DANE.'
+    if pm_mas_reciente and pm_mas_reciente.ultima_actualizacion:
+        ts = pm_mas_reciente.ultima_actualizacion
+        dias_desde = (timezone.now() - ts).days
+        ultima_actualizacion_global = timezone.localtime(ts).strftime("%d/%m/%Y %H:%M")
+
+        if ts >= hace_24h:
+            estado_conexion = 'online'
+            mensaje_conexion = f"Precios actualizados al {ultima_actualizacion_global} desde SIPSA/DANE."
+        elif ts >= hace_72h:
+            estado_conexion = 'reciente'
+            mensaje_conexion = f"Precios con {dias_desde} día(s) de antigüedad. Se recomienda actualizar."
+        else:
+            estado_conexion = 'desactualizado'
+            mensaje_conexion = f"Precios con más de 72h de antigüedad ({dias_desde} días). Mostrando datos de referencia."
     else:
-        mensaje_conexion = 'Sin conexión a DANE/SIPSA. Mostrando datos de referencia regional almacenados localmente.'
+        estado_conexion = 'desactualizado'
+        mensaje_conexion = "Sin datos recientes. Mostrando precios de referencia regional almacenados."
 
-    # Max price calculation for bar height scaling
-    precios_historial = [item["precio"] for item in datos_cultivo["historial"]]
+    # --- Build enriched precios_tabla ---
+    precios_tabla = []
+    todos_cultivos = list(dict.fromkeys(
+        list(DATOS_MERCADO_HUILA.keys()) +
+        list(PrecioMercado.objects.values_list('cultivo_nombre', flat=True).distinct())
+    ))
+
+    for nombre_cultivo in todos_cultivos:
+        # Try DB first
+        pm = PrecioMercado.objects.filter(cultivo_nombre=nombre_cultivo).first()
+        if pm:
+            dias = (timezone.now() - pm.ultima_actualizacion).days if pm.ultima_actualizacion else None
+            precios_tabla.append({
+                "cultivo": pm.cultivo_nombre,
+                "precio_promedio": float(pm.precio_promedio),
+                "precio_local": float(pm.precio_local) if pm.precio_local else float(pm.precio_promedio),
+                "unidad": pm.unidad,
+                "tendencia": _normalizar_tendencia(pm.tendencia),
+                "variacion_porcentaje": pm.variacion_porcentaje,
+                "fuente": pm.fuente,
+                "ultima_actualizacion": timezone.localtime(pm.ultima_actualizacion).strftime("%d/%m/%Y") if pm.ultima_actualizacion else "—",
+                "dias_desde_actualizacion": dias,
+                "compradores": _get_compradores_for_cultivo(pm.cultivo_nombre),
+                "historial": DATOS_MERCADO_HUILA.get(pm.cultivo_nombre, {}).get(
+                    "historial", [{"mes": "Jun", "precio": float(pm.precio_promedio)}]
+                ),
+            })
+        else:
+            # Fall back to static dict
+            datos_est = DATOS_MERCADO_HUILA.get(nombre_cultivo, {})
+            if datos_est:
+                precios_tabla.append({
+                    "cultivo": nombre_cultivo,
+                    "precio_promedio": datos_est.get("precio_promedio", 0),
+                    "precio_local": datos_est.get("precio_local", datos_est.get("precio_promedio", 0)),
+                    "unidad": datos_est.get("unidad", "kg"),
+                    "tendencia": _normalizar_tendencia(datos_est.get("tendencia", "Estable")),
+                    "variacion_porcentaje": float(
+                        str(datos_est.get("variacion", "0%")).replace('%', '').replace('+', '')
+                    ),
+                    "fuente": datos_est.get("fuente", "SIPSA / DANE"),
+                    "ultima_actualizacion": "—",
+                    "dias_desde_actualizacion": None,
+                    "compradores": _get_compradores_for_cultivo(nombre_cultivo),
+                    "historial": datos_est.get("historial", []),
+                })
+
+    precios_historial = [item["precio"] for item in datos_cultivo.get("historial", [])]
     max_precio = max(precios_historial) if precios_historial else 1
 
     historial_con_porcentajes = []
-    for h in datos_cultivo["historial"]:
-        pct = int((h["precio"] / max_precio) * 100)
+    for h in datos_cultivo.get("historial", []):
+        pct = int((h["precio"] / max_precio) * 100) if max_precio else 30
         historial_con_porcentajes.append({
             "mes": h["mes"],
             "precio": h["precio"],
             "pct": max(30, pct)
         })
 
-    # Local vs Regional calculation
-    precio_reg = datos_cultivo["precio_promedio"]
-    precio_loc = datos_cultivo["precio_local"]
-    max_comp = max(precio_reg, precio_loc)
+    precio_reg = float(datos_cultivo.get("precio_promedio") or 0)
+    precio_loc = float(datos_cultivo.get("precio_local") or 0)
+    max_comp = max(precio_reg, precio_loc, 1)
     pct_loc = int((precio_loc / max_comp) * 90)
     pct_reg = int((precio_reg / max_comp) * 90)
 
     context = {
         'cultivo_actual': cultivo_key,
         'datos': datos_cultivo,
+        'precios': _listado_precios_tabla(),
+        'precios_tabla': precios_tabla,
         'cultivos_disponibles': cultivos_disponibles,
         'historial_grafica': historial_con_porcentajes,
         'pct_local': pct_loc,
@@ -319,9 +402,27 @@ def precios_sipsa(request):
         'max_precio_historico': max_precio,
         'estado_conexion': estado_conexion,
         'mensaje_conexion': mensaje_conexion,
+        'ultima_actualizacion_global': ultima_actualizacion_global,
         'fecha_hoy': datetime.now().strftime("%d/%m/%Y")
     }
-    return render(request, 'agricultor/mercado.html', context)
+    return render(request, 'agricultor/precios_sipsa.html', context)
+
+
+@login_required(login_url='login')
+def actualizar_precios_view(request):
+    """Dispara el comando actualizar_precios vía POST y devuelve JSON con el resultado."""
+    if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
+        return JsonResponse({'error': 'No autorizado'}, status=403)
+
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    out = StringIO()
+    try:
+        call_command('actualizar_precios', stdout=out)
+        return JsonResponse({'status': 'ok', 'output': out.getvalue()})
+    except Exception as exc:
+        return JsonResponse({'status': 'error', 'message': str(exc)}, status=500)
 
 
 @login_required(login_url='login')
@@ -332,24 +433,9 @@ def api_datos_cultivo_mercado(request, cultivo_nombre):
     if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
         return JsonResponse({'error': 'No autorizado'}, status=403)
 
-    cultivo_key = "Maíz"
-    for k in DATOS_MERCADO_HUILA.keys():
-        if k.lower() in cultivo_nombre.lower() or cultivo_nombre.lower() in k.lower():
-            cultivo_key = k
-            break
-
-    # Prefer DB data over static dict
-    if PrecioMercado.objects.exists():
-        pm = PrecioMercado.objects.filter(cultivo_nombre=cultivo_key).first()
-        if pm is None:
-            pm = PrecioMercado.objects.filter(cultivo_nombre__icontains=cultivo_key).first()
-        if pm is not None:
-            datos = _build_datos_cultivo_from_db(pm)
-        else:
-            datos = DATOS_MERCADO_HUILA.get(cultivo_key, DATOS_MERCADO_HUILA["Maíz"])
-    else:
-        datos = DATOS_MERCADO_HUILA.get(cultivo_key, DATOS_MERCADO_HUILA["Maíz"])
-
+    cultivo_key = _resolver_cultivo_key(cultivo_nombre)
+    datos = dict(_datos_cultivo(cultivo_key))
+    datos["tendencia"] = _normalizar_tendencia(datos.get("tendencia"))
     compradores = _get_compradores_for_cultivo(cultivo_key)
 
     precios_historial = [item["precio"] for item in datos["historial"]]
@@ -376,3 +462,75 @@ def api_datos_cultivo_mercado(request, cultivo_nombre):
         'max_precio': max_precio,
         'compradores': compradores,
     })
+
+
+@login_required(login_url='login')
+def listado_productos(request):
+    if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
+        return redirect('home')
+
+    productos = ProductoMercado.objects.filter(activo=True).select_related('vendedor').order_by('-fecha_publicacion')
+    return render(request, 'agricultor/mercado.html', {'productos': productos})
+
+
+@login_required(login_url='login')
+def mi_tienda(request):
+    """
+    Vista de 'Mi Tienda' del agricultor en el mercado.
+    Muestra los productos que el agricultor ha publicado para la venta.
+    """
+    if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
+        return redirect('home')
+
+    productos = ProductoMercado.objects.filter(vendedor=request.user, activo=True).order_by('-fecha_publicacion')
+
+    context = {
+        'productos': productos,
+    }
+    return render(request, 'agricultor/mi_tienda.html', context)
+
+
+@login_required(login_url='login')
+def agregar_producto(request):
+    """Agrega un nuevo producto a la tienda del agricultor."""
+    if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
+        return JsonResponse({'error': 'No autorizado'}, status=403)
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre', '').strip()
+        precio = request.POST.get('precio', '').strip()
+        cantidad = request.POST.get('cantidad', '').strip()
+        unidad = request.POST.get('unidad', 'kg').strip()
+
+        if not nombre or not precio or not cantidad:
+            return JsonResponse({'error': 'Todos los campos son obligatorios.'}, status=400)
+
+        try:
+            ProductoMercado.objects.create(
+                vendedor=request.user,
+                nombre=nombre,
+                precio=precio,
+                cantidad_disponible=int(cantidad),
+                unidad_medida=unidad,
+            )
+            return JsonResponse({'mensaje': f'Producto "{nombre}" publicado exitosamente.'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+
+@login_required(login_url='login')
+def eliminar_producto(request, producto_id):
+    """Elimina (desactiva) un producto de la tienda del agricultor."""
+    if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
+        return JsonResponse({'error': 'No autorizado'}, status=403)
+
+    if request.method == 'POST':
+        from django.shortcuts import get_object_or_404
+        producto = get_object_or_404(ProductoMercado, id=producto_id, vendedor=request.user)
+        producto.activo = False
+        producto.save()
+        return JsonResponse({'mensaje': f'Producto "{producto.nombre}" eliminado del mercado.'})
+
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
