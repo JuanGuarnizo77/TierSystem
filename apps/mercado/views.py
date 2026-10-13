@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from datetime import datetime, timedelta
 from io import StringIO
+import unicodedata
 
 from django.core.management import call_command
 
@@ -243,11 +244,21 @@ def _get_compradores_for_cultivo(cultivo_key):
     return DATOS_MERCADO_HUILA.get(cultivo_key, {}).get("compradores", [])
 
 
+def _normalizar_texto(s):
+    """Quita tildes y convierte a minúsculas para comparación flexible."""
+    return ''.join(
+        c for c in unicodedata.normalize('NFD', s)
+        if unicodedata.category(c) != 'Mn'
+    ).lower()
+
+
 def _resolver_cultivo_key(nombre):
-    solicitado = (nombre or 'Maíz').strip() or 'Maíz'
+    solicitado_raw = (nombre or 'Maíz').strip() or 'Maíz'
+    solicitado = _normalizar_texto(solicitado_raw)
     cultivo_key = "Maíz"
     for k in DATOS_MERCADO_HUILA.keys():
-        if k.lower() in solicitado.lower() or solicitado.lower() in k.lower():
+        k_norm = _normalizar_texto(k)
+        if k_norm in solicitado or solicitado in k_norm:
             cultivo_key = k
             break
     return cultivo_key
