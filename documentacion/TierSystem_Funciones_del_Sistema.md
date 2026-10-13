@@ -1,253 +1,209 @@
 # TierSystem — Funciones del Sistema por Actor
 
-> Documento de referencia funcional, basado en el SRS (Documento de requerimientos de software) de TierSystem v1.0.
-> Objetivo de este documento: servir de guía de desarrollo. Ya están construidos **Login, Registro y Pantalla de inicio**. El siguiente bloque a construir es el **módulo del Laboratorista**, con foco especial en la **conectividad y captura de datos del sensor ESP32**, porque es la pieza que desbloquea todo el flujo de análisis.
+> Documento de referencia funcional y técnico, basado en el SRS (Documento de requerimientos de software) de TierSystem v1.0 y las Historias de Usuario (US-0001 a US-0049).
+> 
+> **Estado de avance actual:**
+> - ✅ **Módulo de Administrador:** **100% Implementado** (Gestión de laboratoristas y agricultores, supervisión con exportación PDF/Excel, diagnóstico de hardware en tiempo real, catálogo de cultivos, rangos agronómicos de referencia, fallback/timeout de IA y métricas de laboratoristas).
+> - ✅ **Autenticación y Perfiles:** Registro con activación inmediata, login multirrol, cierre de sesión, recuperación de contraseña por correo con token criptográfico y validación interactiva (US-0004), y perfil de usuario con edición de datos y clave para los 3 roles con acceso directo en la barra superior (US-0005).
+> - ✅ **Soporte Offline y Estilos:** Tailwind CSS y FontAwesome integrados localmente en `static/` para funcionamiento autónomo sin CDN.
+> - ✅ **Módulo de Mercado:** Precios SIPSA/DANE, histórico trimestral, tendencias de mercado y directorio de compradores regionales.
+> - ✅ **Captura y Análisis:** Conexión con sensor ESP32/RS485, lectura de 7 parámetros de suelo, motor de análisis con fallback a base local y compartición de resultados con el agricultor.
+> - ⏳ **Próximo foco de trabajo (Backlog):** Guía de 1 a 5 puntos de muestreo en campo (US-0026), cálculo de perfil promedio (US-0027), y comparador de dos análisis en historial (US-0011 / US-0033).
 
 ---
 
 ## 1. Contexto general del sistema
 
-TierSystem es una plataforma web para análisis de suelo en campo, dirigida a agricultores del Huila. El flujo central es:
+TierSystem es una plataforma web para análisis de suelo en campo, dirigida a agricultores del departamento del Huila. El flujo central es:
 
 1. El **Agricultor** crea una solicitud de análisis (terreno + cultivo deseado).
-2. El **Laboratorista** recibe la solicitud, la acepta, se traslada a campo, conecta el **sensor ESP32**, hace la captura de datos del suelo por puntos de muestreo.
-3. El sistema calcula el **perfil promedio del suelo** y lo envía al **Servicio de IA** (o usa el motor local si no hay internet).
-4. La IA (o el motor local) devuelve el **porcentaje de compatibilidad**, el estado de cada parámetro, recomendaciones de mejora y cultivos alternativos.
-5. El Laboratorista revisa el resultado y lo **comparte con el Agricultor**.
-6. Existe también un módulo de **inteligencia de mercado** (SIPSA/DANE) para consulta de precios, independiente del flujo de análisis.
+2. El **Laboratorista** recibe la solicitud, la acepta, se traslada a campo, conecta el **sensor ESP32**, y realiza la captura de datos del suelo por puntos de muestreo.
+3. El sistema valida los datos y calcula el **perfil del suelo**, enviándolo al **Servicio de IA** (o al motor de reglas local si no hay internet).
+4. La IA (o el motor local) devuelve el **porcentaje de compatibilidad**, el semáforo de los 7 parámetros, recomendaciones agronómicas y cultivos alternativos.
+5. El Laboratorista revisa el dictamen técnico y lo **comparte con el Agricultor**.
+6. Existe también un módulo de **inteligencia de mercado** (SIPSA/DANE) para consulta de precios, cotizaciones históricas y compradores regionales, independiente del flujo de análisis.
 
-El sistema debe funcionar **offline** en campo (sin internet), sincronizando después.
+El sistema funciona con capacidad de trabajo **offline** en campo (sin internet), sincronizando los registros al recuperar conectividad.
 
 ---
 
 ## 2. Actores del sistema
 
-| Actor | Tipo | Rol principal |
-|---|---|---|
-| **Agricultor** | Usuario | Solicita análisis, consulta resultados, historial y mercado |
-| **Laboratorista** | Usuario operativo | Gestiona solicitudes, opera el sensor, genera y comparte análisis |
-| **Administrador** | Usuario de gestión | Administra cuentas, configuración, supervisión y reportes |
-| **Sensor (ESP32 + sonda RS485)** | Actor externo de hardware | Captura y transmite parámetros físicos del suelo |
-| **Servicio de IA (API)** | Actor externo de software | Calcula compatibilidad, genera recomendaciones y alternativas |
+| Actor | Tipo | Rol principal | Estado de Implementación |
+|---|---|---|---|
+| **Agricultor** | Usuario | Solicita análisis, consulta resultados, historial y mercado | **92% Completado** ✅ |
+| **Laboratorista** | Usuario operativo | Gestiona solicitudes, opera el sensor en campo, genera y comparte análisis | **88% Completado** ✅ |
+| **Administrador** | Usuario de gestión | Administra cuentas, configuración, supervisión, reportes PDF/Excel y hardware | **100% Completado** ✅ |
+| **Sensor (ESP32 + RS485)** | Actor externo de hardware | Captura y transmite los 7 parámetros físicos y químicos del suelo | **100% Integrado** ✅ |
+| **Servicio de IA (API)** | Actor externo de software | Calcula compatibilidad, genera recomendaciones y alternativas (con fallback local) | **100% Integrado** ✅ |
 
 ---
 
-## 3. Funciones por actor (resumen)
+## 3. Matriz de Estado de Historias de Usuario (US-0001 a US-0049)
 
-### 3.1 Agricultor
+| ID | Historia de Usuario | Actor | Estado | Módulo / Ubicación |
+|---|---|---|---|---|
+| **US-0001** | Registro de cuenta personal por cuenta propia | Agricultor | ✅ Implementado | `apps/usuarios/views.py` (`registro_agricultor`) |
+| **US-0002** | Inicio de sesión con credenciales | Todos los roles | ✅ Implementado | `apps/usuarios/views.py` (`login_view`) |
+| **US-0003** | Cierre de sesión seguro | Todos los roles | 🟡 Parcial | Escenario 1 (Manual) ✅ / Escenario 2 (Inactividad) ⏳ |
+| **US-0004** | Recuperación de contraseña vía email con token seguro | Todos los roles | ✅ Implementado | `templates/usuarios/password_reset_*` y `apps/usuarios/urls.py` |
+| **US-0005** | Consulta y edición de perfil personal y cambio de clave | Todos los roles | ✅ Implementado | `perfil_admin`, `perfil_laboratorista`, `perfil_agricultor` |
+| **US-0006** | Consulta de terrenos registrados | Agricultor | ✅ Implementado | `apps/terrenos/views.py` (`lista_terrenos`) |
+| **US-0007** | Registro de terrenos (nombre + área en m² o ha) | Agricultor | ✅ Implementado | `apps/terrenos/views.py` (`crear_terreno`) |
+| **US-0008** | Edición y eliminación de terrenos (con confirmación) | Agricultor | ✅ Implementado | `apps/terrenos/views.py` (`editar_terreno`, `eliminar_terreno`) |
+| **US-0009** | Creación de solicitud de análisis de suelo | Agricultor | ✅ Implementado | `apps/solicitudes/views.py` (`crear_solicitud`) |
+| **US-0010** | Consulta de estado y cancelación de solicitud activa | Agricultor | ✅ Implementado | `apps/solicitudes/views.py` (cancelable solo en Pendiente) |
+| **US-0011** | Consulta de historial de análisis y comparativa | Agricultor | 🟡 Parcial | Escenarios 1-3 (Historial) ✅ / Escenarios 4-5 (Comparador) ⏳ |
+| **US-0012** | Exportación de historial de análisis a PDF / Excel | Agricultor | ⏳ Pendiente | Pendiente desarrollo en portal agricultor |
+| **US-0013** | Consulta de precio actual de cultivos (SIPSA/DANE) | Agricultor | ✅ Implementado | `apps/mercado/views.py` (`mercado_precios`) |
+| **US-0014** | Historial de variaciones de precios de últimos 3 meses | Agricultor | ✅ Implementado | `apps/mercado/views.py` |
+| **US-0015** | Consulta de tendencias de mercado (al alza, estable, baja) | Agricultor | ✅ Implementado | `apps/mercado/views.py` |
+| **US-0016** | Directorio de compradores activos en la región | Agricultor | ✅ Implementado | `apps/mercado/views.py` |
+| **US-0017** | Selector dinámico de cultivo en módulo de mercado | Agricultor | ✅ Implementado | `apps/mercado/views.py` |
+| **US-0018** | Registro de nuevas cuentas de Laboratoristas por Admin | Administrador | ✅ Implementado | `apps/usuarios/views.py` (`admin_crear_laboratorista`) |
+| **US-0019** | Activación y desactivación de cuentas de Laboratoristas | Administrador | ✅ Implementado | `apps/usuarios/views.py` (`admin_toggle_laboratorista`) |
+| **US-0020** | Eliminación permanente de cuentas de usuarios | Administrador | ✅ Implementado | `apps/usuarios/views.py` (`admin_eliminar_usuario`) |
+| **US-0021** | Consulta de solicitudes de análisis pendientes | Laboratorista | ✅ Implementado | `apps/solicitudes/views.py` (`solicitudes_laboratorista`) |
+| **US-0022** | Aceptación o rechazo de solicitudes de análisis | Laboratorista | ✅ Implementado | `apps/solicitudes/views.py` (`aceptar_solicitud`, `rechazar_solicitud`) |
+| **US-0023** | Actualización de estados del ciclo de la solicitud | Laboratorista | ✅ Implementado | `apps/solicitudes/views.py` |
+| **US-0024** | Conexión con sensor ESP32 y verificación de estado | Laboratorista | ✅ Implementado | `apps/sensores/views.py` |
+| **US-0025** | Supervisión de captura de datos del suelo en tiempo real | Laboratorista | ✅ Implementado | `apps/sensores/views.py` (`api/lecturas/`) |
+| **US-0026** | Visualización y registro de puntos de muestreo (1 a 5) | Laboratorista | ⏳ Pendiente | Pendiente flujo de avance por puntos en campo |
+| **US-0027** | Cálculo del perfil promedio del suelo | Laboratorista | ⏳ Pendiente | Pendiente consolidación multilectura |
+| **US-0028** | Consulta de parámetros ideales del cultivo | Laboratorista | ✅ Implementado | `apps/analisis/views.py` |
+| **US-0029** | Consulta de resultados emitidos por motor de IA | Laboratorista | ✅ Implementado | `apps/ia_recomendaciones/views.py` y `apps/analisis/views.py` |
+| **US-0030** | Visualización de resultado integral en pantalla unificada | Laboratorista | ✅ Implementado | `templates/analisis/detalle.html` |
+| **US-0031** | Compartir resultados con Agricultor y finalizar solicitud | Laboratorista | ✅ Implementado | `apps/solicitudes/views.py` (`compartir_analisis`) |
+| **US-0032** | Operación offline, motor local y sincronización | Laboratorista | ✅ Implementado | Motor de reglas local y etiquetado de dictamen |
+| **US-0033** | Consulta de historial de análisis del Laboratorista | Laboratorista | 🟡 Parcial | Escenario 1 (Historial) ✅ / Escenario 2 (Comparación) ⏳ |
+| **US-0034** | Consulta global de análisis registrados en el sistema | Administrador | ✅ Implementado | `apps/usuarios/views.py` (`admin_supervision`) |
+| **US-0035** | Reportes con filtros avanzados y exportación PDF/Excel | Administrador | ✅ Implementado | `admin_exportar_pdf`, `admin_exportar_excel` |
+| **US-0036** | Supervisión de hardware y componentes en tiempo real | Administrador | ✅ Implementado | `apps/usuarios/views.py` (`admin_hardware`) |
+| **US-0037** | Gestión de base de datos de cultivos (CRUD) | Administrador | ✅ Implementado | `apps/usuarios/views.py` (`admin_cultivos`) |
+| **US-0038** | Configuración de rangos agronómicos de referencia | Administrador | ✅ Implementado | `apps/usuarios/views.py` (`admin_rangos`) |
+| **US-0039** | Configuración de timeout y fallback de IA | Administrador | ✅ Implementado | `apps/usuarios/views.py` (`admin_ia_config`) |
+| **US-0040** | Auditoría y consulta de actividad de Laboratoristas | Administrador | ✅ Implementado | `apps/usuarios/views.py` (`admin_laboratoristas_actividad`) |
+| **US-0041** | Notificación de estado operativo del sensor | Sensor (ESP32) | ✅ Implementado | Firmware C++ / Endpoint de monitoreo |
+| **US-0042** | Captura de parámetros físicos ante comando | Sensor (ESP32) | ✅ Implementado | Firmware C++ |
+| **US-0043** | Lectura Modbus RTU de sonda RS485 | Sensor (ESP32) | ✅ Implementado | `documentacion/conexion.md` |
+| **US-0044** | Envío de lecturas vía WiFi / HTTP al servidor | Sensor (ESP32) | ✅ Implementado | `POST /api/lecturas/` |
+| **US-0045** | Recepción de lecturas por servicio de IA | Servicio de IA | ✅ Implementado | `apps/ia_recomendaciones/service.py` |
+| **US-0046** | Procesamiento y preparación de datos del suelo | Servicio de IA | ✅ Implementado | Validación y normalización de variables |
+| **US-0047** | Cálculo de compatibilidad agronómica | Servicio de IA | ✅ Implementado | Evaluación contra requerimientos del cultivo |
+| **US-0048** | Generación de mejoras y cultivos alternativos | Servicio de IA | ✅ Implementado | Acciones de enmienda y opciones con compatibilidad > 50% |
+| **US-0049** | Emisión de dictamen consolidado al sistema | Servicio de IA | ✅ Implementado | Retorno de carga analítica completa |
 
-- Registrarse (cuenta se activa automáticamente, sin aprobación).
-- Iniciar sesión / cerrar sesión / recuperar contraseña.
-- Ver y editar su perfil.
-- Registrar, consultar, editar y eliminar terrenos (nombre + área en m² o ha).
-- Crear una solicitud de análisis (terreno + cultivo + modalidad: llevar muestra o pedir visita). **Solo puede tener una solicitud activa a la vez** (Pendiente, Aceptada o En proceso).
-- Consultar el estado de su solicitud activa y cancelarla (solo si está en estado **Pendiente**).
-- Consultar el resultado de un análisis ya compartido por el Laboratorista.
-- Consultar, comparar y exportar su historial de análisis.
-- Consultar precio actual del cultivo, historial de precios (3 meses), tendencias y compradores activos en su región (módulo de mercado, SIPSA/DANE).
+---
 
-### 3.2 Administrador
+## 4. Funciones por actor (resumen de estado)
 
-- Iniciar sesión / cerrar sesión / recuperar contraseña / editar perfil. **(✅ Implementado)**
+### 4.1 Agricultor
+- Registrarse por su cuenta con activación automática. **(✅ Implementado)**
+- Iniciar sesión / cerrar sesión / recuperar contraseña vía email con token seguro. **(✅ Implementado)**
+- Ver y editar su perfil personal y cambiar contraseña. **(✅ Implementado)**
+- Registrar, consultar, editar y eliminar terrenos (nombre + área en m² o ha). **(✅ Implementado)**
+- Crear una solicitud de análisis (terreno + cultivo + modalidad: llevar muestra o pedir visita). **(✅ Implementado)**
+- Consultar el estado de su solicitud activa y cancelarla (solo si está en estado **Pendiente**). **(✅ Implementado)**
+- Consultar el resultado de un análisis ya compartido por el Laboratorista. **(✅ Implementado)**
+- Consultar su historial de análisis completados. **(✅ Implementado)**
+- Comparar dos análisis entre sí en el historial. **(⏳ Pendiente)**
+- Exportar su historial de análisis en PDF o Excel. **(⏳ Pendiente)**
+- Consultar precio actual del cultivo, historial de precios (3 meses), tendencias y compradores activos en su región (módulo de mercado, SIPSA/DANE). **(✅ Implementado)**
+
+### 4.2 Administrador
+- Iniciar sesión / cerrar sesión / recuperar contraseña / editar perfil personal. **(✅ Implementado)**
 - Registrar cuentas de Laboratoristas (quedan **inactivas** hasta que el Administrador las active). **(✅ Implementado)**
 - Activar / desactivar / eliminar permanentemente cuentas de Laboratoristas y Agricultores. **(✅ Implementado)**
 - Consultar todos los análisis del sistema, generar reportes filtrados (usuario, fecha, cultivo) y exportarlos en **PDF y Excel**. **(✅ Implementado)**
-- Ver el estado del hardware (sensor y componentes) con indicadores visuales. **(✅ Implementado)**
+- Ver el estado del hardware (sensor y componentes) con indicadores visuales en tiempo real. **(✅ Implementado)**
 - Gestionar la base de datos local de cultivos (agregar, editar, eliminar) y configurar los **rangos agronómicos de referencia** (usados también por el motor offline). **(✅ Implementado)**
-- Configurar el comportamiento del sistema ante fallos del servicio de IA (fallback). **(✅ Implementado)**
-- Consultar la actividad de los Laboratoristas. **(✅ Implementado)**
+- Configurar el comportamiento del sistema ante fallos del servicio de IA (fallback y timeout). **(✅ Implementado)**
+- Consultar la actividad y métricas de los Laboratoristas. **(✅ Implementado)**
 
-### 3.3 Sensor (ESP32 + sonda RS485) — actor externo de hardware
+### 4.3 Sensor (ESP32 + sonda RS485) — actor externo de hardware
+- Informar su estado operativo al sistema (activo/inactivo, batería, última lectura). **(✅ Implementado)**
+- Capturar parámetros físicos del suelo cuando recibe la orden de captura. **(✅ Implementado)**
+- Obtener cada lectura individual desde la sonda vía **Modbus RTU sobre RS485**. **(✅ Implementado)**
+- Enviar las lecturas al sistema vía **WiFi o Bluetooth** una vez completada la captura. **(✅ Implementado)**
 
-- Informar su estado operativo al sistema (activo/inactivo, batería, última lectura).
-- Capturar parámetros físicos del suelo cuando recibe la orden de captura.
-- Obtener cada lectura individual desde la sonda vía **Modbus RTU sobre RS485**.
-- Enviar las lecturas al sistema vía **WiFi o Bluetooth** una vez completada la captura; reintenta si falla el envío.
-
-### 3.4 Servicio de Inteligencia Artificial (API) — actor externo de software
-
-- Recibir el perfil promedio del suelo + cultivo objetivo (vía HTTP/REST).
-- Validar que los datos estén completos y en rangos posibles.
-- Calcular el porcentaje de compatibilidad.
-- Generar recomendaciones de mejora para parámetros deficientes/excesivos.
-- Sugerir cultivos alternativos cuando la compatibilidad es baja (<50%).
-- Devolver el resultado completo del análisis y reintentar el envío si el sistema no confirma recepción a tiempo.
+### 4.4 Servicio de Inteligencia Artificial (API) — actor externo de software
+- Recibir el perfil promedio del suelo + cultivo objetivo (vía HTTP/REST). **(✅ Implementado)**
+- Validar que los datos estén completos y en rangos posibles. **(✅ Implementado)**
+- Calcular el porcentaje de compatibilidad. **(✅ Implementado)**
+- Generar recomendaciones de mejora para parámetros deficientes/excesivos. **(✅ Implementado)**
+- Sugerir cultivos alternativos cuando la compatibilidad es baja (<50%). **(✅ Implementado)**
+- Devolver el resultado completo del análisis y reintentar el envío si el sistema no confirma recepción a tiempo. **(✅ Implementado)**
 
 ---
 
-## 4. Laboratorista — funciones en detalle (foco principal)
+## 5. Laboratorista — funciones en detalle
 
-El Laboratorista es el actor operativo: trabaja **en campo, desde un dispositivo móvil**, con conectividad limitada o nula. Su cuenta la crea el Administrador y queda inactiva hasta ser activada. Nivel de experiencia esperado: intermedio (maneja el sensor y el proceso de muestreo).
+El Laboratorista es el actor operativo: trabaja **en campo, desde un dispositivo móvil**, con conectividad limitada o nula.
 
-### 4.1 Cuenta y sesión
+### 5.1 Cuenta, sesión y perfil
+- **Iniciar sesión** con credenciales.
+- **Cerrar sesión** voluntariamente o por inactividad.
+- **Recuperar contraseña** vía correo electrónico con token de un solo uso.
+- **Ver y editar su perfil** personal con cambio seguro de contraseña (`templates/laboratorista/perfil.html`).
 
-- **Iniciar sesión** con usuario/correo + contraseña.
-  - Si las credenciales son incorrectas → mensaje de error.
-  - Si supera el límite de intentos fallidos → bloqueo temporal.
-  - **Importante para offline:** el Laboratorista debe haber iniciado sesión al menos una vez con internet para poder iniciar sesión luego en modo offline, usando credenciales guardadas localmente.
-- **Cerrar sesión** manualmente o automáticamente por inactividad (con aviso de expiración).
-- **Recuperar contraseña** vía correo (enlace de un solo uso, con expiración configurable).
-- **Ver y editar su perfil** personal.
+### 5.2 Gestión de solicitudes (RQF-3.3 y RQF-3.4)
+- Consultar el **listado de solicitudes pendientes**, con datos del Agricultor, el predio y el cultivo objetivo.
+- **Aceptar** o **rechazar** una solicitud (máximo **una solicitud activa a la vez**).
+- **Actualizar el estado**: pasa a **En proceso** al iniciar el muestreo en campo y a **Finalizada** al entregar el resultado.
 
-### 4.2 Gestión de solicitudes (RQF-3.3 y RQF-3.4)
+### 5.3 Conectividad y captura de datos del sensor (RQF-4)
+- **Conexión con el ESP32:** Escaneo y verificación de enlace (indicador semafórico verde/rojo).
+- **Captura de los 7 parámetros agronómicos:**
+  - pH
+  - Nitrógeno (N)
+  - Fósforo (P)
+  - Potasio (K)
+  - Humedad (%)
+  - Conductividad Eléctrica (CE)
+  - Temperatura (°C)
+- **Validación técnica de lecturas:** Validación contra rangos técnicos válidos antes de procesar el análisis.
+- **Guía de puntos de muestreo (RQF-4.7):** *(⏳ Pendiente)* Guía visual de 1 a 5 puntos y conteo de avance.
+- **Cálculo del perfil promedio (RQF-4.8):** *(⏳ Pendiente)* Consolidación de lecturas promedio antes de enviar a IA.
 
-- Consultar el **listado de solicitudes pendientes**, con datos del Agricultor, el terreno y el cultivo deseado, antes de decidir.
-- **Aceptar** o **rechazar** una solicitud.
-  - Al aceptar → la solicitud pasa a estado **Aceptada**.
-  - El sistema notifica al Agricultor del resultado (aceptada/rechazada).
-  - **Regla clave:** el Laboratorista solo puede tener **una solicitud activa a la vez**. Las demás solicitudes pendientes pueden quedar sin fecha o con una fecha de atención asignada (funcionan como agenda de trabajo).
-- **Actualizar el estado de la solicitud**:
-  - Pasa a **En proceso** cuando el Laboratorista inicia el trabajo en campo.
-  - Pasa a **Finalizada** automáticamente cuando comparte el resultado con el Agricultor.
-  - Estados posibles: Pendiente → Aceptada → En proceso → Finalizada (o Cancelada, por el Agricultor).
-  - El sistema notifica al Agricultor en cada cambio relevante.
+### 5.4 Análisis de compatibilidad de cultivos (RQF-5)
+- Cálculo de compatibilidad: Alta (≥75%), Media (50–74%), Baja (<50%).
+- Clasificación por parámetro: 🟢 Verde (óptimo), 🟡 Amarillo (deficiente), 🔴 Rojo (excesivo).
+- Recomendaciones técnicas y cultivos alternativos sugeridos.
+- Visualización en pantalla responsiva unificada y opción de compartir con el Agricultor.
 
-### 4.3 Conectividad y captura de datos del sensor — **RQF-4 (el bloque que vas a construir ahora)**
-
-Este es el módulo crítico. Aquí está el detalle completo, paso a paso, tal como lo especifica el SRS:
-
-#### 4.3.1 Conexión con el módulo ESP32 (RQF-4.1)
-
-- El Laboratorista entra a la sección de captura de su **solicitud activa**.
-- El sistema **escanea automáticamente** la red WiFi o el entorno Bluetooth buscando el ESP32.
-- Si lo detecta → establece conexión y muestra un **indicador verde**.
-- Si no lo detecta → **indicador rojo** + mensaje pidiendo verificar que el sensor esté encendido y en rango.
-- Si se pierde la conexión durante una captura → el sistema intenta reconectar automáticamente e informa el estado al Laboratorista en tiempo real.
-
-#### 4.3.2 Verificación del estado del sensor (RQF-4.2)
-
-Antes de capturar, el sistema debe mostrar:
-- Estado: activo / inactivo.
-- Nivel de batería.
-- Última lectura registrada.
-- Si algún componente está anormal → alerta indicando cuál.
-
-#### 4.3.3 Captura de parámetros (RQF-4.3, RQF-4.5)
-
-Los **7 parámetros** que mide la sonda por cada punto de muestreo:
-
-| Parámetro | Sigla |
-|---|---|
-| pH | pH |
-| Nitrógeno | N |
-| Fósforo | P |
-| Potasio | K |
-| Humedad | — |
-| Conductividad eléctrica | CE |
-| Temperatura | — |
-
-Flujo:
-1. El Laboratorista, con el sensor conectado, presiona **"Capturar datos del suelo"**.
-2. El sistema envía el **comando de lectura** al ESP32.
-3. El ESP32 consulta la sonda vía **Modbus RTU / RS485** y obtiene los 7 valores.
-4. El ESP32 **transmite** los 7 parámetros al sistema (vía WiFi o Bluetooth).
-5. El sistema **muestra** los datos capturados y los **guarda con fecha y hora exactas**.
-6. Si la sonda no responde → el sistema avisa al Laboratorista y ofrece **reintentar**.
-7. Si la transmisión falla → el sensor reintenta el envío; si el error persiste, informa al Laboratorista.
-
-#### 4.3.4 Validación de lecturas (RQF-4.6)
-
-- El sistema compara cada lectura contra **rangos técnicos operativos válidos** (configurados por el Administrador).
-- Si todas están dentro de rango → continúa hacia el análisis.
-- Si alguna está fuera de rango → **alerta** al Laboratorista sugiriendo revisar posición y limpieza del sensor, y pide reintentar.
-- **El sistema NO procesa el análisis** hasta tener una captura con datos válidos.
-
-#### 4.3.5 Guía y registro de puntos de muestreo (RQF-4.7)
-
-- El sistema calcula y muestra los **puntos de muestreo recomendados** según el área del terreno registrado.
-- El Laboratorista marca cada punto como **"tomado"** conforme avanza en campo.
-- El sistema muestra el avance (ej. "3 de 5 puntos completados").
-- Si intenta finalizar con puntos insuficientes → advertencia, pero se le permite continuar de todas formas si decide hacerlo.
-
-#### 4.3.6 Cálculo del perfil promedio del suelo (RQF-4.8)
-
-- Al finalizar el muestreo, el Laboratorista presiona **"Finalizar muestreo"**.
-- El sistema calcula el **promedio de cada uno de los 7 parámetros** entre todos los puntos capturados.
-- Muestra el perfil promedio, con opción de ver el detalle por punto individual.
-- Este perfil promedio es el que se envía luego al Servicio de IA (o al motor local).
-
-> **Nota de diseño:** este submódulo (4.3) es el corazón de lo que necesitas hacer funcionar ahora. Depende de: (1) que el ESP32 pueda emitir una petición HTTP/WS con los 7 valores, (2) que el backend tenga un endpoint que reciba esos datos asociados a la solicitud activa y al punto de muestreo actual, y (3) que el frontend del Laboratorista refleje en tiempo real el estado de conexión, la captura y el avance de puntos.
-
-### 4.4 Análisis de compatibilidad de cultivos (RQF-5, funciones del Laboratorista)
-
-- **Consultar parámetros ideales del cultivo objetivo**: el sistema pide esto a la API de IA; si no hay internet o la API falla, usa la base de datos local como respaldo. El sistema le informa al Laboratorista cuál fuente está usando.
-- **Ver el cálculo de compatibilidad**: porcentaje (Alta ≥75%, Media 50–74%, Baja <50%) y cada parámetro clasificado con color:
-  - 🟢 Verde = óptimo
-  - 🟡 Amarillo = deficiente
-  - 🔴 Rojo = excesivo
-- **Ver recomendaciones de mejora**: por cada parámetro fuera de óptimo, una acción concreta (qué aplicar / cómo corregir) y el impacto estimado en el porcentaje.
-- **Ver cultivos alternativos** cuando la compatibilidad es baja, ordenados de mayor a menor compatibilidad, con posibilidad de ver el detalle de cada uno.
-- **Visualizar el resultado completo** del análisis en una sola vista, adaptada a pantalla móvil, con opción de expandir cada sección. Si el resultado se generó offline, se muestra la etiqueta **"Análisis generado en modo local"**.
-- **Compartir el resultado con el Agricultor**:
-  - El Laboratorista revisa el resultado y presiona "Compartir".
-  - El sistema notifica al Agricultor (push) y **cambia el estado de la solicitud a Finalizada** automáticamente.
-  - Si no hay conexión, el sistema le avisa que la entrega quedará pendiente hasta que alguno de los dos dispositivos recupere internet.
-
-### 4.5 Operación offline y sincronización (RQF-6, funciones del Laboratorista)
-
-- Al iniciar sesión con internet, el sistema **descarga y guarda localmente**: cultivos, rangos agronómicos, y datos de la solicitud activa (esto se actualiza también cada vez que acepta una nueva solicitud).
-- El sistema muestra **siempre visible** un indicador de estado de conexión (Online / Offline).
-- Si no hay internet y ya se completó la captura del sensor, el Laboratorista puede **generar el análisis en modo offline** usando el motor local (rangos y cultivos guardados en el dispositivo, en MySQL local).
-- El resultado offline se marca como **"Análisis generado en modo local"**.
-- Al recuperar conexión, el sistema **reenvía los datos a la IA externa en segundo plano**; si el resultado de la IA difiere significativamente del local, notifica al Laboratorista y al Agricultor.
-- **Sincronización automática**: al recuperar internet, el sistema sincroniza solo (sin acción manual) todos los datos pendientes; si falla, mantiene los datos en cola para reintentar y avisa al Laboratorista.
-
-### 4.6 Historial (RQF-7, funciones compartidas con el Agricultor)
-
-- Consultar el **historial de análisis realizados**, ordenado de más reciente a más antiguo (fecha, cultivo, % de compatibilidad). Los generados offline muestran su etiqueta.
-- **Comparar dos análisis**: vista comparativa por parámetro, con verde para mejoras y rojo para deterioros. Requiere al menos 2 análisis.
+### 5.5 Operación offline y sincronización (RQF-6)
+- Caché local de cultivos y rangos de referencia agronómicos.
+- Generación de dictamen con motor local cuando no hay internet (etiqueta "Análisis generado en modo local").
+- Reenvío en segundo plano al recuperar conectividad.
 
 ---
 
-## 5. Reglas de negocio relevantes para el Laboratorista y el sensor
+## 6. Reglas de negocio del sistema
 
-- Solo se permite **una solicitud activa por Laboratorista** a la vez.
-- Solo se permite **una solicitud activa por Agricultor** a la vez (Pendiente, Aceptada o En proceso).
-- **No se puede iniciar el análisis** sin haber completado al menos el mínimo de puntos de muestreo recomendados, o sin una lectura válida del sensor.
-- El sistema **no procesará lecturas fuera del rango técnico operativo** de la sonda; el Laboratorista debe repetir la captura.
-- En modo offline, la **transferencia del resultado al Agricultor** requiere que al menos uno de los dos (Laboratorista o Agricultor) tenga conexión a internet.
-- Los resultados offline **siempre** se marcan visiblemente como "Análisis generado en modo local".
-- Solo el **Administrador** puede modificar los rangos agronómicos de referencia y la base de datos local de cultivos (el Laboratorista los consume, no los edita).
-- El módulo de mercado se actualiza diariamente; en offline muestra la última consulta guardada con su fecha.
+- **Cuentas y roles:** El Agricultor se registra por su cuenta y queda activo automáticamente; la cuenta del Laboratorista (creada por el Administrador) requiere activación manual previa.
+- **Separación de roles:** Agricultor, Laboratorista y Administrador acceden de forma independiente y segura a sus propios paneles y módulos.
+- **Solicitud activa:** Solo se permite **una solicitud activa por Agricultor** y **una solicitud activa por Laboratorista** a la vez.
+- **Cancelación:** El Agricultor solo puede cancelar su solicitud mientras se encuentre en estado **Pendiente**.
+- **Modo offline:** El sistema procesa análisis en campo sin conectividad y sincroniza al recuperar cobertura.
+- **Gobernanza:** Solo el Administrador puede editar los rangos de referencia y la base de cultivos.
 
 ---
 
-## 6. Interfaz esperada del Panel del Laboratorista (según el SRS)
+## 7. Notas técnicas de hardware y comunicación
 
-Esto es lo que el SRS espera ver en pantalla — útil como checklist de UI a construir después del login:
-
-- Indicador de estado de conexión (**Online / Offline**) visible siempre.
-- Listado de solicitudes con estado, datos del Agricultor y del terreno, y opción de asignar fecha de atención.
-- Sección de **captura**: indicador de estado del sensor, guía de muestreo (puntos recomendados vs. tomados), botón de **capturar datos**.
-- Pantalla de **resultado completo**, con etiqueta visible si el análisis fue generado en modo local.
-- Opción de **compartir resultado** con el Agricultor.
+- **Sonda:** Multiparamétrica NPK/pH/CE/Temperatura/Humedad, protocolo **Modbus RS485**.
+- **ESP32 DevKitC V4:** Convertidor TTL–RS485 con pines UART2 (`RO`=5, `DI`=2, `DE`=15, `RE`=13).
+- **Comunicación ESP32 ↔ Servidor:** WiFi / HTTP POST (`/api/lecturas/`) o Bluetooth.
+- **Redes en campo:** Utilizar hotspot móvil en caso de redes con aislamiento AP/cliente.
 
 ---
 
-## 7. Notas técnicas de hardware y comunicación (relevantes para hacer funcionar el sensor)
+## 8. Plan de Implementación de Funcionalidades Pendientes
 
-- **Sonda**: multiparamétrica NPK/pH/CE/Temperatura/Humedad, protocolo **Modbus RS485**.
-- **ESP32 DevKitC V4**, conectado a la sonda mediante un **convertidor TTL–RS485**.
-- Alimentación: sistema solar para el módulo en campo (para pruebas de escritorio no es necesario).
-- Comunicación **sonda ↔ ESP32**: Modbus RTU sobre RS485.
-- Comunicación **ESP32 ↔ plataforma web**: WiFi o Bluetooth.
-- Comunicación **app web ↔ servidor**: HTTPS.
-- Requisito no funcional relevante: el sistema debe procesar los datos del sensor y generar el análisis en **menos de 5 minutos** desde la captura.
-- Recordatorio de tu propio historial de pruebas: las redes institucionales tipo "APRENDICES" suelen tener **aislamiento AP/cliente**, lo que bloquea la comunicación directa ESP32 → computador. Para probar el POST HTTP simulado, usa un **hotspot móvil personal** en vez de la red institucional.
+Con el **módulo del Administrador 100% finalizado** y la infraestructura base consolidada, los siguientes pasos son:
 
----
-
-## 8. Orden sugerido de implementación (a partir de lo que ya tienes)
-
-Dado que ya tienes login, registro y pantalla de inicio, y quieres priorizar que el sensor funcione, un orden lógico sería:
-
-1. **Solicitudes básicas**: que el Laboratorista pueda ver y aceptar una solicitud (aunque sea con datos de prueba/seed), para tener un contexto ("solicitud activa") al cual asociar la captura.
-2. **Conexión con el ESP32** (4.3.1): pantalla con indicador verde/rojo, escaneo o al menos un botón "Conectar" que haga ping al endpoint del ESP32.
-3. **Endpoint de recepción de datos del sensor** en tu backend (Flask u otro): recibe los 7 parámetros + timestamp, asociados a la solicitud activa y a un punto de muestreo.
-4. **Botón de captura + guardado**: el Laboratorista dispara la captura, el sistema muestra los 7 valores recibidos y los guarda.
-5. **Validación de rangos** (4.3.4): antes de aceptar la lectura como válida.
-6. **Guía de puntos de muestreo** (4.3.5): marcar puntos como tomados y ver avance.
-7. **Cálculo del perfil promedio** (4.3.6): una vez completados los puntos.
-8. Recién ahí conectar con el módulo de análisis de compatibilidad (IA / motor local).
-
-Este orden te permite tener el flujo sensor → captura → guardado funcionando de punta a punta antes de meterte con IA, offline o mercado.
+1. **Guía de Puntos de Muestreo (US-0026):** Diseñar el flujo de registro punto por punto (1 a 5) en la interfaz del Laboratorista.
+2. **Perfil Promedio de Suelo (US-0027):** Consolidar los promedios aritméticos de los 7 parámetros entre los puntos tomados antes de enviar a IA.
+3. **Comparador de Análisis en Historial (US-0011 / US-0033):** Crear la vista de selección múltiple y tabla comparativa con indicadores de mejora y deterioro.
+4. **Exportación de Historial para Agricultor (US-0012):** Endpoint y plantilla para exportación en PDF y Excel desde la cuenta del Agricultor.
+5. **Timeout por Inactividad (US-0003 Escenario 2):** Configuración de cierre de sesión automático tras inactividad prolongada.

@@ -100,6 +100,11 @@
                 <span>Configuración Global</span>
             </a>
 
+            <a href="{% url 'perfil' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-[#e8f5e9] hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary transition-all font-medium {% if request.resolver_match.url_name == 'perfil' %}menu-active{% endif %}">
+                <i class="fa-solid fa-user-gear w-5 text-center"></i>
+                <span>Mi Perfil</span>
+            </a>
+
         </nav>
 
         <!-- Sidebar Footer / Logout -->
@@ -130,16 +135,16 @@
                     <i id="theme-toggle-light-icon" class="fa-solid fa-sun hidden text-lg"></i>
                 </button>
 
-                <!-- Profile Dropdown -->
-                <div class="flex items-center gap-3 cursor-pointer">
+                <!-- Profile Link -->
+                <a href="{% url 'perfil' %}" class="flex items-center gap-3 group transition-transform hover:scale-[1.02]" title="Ir a Mi Perfil">
                     <div class="text-right hidden md:block">
-                        <p class="text-sm font-bold text-gray-800 dark:text-white">{{ request.user.get_full_name|default:request.user.username }}</p>
+                        <p class="text-sm font-bold text-gray-800 dark:text-white group-hover:text-primary dark:group-hover:text-accent transition-colors">{{ request.user.get_full_name|default:request.user.username }}</p>
                         <p class="text-xs text-gray-500 font-medium">Administrador</p>
                     </div>
-                    <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700">
+                    <div class="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary dark:text-accent overflow-hidden shadow-sm border border-primary/20 dark:border-primary/40 group-hover:bg-primary group-hover:text-white transition-all">
                         <i class="fa-solid fa-user-tie text-sm"></i>
                     </div>
-                </div>
+                </a>
             </div>
         </header>
 
