@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - TierSystem</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/static/js/tailwindcss.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -22,7 +22,7 @@
             }
         }
     </script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body class="mesh-bg text-gray-800 min-h-screen flex items-center justify-center p-4">
@@ -130,7 +130,7 @@
                 </div>
 
                 <div class="flex justify-end pt-1">
-                    <a href="#" class="text-xs font-medium text-accent hover:text-primary transition-colors">¿Olvidaste tu contraseña?</a>
+                    <a href="{% url 'password_reset' %}" class="text-xs font-medium text-accent hover:text-primary transition-colors">¿Olvidaste tu contraseña?</a>
                 </div>
 
                 <button type="submit" class="w-full bg-primary hover:bg-secondary text-white font-medium py-3 px-4 rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 mt-4 text-sm">

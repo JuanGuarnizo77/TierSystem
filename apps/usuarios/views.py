@@ -51,6 +51,7 @@ def register_view(request):
         
     return render(request, 'usuarios/register.html', {'form': form})
 
+from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib.auth import update_session_auth_hash
@@ -61,11 +62,20 @@ def perfil_view(request):
         action = request.POST.get('action')
         
         if action == 'update_info':
-            nombre = request.POST.get('first_name')
-            telefono = request.POST.get('telefono')
+            nombre = request.POST.get('first_name', '').strip()
+            apellido = request.POST.get('last_name', '').strip()
+            email = request.POST.get('email', '').strip()
+            telefono = request.POST.get('telefono', '').strip()
             
             user = request.user
+            
+            if email:
+                if User.objects.filter(email=email).exclude(id=user.id).exists():
+                    return JsonResponse({'error': 'El correo electrónico ya está registrado por otro usuario.'}, status=400)
+                user.email = email
+                
             user.first_name = nombre
+            user.last_name = apellido
             user.save()
             
             if hasattr(user, 'perfil'):
@@ -77,22 +87,32 @@ def perfil_view(request):
         elif action == 'change_password':
             old_pass = request.POST.get('old_password')
             new_pass = request.POST.get('new_password')
+            confirm_pass = request.POST.get('confirm_password')
             
+            if confirm_pass and new_pass != confirm_pass:
+                return JsonResponse({'error': 'Las contraseñas nuevas no coinciden.'}, status=400)
+                
+            if len(new_pass) < 6:
+                return JsonResponse({'error': 'La nueva contraseña debe tener al menos 6 caracteres.'}, status=400)
+                
             user = request.user
             if user.check_password(old_pass):
                 user.set_password(new_pass)
                 user.save()
                 update_session_auth_hash(request, user)  # Importante para que no cierre sesión
-                return JsonResponse({'mensaje': 'Contraseña actualizada.'})
+                return JsonResponse({'mensaje': 'Contraseña actualizada con éxito.'})
             else:
                 return JsonResponse({'error': 'La contraseña actual es incorrecta.'}, status=400)
                 
-    # Determinamos la plantilla según el rol para mantener el diseño base
-    template = 'usuarios/perfil.html' # Plantilla genérica o podríamos tener una por rol
+    # Determinamos la plantilla según el rol para mantener el diseño base correspondiente
     rol = request.user.perfil.rol if hasattr(request.user, 'perfil') else None
     
-    if rol == 'AGRICULTOR':
+    if rol == 'ADMIN':
+        template = 'admin/perfil.html'
+    elif rol == 'LABORATORISTA':
+        template = 'laboratorista/perfil.html'
+    else:
         template = 'agricultor/perfil.html'
-    # TODO: add para los otros roles si es necesario
     
     return render(request, template)
+

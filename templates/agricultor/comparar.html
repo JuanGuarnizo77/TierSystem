@@ -1,0 +1,201 @@
+{% extends 'agricultor/base_dashboard.html' %}
+
+{% block title %}Comparar Análisis de Suelo | TierSystem{% endblock %}
+{% block header_title %}Comparar Análisis{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white font-heading">
+                Comparación de Análisis de Suelo
+            </h2>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                Evalúa la evolución física y química de tus terrenos entre dos fechas de muestreo.
+            </p>
+        </div>
+
+        <a href="{% url 'solicitudes_agricultor:historial' %}" class="self-start md:self-auto bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i> Volver al Historial
+        </a>
+    </div>
+
+    {% if insuficientes %}
+    <div class="bento-card p-12 text-center">
+        <div class="w-16 h-16 bg-blue-50 dark:bg-blue-950/50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm">
+            <i class="fa-solid fa-code-compare"></i>
+        </div>
+        <h3 class="text-xl font-bold text-gray-800 dark:text-white font-heading">Se requieren al menos 2 análisis completados</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto mt-2">
+            Para poder comparar la evolución de tu suelo necesitas haber completado al menos dos solicitudes de muestreo con la sonda RS485.
+        </p>
+        <a href="{% url 'solicitudes_agricultor:mis_solicitudes' %}" class="inline-block mt-6 bg-primary hover:bg-secondary text-white text-xs font-bold py-2.5 px-6 rounded-xl shadow-sm transition-all">
+            Solicitar nuevo análisis
+        </a>
+    </div>
+    {% else %}
+
+    <!-- Selector de los 2 análisis a comparar -->
+    <div class="bento-card p-5">
+        <form method="GET" action="{% url 'solicitudes_agricultor:comparar_analisis' %}" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+            <div class="md:col-span-5">
+                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
+                    Análisis Reciente (A)
+                </label>
+                <select name="id1" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-xs text-gray-800 dark:text-gray-200 font-medium focus:ring-2 focus:ring-primary focus:outline-none">
+                    {% for s in solicitudes %}
+                    <option value="{{ s.id }}" {% if s.id == s1.id %}selected{% endif %}>
+                        #{{ s.id }} — {{ s.cultivo_deseado }} en {{ s.terreno.nombre }} ({{ s.fecha_solicitud|date:"d/m/Y" }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="md:col-span-5">
+                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
+                    Análisis Anterior (B)
+                </label>
+                <select name="id2" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2.5 text-xs text-gray-800 dark:text-gray-200 font-medium focus:ring-2 focus:ring-primary focus:outline-none">
+                    {% for s in solicitudes %}
+                    <option value="{{ s.id }}" {% if s.id == s2.id %}selected{% endif %}>
+                        #{{ s.id }} — {{ s.cultivo_deseado }} en {{ s.terreno.nombre }} ({{ s.fecha_solicitud|date:"d/m/Y" }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="md:col-span-2">
+                <button type="submit" class="w-full bg-primary hover:bg-secondary text-white font-bold py-2.5 px-4 rounded-xl text-xs shadow-sm transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate"></i> Comparar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Comparativa Visual (Dual Column) -->
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
+        
+        <!-- Tarjeta Análisis A -->
+        <div class="md:col-span-6 bento-card p-6 border-l-4 border-l-emerald-500 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="px-2.5 py-1 rounded-lg text-xs font-black bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                        ANÁLISIS A (RECIENTE)
+                    </span>
+                    <span class="text-xs text-gray-400">{{ s1.fecha_solicitud|date:"d/m/Y" }}</span>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                    <i class="fa-solid fa-seedling text-emerald-600 mr-1"></i> {{ s1.cultivo_deseado }}
+                </h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                    Finca: <b>{{ s1.terreno.nombre }}</b> ({{ s1.terreno.hectareas }} ha)
+                </p>
+                
+                <div class="flex items-center gap-3 p-3 bg-emerald-50/60 dark:bg-emerald-950/30 rounded-xl border border-emerald-100 dark:border-emerald-800">
+                    <div class="text-3xl font-black text-emerald-700 dark:text-emerald-400 font-heading">
+                        {{ ev1.compatibilidad }}%
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-emerald-800 dark:text-emerald-300">{{ ev1.nivel_compatibilidad }} COMPATIBILIDAD</div>
+                        <div class="text-[11px] text-emerald-600 dark:text-emerald-400">Puntaje global del suelo</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta Análisis B -->
+        <div class="md:col-span-6 bento-card p-6 border-l-4 border-l-blue-500 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="px-2.5 py-1 rounded-lg text-xs font-black bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
+                        ANÁLISIS B (ANTERIOR)
+                    </span>
+                    <span class="text-xs text-gray-400">{{ s2.fecha_solicitud|date:"d/m/Y" }}</span>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                    <i class="fa-solid fa-seedling text-blue-600 mr-1"></i> {{ s2.cultivo_deseado }}
+                </h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                    Finca: <b>{{ s2.terreno.nombre }}</b> ({{ s2.terreno.hectareas }} ha)
+                </p>
+                
+                <div class="flex items-center gap-3 p-3 bg-blue-50/60 dark:bg-blue-950/30 rounded-xl border border-blue-100 dark:border-blue-800">
+                    <div class="text-3xl font-black text-blue-700 dark:text-blue-400 font-heading">
+                        {{ ev2.compatibilidad }}%
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-blue-800 dark:text-blue-300">{{ ev2.nivel_compatibilidad }} COMPATIBILIDAD</div>
+                        <div class="text-[11px] text-blue-600 dark:text-blue-400">Puntaje global del suelo</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla Comparativa Detallada -->
+    <div class="bento-card p-6">
+        <h3 class="text-base font-bold text-gray-900 dark:text-white font-heading mb-4 pb-2 border-b border-gray-100 dark:border-gray-800">
+            Comparativa Parámetro por Parámetro
+        </h3>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead>
+                    <tr class="text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800">
+                        <th class="pb-3">Parámetro</th>
+                        <th class="pb-3 text-center">Rango Ideal</th>
+                        <th class="pb-3 text-center bg-emerald-50/30 dark:bg-emerald-950/10">Análisis A ({{ s1.fecha_solicitud|date:"d/m" }})</th>
+                        <th class="pb-3 text-center bg-blue-50/30 dark:bg-blue-950/10">Análisis B ({{ s2.fecha_solicitud|date:"d/m" }})</th>
+                        <th class="pb-3 text-center">Variación</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50 dark:divide-gray-800/60">
+                    {% for row in comparacion_filas %}
+                    <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30">
+                        <td class="py-3 font-bold text-gray-900 dark:text-white">{{ row.parametro }}</td>
+                        <td class="py-3 text-center text-xs text-gray-500 font-mono">{{ row.ideal }} {{ row.unidad }}</td>
+                        <td class="py-3 text-center bg-emerald-50/30 dark:bg-emerald-950/10 font-mono font-bold text-gray-800 dark:text-gray-200">
+                            {{ row.val1 }} <span class="text-[10px] text-gray-400">{{ row.unidad }}</span>
+                            <span class="block text-[10px] {% if row.estado1 == 'Óptimo' %}text-emerald-600{% else %}text-amber-600{% endif %} font-sans font-bold">
+                                {{ row.estado1 }}
+                            </span>
+                        </td>
+                        <td class="py-3 text-center bg-blue-50/30 dark:bg-blue-950/10 font-mono font-bold text-gray-800 dark:text-gray-200">
+                            {{ row.val2 }} <span class="text-[10px] text-gray-400">{{ row.unidad }}</span>
+                            <span class="block text-[10px] {% if row.estado2 == 'Óptimo' %}text-blue-600{% else %}text-amber-600{% endif %} font-sans font-bold">
+                                {{ row.estado2 }}
+                            </span>
+                        </td>
+                        <td class="py-3 text-center font-bold text-xs {{ row.tendencia_clase }}">
+                            {{ row.tendencia }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Banner de Diagnóstico Comparativo -->
+    <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-900 dark:text-emerald-200 flex items-start gap-3">
+        <i class="fa-solid fa-chart-line text-lg text-emerald-600 mt-0.5"></i>
+        <div>
+            <h4 class="font-bold text-sm text-emerald-950 dark:text-emerald-100 mb-0.5">Resumen de Evolución Agronómica:</h4>
+            <p class="leading-relaxed">
+                {% if diff_compat > 0 %}
+                    El suelo muestra una <strong class="text-emerald-700 dark:text-emerald-300">mejora de +{{ diff_compat }}%</strong> en la compatibilidad general respecto al análisis anterior, lo que indica una respuesta positiva a los planes de fertilización y manejo de riego implementados.
+                {% elif diff_compat < 0 %}
+                    El suelo presenta una <strong class="text-amber-700 dark:text-amber-300">reducción de {{ diff_compat }}%</strong> en compatibilidad. Se recomienda revisar los niveles de nutrientes y ajustar las enmiendas según el informe detallado.
+                {% else %}
+                    Los parámetros del suelo se mantienen estables entre ambas fechas de muestreo.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
+{% endblock %}

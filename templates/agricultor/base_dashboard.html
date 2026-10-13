@@ -7,7 +7,7 @@
     <title>{% block title %}TierSystem — Panel Agricultor{% endblock %}</title>
     
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/static/js/tailwindcss.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -25,9 +25,8 @@
         }
     </script>
     
-    <!-- FontAwesome & Tabler Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="/static/fontawesome/css/all.min.css">
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
@@ -141,6 +140,7 @@
                     <i id="theme-toggle-light-icon" class="fa-solid fa-sun hidden text-lg"></i>
                 </button>
 
+<<<<<<< HEAD
                 <!-- Profile Badge -->
                 <a href="{% url 'perfil' %}" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
                     <div class="text-right hidden md:block">
@@ -149,6 +149,16 @@
                     </div>
                     <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm border border-emerald-200 dark:border-emerald-800">
                         {{ request.user.username|slice:":2"|upper }}
+=======
+                <!-- Profile Link -->
+                <a href="{% url 'perfil' %}" class="flex items-center gap-3 group transition-transform hover:scale-[1.02] cursor-pointer" title="Ir a Mi Perfil">
+                    <div class="text-right hidden md:block">
+                        <p class="text-sm font-bold text-gray-800 dark:text-white group-hover:text-primary dark:group-hover:text-accent transition-colors">{{ request.user.get_full_name|default:request.user.username }}</p>
+                        <p class="text-xs text-gray-500 font-medium">Agricultor</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary dark:text-accent overflow-hidden shadow-sm border border-primary/20 dark:border-primary/40 group-hover:bg-primary group-hover:text-white transition-all">
+                        <i class="fa-solid fa-user text-sm"></i>
+>>>>>>> 4a1c4f93e7e67ac39e993a181f9ac39abab3d18e
                     </div>
                 </a>
             </div>
