@@ -592,6 +592,8 @@ def exportar_historial_pdf(request):
     p.setFillColor(colors.HexColor('#111827'))
     
     for s in solicitudes:
+        if not hasattr(s, 'analisis_resultado'):
+            continue
         if y < 60:
             p.showPage()
             y = 730
@@ -656,6 +658,8 @@ def exportar_historial_excel(request):
         cell.alignment = Alignment(horizontal='center')
         
     for s in solicitudes:
+        if not hasattr(s, 'analisis_resultado'):
+            continue
         a = s.analisis_resultado
         ev = _evaluar_parametros_agronomicos(a, s.cultivo_deseado)
         ws.append([

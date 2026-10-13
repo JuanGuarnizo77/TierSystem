@@ -11,6 +11,32 @@ try:
 except ImportError:
     genai = None
 
+def _guardar_diagnostico_solicitud(solicitud_id, diagnostico, h, t, c, ph, n, p, k):
+    if not solicitud_id:
+        return
+    from apps.solicitudes.models import SolicitudAnalisis
+    from apps.analisis.models import RegistroAnalisis
+    try:
+        sol = SolicitudAnalisis.objects.get(id=solicitud_id)
+    except SolicitudAnalisis.DoesNotExist:
+        return
+    RegistroAnalisis.objects.update_or_create(
+        solicitud=sol,
+        defaults={
+            'humedad': h,
+            'temperatura': t,
+            'conductividad': c,
+            'ph': ph,
+            'nitrogeno': n,
+            'fosforo': p,
+            'potasio': k,
+            'diagnostico_ia': json.dumps(diagnostico),
+        }
+    )
+    sol.estado = 'COMPLETADA'
+    sol.save()
+
+
 def api_obtener_cultivos(request):
     """
     Retorna la lista completa de cultivos con sus rangos ideales.

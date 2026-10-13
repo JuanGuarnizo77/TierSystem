@@ -20,7 +20,10 @@ def dashboard_agricultor(request):
         
         context = {
             'total_terrenos': Terreno.objects.filter(agricultor=request.user).count(),
-            'solicitudes_activas': SolicitudAnalisis.objects.filter(agricultor=request.user).exclude(estado='COMPLETADA').count(),
+            'solicitudes_activas': SolicitudAnalisis.objects.filter(
+                agricultor=request.user,
+                estado__in=['PENDIENTE', 'ASIGNADA', 'EN_PROCESO']
+            ).count(),
         }
         return render(request, 'agricultor/dashboard.html', context)
     return redirect('home')
@@ -113,6 +116,9 @@ def crear_laboratorista(request):
             first_name = data.get('first_name', '')
             last_name = data.get('last_name', '')
             
+            if not username or not password:
+                return JsonResponse({'error': 'Usuario y contraseña son obligatorios'}, status=400)
+
             if User.objects.filter(username=username).exists():
                 return JsonResponse({'error': 'El usuario ya existe'}, status=400)
                 

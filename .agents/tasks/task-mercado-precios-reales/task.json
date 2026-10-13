@@ -1,0 +1,7 @@
+{
+  "task_id": "task-mercado-precios-reales",
+  "task_description": "Implementar el sistema completo de precios reales para el módulo de mercado de TierSystem: añadir campos al modelo, migración, comando de scraping actualizar_precios, seed_mercado con contactos, template SIPSA reescrito con tabla expandible y compradores, endpoint manual y vista mejorada.",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}
