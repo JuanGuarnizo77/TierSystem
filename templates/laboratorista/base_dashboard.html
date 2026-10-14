@@ -98,15 +98,15 @@
 
         <!-- User Profile -->
         <div class="p-6 mx-4 mt-6 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-white dark:bg-gray-700 flex items-center justify-center shadow-sm border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300">
+            <a href="{% url 'perfil' %}" class="flex items-center gap-4 group cursor-pointer" title="Ir a Mi Perfil">
+                <div class="w-12 h-12 rounded-xl bg-white dark:bg-gray-700 flex items-center justify-center shadow-sm border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 group-hover:bg-primary group-hover:text-white transition-all">
                     <i class="fa-solid fa-user-doctor text-lg"></i>
                 </div>
                 <div class="flex-1 overflow-hidden">
-                    <p class="font-bold text-sm truncate dark:text-white">{{ request.user.username|title }}</p>
+                    <p class="font-bold text-sm truncate dark:text-white group-hover:text-primary dark:group-hover:text-accent transition-colors">{{ request.user.username|title }}</p>
                     <p class="text-xs font-medium text-gray-500">Laboratorista</p>
                 </div>
-            </div>
+            </a>
             
             <!-- Online/Offline Indicator Desktop -->
             <div id="connection-status-desktop" class="mt-4 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-bold bg-[#e8f5e9] dark:bg-[#10b981]/20 text-[#0a4d3c] dark:text-[#10b981] border border-[#0a4d3c]/20 dark:border-[#10b981]/30 hidden md:flex transition-colors">
@@ -146,6 +146,13 @@
                 </div>
                 <span>Historial Análisis</span>
             </a>
+
+            <a href="{% url 'perfil' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'perfil' %}menu-active{% else %}text-gray-600 dark:text-gray-400 hover:bg-[#e8f5e9] hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary font-medium{% endif %} transition-all group">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center {% if request.resolver_match.url_name == 'perfil' %}bg-primary text-white shadow-md shadow-primary/30{% else %}bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 group-hover:text-primary dark:group-hover:text-primary{% endif %} transition-all">
+                    <i class="fa-solid fa-user-gear text-sm"></i>
+                </div>
+                <span>Mi Perfil</span>
+            </a>
         </nav>
 
         <!-- Sidebar Footer / Logout -->
@@ -174,9 +181,21 @@
                     <i id="theme-toggle-dark-icon" class="fa-solid fa-moon hidden text-lg"></i>
                     <i id="theme-toggle-light-icon" class="fa-solid fa-sun hidden text-lg text-amber-500"></i>
                 </button>
+                <!-- Notification Button -->
                 <button class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white transition-all shadow-sm">
                     <i class="fa-solid fa-bell text-lg"></i>
                 </button>
+
+                <!-- Profile Link -->
+                <a href="{% url 'perfil' %}" class="flex items-center gap-3 group transition-transform hover:scale-[1.02] pl-3 border-l border-gray-200 dark:border-gray-700 cursor-pointer" title="Ir a Mi Perfil">
+                    <div class="text-right hidden md:block">
+                        <p class="text-sm font-bold text-gray-800 dark:text-white group-hover:text-primary dark:group-hover:text-accent transition-colors">{{ request.user.get_full_name|default:request.user.username }}</p>
+                        <p class="text-xs text-gray-500 font-medium">Laboratorista</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary dark:text-accent overflow-hidden shadow-sm border border-primary/20 dark:border-primary/40 group-hover:bg-primary group-hover:text-white transition-all">
+                        <i class="fa-solid fa-user-doctor text-sm"></i>
+                    </div>
+                </a>
             </div>
         </header>
 
