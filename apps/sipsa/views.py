@@ -1,5 +1,6 @@
+import json
 from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse
 from django.core.management import call_command
 from io import StringIO
@@ -42,7 +43,8 @@ def detalle_cultivo(request, cultivo_id):
     precios = cultivo.precios_semanales.order_by('fecha_semana')
     pred = getattr(cultivo, 'prediccion', None)
 
-    # Datos para Chart.js
+    # Serializar con json.dumps para garantizar JSON válido en Chart.js
+    # (evita que Django use repr() de Python con comillas simples)
     labels = [p.semana_label for p in precios]
     valores = [float(p.precio_kg) for p in precios]
 
@@ -50,14 +52,15 @@ def detalle_cultivo(request, cultivo_id):
         'cultivo': cultivo,
         'precios': precios,
         'prediccion': pred,
-        'chart_labels': labels,
-        'chart_valores': valores,
+        'chart_labels': json.dumps(labels),
+        'chart_valores': json.dumps(valores),
     })
 
 
 @login_required
+@user_passes_test(lambda u: u.is_superuser, login_url='/agricultor/sipsa/')
 def actualizar_precios_view(request):
-    """POST → llama actualizar_sipsa y devuelve JSON."""
+    """POST → solo superusuarios; llama actualizar_sipsa y devuelve JSON."""
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
     try:

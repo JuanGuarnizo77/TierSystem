@@ -6,7 +6,7 @@ Idempotente — usa get_or_create. Calcula predicciones al finalizar.
 Uso:
     python manage.py seed_sipsa
 """
-from datetime import date
+from datetime import date, timedelta
 from django.core.management.base import BaseCommand
 from apps.sipsa.models import CultivoSipsa, PrecioSemanal, PrediccionPrecio
 from apps.sipsa.prediccion import calcular_prediccion
@@ -14,20 +14,18 @@ from apps.sipsa.prediccion import calcular_prediccion
 
 # ──────────────────────────────────────────────────────────────────────
 # Precios históricos (COP/kg) — 8 semanas, del más antiguo al más reciente
-# Semanas ISO 40..47 de 2024 (lunes 30-sep-2024 → lunes 18-nov-2024)
-# Fuente: SIPSA/DANE plazas mayoristas Colombia
+# Fuente: SIPSA/DANE plazas mayoristas Colombia (datos representativos)
 # ──────────────────────────────────────────────────────────────────────
 
-SEMANAS = [
-    date(2024,  9, 30),   # Sem 40
-    date(2024, 10,  7),   # Sem 41
-    date(2024, 10, 14),   # Sem 42
-    date(2024, 10, 21),   # Sem 43
-    date(2024, 10, 28),   # Sem 44
-    date(2024, 11,  4),   # Sem 45
-    date(2024, 11, 11),   # Sem 46
-    date(2024, 11, 18),   # Sem 47
-]
+def _lunes_hace_n_semanas(n):
+    """Devuelve el lunes de hace n semanas."""
+    hoy = date.today()
+    lunes_actual = hoy - timedelta(days=hoy.weekday())
+    return lunes_actual - timedelta(weeks=n)
+
+
+# Generar 8 semanas desde hace 8 semanas hasta la semana pasada
+SEMANAS = [_lunes_hace_n_semanas(8 - i) for i in range(8)]
 
 
 def _label(d: date) -> str:
@@ -41,6 +39,7 @@ CULTIVOS_SEED = [
         "nombre_dane": "papa pastusa",
         "unidad": "kg",
         "categoria": "Tubérculos",
+        # precios semanas 1..8 (descendente — tendencia Baja)
         "precios": [2650, 2580, 2510, 2440, 2370, 2320, 2290, 2260],
     },
     {
@@ -182,6 +181,5 @@ def _recalcular_predicciones(cmd=None):
         )
         if cmd:
             cmd.stdout.write(
-                f'  [predicción] {cultivo.nombre}: '
-                f'{resultado["tendencia"]} ({resultado["confianza_pct"]}%)'
+                f'  [predicción] {cultivo.nombre}: {resultado["tendencia"]} ({resultado["confianza_pct"]}%)'
             )

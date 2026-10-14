@@ -1,17 +1,15 @@
 """
 Management command: actualizar_sipsa
 Actualiza precios semanales SIPSA/DANE desde datos.gov.co (Socrata).
-Fallback: precios de referencia hard-coded si las APIs no responden.
+Fallback: precios de referencia hard-coded.
 
 Uso:
     python manage.py actualizar_sipsa
 
-Cron semanal (lunes 7am hora Colombia):
-    0 7 * * 1 /ruta/venv/bin/python /ruta/manage.py actualizar_sipsa >> /var/log/sipsa.log 2>&1
+Cron semanal (lunes 7am):
+    0 7 * * 1 /ruta/al/venv/bin/python /ruta/manage.py actualizar_sipsa >> /var/log/sipsa.log 2>&1
 """
-import urllib.request
-import urllib.error
-import json
+import requests
 from datetime import date, timedelta
 from django.core.management.base import BaseCommand
 
@@ -23,23 +21,23 @@ HTTP_TIMEOUT = 12
 
 # Datasets DANE en datos.gov.co (Socrata endpoints)
 APIS_DANE = [
-    "https://www.datos.gov.co/resource/3sp3-mua5.json",
-    "https://www.datos.gov.co/resource/8ff4-g29n.json",
-    "https://www.datos.gov.co/resource/2hfu-fu5g.json",
+    "https://www.datos.gov.co/resource/3sp3-mua5.json",   # Abastecimiento centrales
+    "https://www.datos.gov.co/resource/8ff4-g29n.json",   # SIPSA mayoristas
+    "https://www.datos.gov.co/resource/2hfu-fu5g.json",   # SIPSA abastecimiento
 ]
 
-# Precios de referencia fallback (COP/kg)
+# Precios de referencia fallback (COP/kg) — actualizados con series recientes
 FALLBACK_PRECIOS = {
-    "Papa Pastusa":      {"precio": 2260},
-    "Tomate Chonto":     {"precio": 3300},
-    "Cebolla Cabezona":  {"precio": 3120},
-    "Fríjol Cargamanto": {"precio": 11750},
-    "Zanahoria":         {"precio": 1280},
-    "Plátano Hartón":    {"precio": 1850},
-    "Arroz Blanco":      {"precio": 2130},
-    "Maíz Amarillo":     {"precio": 1530},
-    "Aguacate Hass":     {"precio": 7500},
-    "Yuca":              {"precio": 995},
+    "Papa Pastusa":       {"precio": 2260},
+    "Tomate Chonto":      {"precio": 3300},
+    "Cebolla Cabezona":   {"precio": 3120},
+    "Fríjol Cargamanto":  {"precio": 11750},
+    "Zanahoria":          {"precio": 1280},
+    "Plátano Hartón":     {"precio": 1850},
+    "Arroz Blanco":       {"precio": 2130},
+    "Maíz Amarillo":      {"precio": 1530},
+    "Aguacate Hass":      {"precio": 7500},
+    "Yuca":               {"precio": 995},
 }
 
 
@@ -55,7 +53,7 @@ def _label(d: date) -> str:
 
 
 class Command(BaseCommand):
-    help = "Actualiza precios semanales SIPSA desde datos.gov.co con fallback estático."
+    help = "Actualiza precios semanales SIPSA desde datos.gov.co (Socrata) con fallback estático."
 
     def _guardar_precio(self, cultivo_nombre, precio, fuente, fuente_url=""):
         try:
@@ -78,9 +76,7 @@ class Command(BaseCommand):
                 'fuente_url': fuente_url,
             }
         )
-        self.stdout.write(self.style.SUCCESS(
-            f"  ✓ {cultivo_nombre}: ${precio:,}/kg ({label})"
-        ))
+        self.stdout.write(self.style.SUCCESS(f"  ✓ {cultivo_nombre}: ${precio:,}/kg ({label})"))
         return True
 
     def _intentar_apis_dane(self, actualizados):
@@ -96,13 +92,14 @@ class Command(BaseCommand):
             if len(actualizados) >= total_activos:
                 break
             try:
-                req = urllib.request.Request(
-                    api_url + "?$limit=1000&$order=fecha+DESC",
-                    headers={"User-Agent": "TierSystem/1.0"},
+                resp = requests.get(
+                    api_url,
+                    params={"$limit": 1000, "$order": "fecha DESC"},
+                    timeout=HTTP_TIMEOUT,
+                    headers={"User-Agent": "TierSystem/1.0 (info@tiersystem.co)"},
                 )
-                with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT) as resp:
-                    rows = json.loads(resp.read().decode())
-
+                resp.raise_for_status()
+                rows = resp.json()
                 if not isinstance(rows, list):
                     continue
                 self.stdout.write(f"  [DANE] {api_url} → {len(rows)} filas")
@@ -112,9 +109,7 @@ class Command(BaseCommand):
                         row.get("producto") or row.get("nombre_producto") or ""
                     ).lower()
                     precio_raw = (
-                        row.get("precio_kg") or
-                        row.get("precio") or
-                        row.get("precio_promedio")
+                        row.get("precio_kg") or row.get("precio") or row.get("precio_promedio")
                     )
 
                     for alias, nombre_cultivo in alias_map.items():
@@ -131,10 +126,8 @@ class Command(BaseCommand):
                                     actualizados.add(nombre_cultivo)
                             except (TypeError, ValueError):
                                 pass
-
             except Exception as exc:
                 self.stdout.write(self.style.WARNING(f"  [DANE] {api_url}: {exc}"))
-
         return actualizados
 
     def handle(self, *args, **options):

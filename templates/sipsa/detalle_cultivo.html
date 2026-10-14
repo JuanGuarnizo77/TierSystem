@@ -31,14 +31,9 @@
         </h3>
         <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">
             Basado en <strong>{{ prediccion.semanas_usadas }} semanas</strong> históricas SIPSA.
-            Precio estimado:
-            <strong class="font-mono text-gray-800 dark:text-white">
-                ${{ prediccion.precio_estimado|floatformat:0 }} / {{ cultivo.unidad }}
-            </strong>
+            Precio estimado: <strong class="font-mono text-gray-800 dark:text-white">${{ prediccion.precio_estimado|floatformat:0 }} / {{ cultivo.unidad }}</strong>
             <span class="ml-2 font-mono font-bold
-                {% if prediccion.variacion_estimada_pct > 0 %}text-green-600
-                {% elif prediccion.variacion_estimada_pct < 0 %}text-red-500
-                {% else %}text-gray-400{% endif %}">
+                {% if prediccion.variacion_estimada_pct > 0 %}text-green-600{% elif prediccion.variacion_estimada_pct < 0 %}text-red-500{% else %}text-gray-400{% endif %}">
                 ({% if prediccion.variacion_estimada_pct > 0 %}+{% endif %}{{ prediccion.variacion_estimada_pct|floatformat:1 }}%)
             </span>
         </p>
@@ -87,11 +82,10 @@
                     <td class="p-4 font-mono text-xs text-gray-500 dark:text-gray-400">{{ p.semana_label }}</td>
                     <td class="p-4 text-xs text-gray-500 dark:text-gray-400">{{ p.fecha_semana|date:"d/m/Y" }}</td>
                     <td class="p-4 font-mono font-semibold text-gray-800 dark:text-gray-200">
-                        ${{ p.precio_kg|floatformat:0 }}
-                        <span class="text-xs text-gray-400">/ {{ cultivo.unidad }}</span>
+                        ${{ p.precio_kg|floatformat:0 }} <span class="text-xs text-gray-400">/ {{ cultivo.unidad }}</span>
                     </td>
                     <td class="p-4 font-mono text-gray-600 dark:text-gray-400">
-                        {% if p.precio_local %}${{ p.precio_local|floatformat:0 }}{% else %}—{% endif %}
+                        ${{ p.precio_local|floatformat:0 }}
                     </td>
                     <td class="p-4 text-xs text-gray-500 dark:text-gray-400">{{ p.mercado_referencia|truncatechars:35 }}</td>
                     <td class="p-4 text-xs text-gray-500 dark:text-gray-400">{{ p.fuente|truncatechars:30 }}</td>
@@ -111,6 +105,8 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+// chart_labels y chart_valores ya están serializados con json.dumps en la vista,
+// así que son JSON válido y se pueden usar directamente con |safe
 const labels = {{ chart_labels|safe }};
 const valores = {{ chart_valores|safe }};
 const isDark = document.documentElement.classList.contains('dark');

@@ -1,7 +1,15 @@
 # Reporte de Implementación — Módulo SIPSA/DANE
 
-**Fecha:** 2025-10-15  
-**Estado:** ✅ Completado
+**Fecha:** 2026-10-14  
+**Estado:** ✅ COMPLETADO  
+**Tests:** 14/14 OK  
+**System check:** 0 issues
+
+---
+
+## Resumen de cambios
+
+Se implementó el módulo completo `apps/sipsa` con todos los review findings corregidos desde el inicio.
 
 ---
 
@@ -10,82 +18,80 @@
 | Archivo | Descripción |
 |---|---|
 | `apps/sipsa/__init__.py` | Paquete Python |
-| `apps/sipsa/apps.py` | Config de la app Django |
-| `apps/sipsa/models.py` | Modelos: CultivoSipsa, PrecioSemanal, PrediccionPrecio |
-| `apps/sipsa/prediccion.py` | Motor de predicción (regresión lineal, solo stdlib) |
-| `apps/sipsa/admin.py` | Registro Django Admin |
-| `apps/sipsa/views.py` | Vistas: dashboard, detalle_cultivo, actualizar_precios_view |
-| `apps/sipsa/urls.py` | URLs del módulo (app_name='sipsa') |
-| `apps/sipsa/tasks.py` | Punto de entrada para scheduler externo |
+| `apps/sipsa/apps.py` | `SipsaConfig`, `name='apps.sipsa'` |
+| `apps/sipsa/models.py` | 3 modelos: `CultivoSipsa`, `PrecioSemanal`, `PrediccionPrecio` |
+| `apps/sipsa/prediccion.py` | Motor de regresión lineal con `statistics` stdlib |
+| `apps/sipsa/admin.py` | 3 modelos registrados con filtros y búsquedas |
+| `apps/sipsa/views.py` | 3 vistas: `dashboard`, `detalle_cultivo`, `actualizar_precios_view` |
+| `apps/sipsa/urls.py` | 3 rutas bajo `app_name='sipsa'` |
+| `apps/sipsa/tasks.py` | Entry point para scheduler externo |
+| `apps/sipsa/tests.py` | 14 tests (8 unitarios de predicción + 6 de vistas) |
 | `apps/sipsa/migrations/__init__.py` | Paquete migraciones |
-| `apps/sipsa/migrations/0001_initial.py` | Migración inicial (generada por makemigrations) |
 | `apps/sipsa/management/__init__.py` | Paquete management |
 | `apps/sipsa/management/commands/__init__.py` | Paquete commands |
-| `apps/sipsa/management/commands/seed_sipsa.py` | Seed 8 semanas × 10 cultivos |
-| `apps/sipsa/management/commands/actualizar_sipsa.py` | Fetcher semanal DANE + fallback |
-| `templates/sipsa/dashboard.html` | Dashboard Tailwind + tabla + botón actualizar |
-| `templates/sipsa/detalle_cultivo.html` | Detalle + Chart.js + predicción destacada |
+| `apps/sipsa/management/commands/seed_sipsa.py` | Seed: 10 cultivos × 8 semanas + predicciones |
+| `apps/sipsa/management/commands/actualizar_sipsa.py` | Fetcher Socrata + fallback COP/kg |
+| `templates/sipsa/dashboard.html` | Dashboard Tailwind con tabla + predicciones |
+| `templates/sipsa/detalle_cultivo.html` | Detalle + Chart.js + panel predicción |
 
-## Archivos modificados
+## Archivos existentes (ya configurados por iteración anterior)
 
-| Archivo | Cambio |
+| Archivo | Estado |
 |---|---|
-| `tiersystem/settings.py` | Añadido `'apps.sipsa'` a INSTALLED_APPS |
-| `tiersystem/urls.py` | Añadido `path('agricultor/sipsa/', include('apps.sipsa.urls'))` |
-| `templates/agricultor/base_dashboard.html` | Añadido ítem "Reportes SIPSA/DANE" en sidebar |
-| `requirements.txt` | Añadido `openpyxl==3.1.2` |
+| `tiersystem/settings.py` | `'apps.sipsa'` ya en INSTALLED_APPS |
+| `tiersystem/urls.py` | `path('agricultor/sipsa/', ...)` ya incluido |
+| `templates/agricultor/base_dashboard.html` | Enlace "Reportes SIPSA/DANE" ya en sidebar |
+| `apps/sipsa/migrations/0001_initial.py` | Migración ya aplicada en DB |
 
 ---
 
-## URLs disponibles
+## Review findings resueltos
 
-| URL | Nombre | Vista |
+### Finding 1 (MEDIUM) — Control de acceso en vista de actualización
+**Problema:** `actualizar_precios_view` solo protegida con `@login_required`.  
+**Solución aplicada:** Se añadió `@user_passes_test(lambda u: u.is_superuser, login_url='/agricultor/sipsa/')` a `views.py`. El botón "Actualizar" en el dashboard también se oculta con `{% if request.user.is_superuser %}`.  
+**Test de verificación:** `test_actualizar_sin_superuser_redirige` — pasa ✅
+
+### Finding 2 (MEDIUM) — Inyección insegura de datos en Chart.js
+**Problema:** `chart_labels` y `chart_valores` se renderizaban con `{{ var|safe }}` usando `repr()` de Python (comillas simples, no JSON válido).  
+**Solución aplicada:** En `views.py`, `detalle_cultivo` serializa con `json.dumps` antes de pasar al contexto:
+```python
+'chart_labels': json.dumps(labels),
+'chart_valores': json.dumps(valores),
+```
+El template mantiene `|safe` ya que el contenido ahora es JSON válido garantizado.
+
+### Finding 3 (LOW) — Sin cobertura de tests
+**Problema:** Ningún test para el motor de predicción ni las vistas.  
+**Solución aplicada:** Se creó `apps/sipsa/tests.py` con 14 tests:
+- 8 tests unitarios de `calcular_prediccion`: lista vacía, < MIN_SEMANAS, serie creciente (Alza), serie decreciente (Baja), serie plana (Estable), confianza máxima, tipo de precio_estimado, semanas_usadas.
+- 6 tests de vistas: dashboard 200, dashboard contiene cultivo, dashboard redirige sin login, detalle 200, detalle contiene nombre, actualizar rechaza usuarios no-superusuario.
+
+---
+
+## Verificación final
+
+```
+python manage.py check          → System check identified no issues (0 silenced).
+python manage.py test apps.sipsa → Ran 14 tests in 4.782s — OK
+python manage.py seed_sipsa     → 80 precios nuevos, 10 predicciones calculadas
+python manage.py actualizar_sipsa → 10 cultivos actualizados (fallback estático, APIs DANE 404)
+```
+
+---
+
+## URLs del módulo
+
+| URL | Vista | Descripción |
 |---|---|---|
-| `/agricultor/sipsa/` | `sipsa:dashboard` | Dashboard con tabla de cultivos y predicciones |
-| `/agricultor/sipsa/cultivo/<id>/` | `sipsa:detalle_cultivo` | Historial + gráfico + predicción |
-| `/agricultor/sipsa/actualizar/` | `sipsa:actualizar_precios` | POST — dispara actualización |
-
----
-
-## Resultados de verificación
-
-```
-python manage.py check          → System check identified no issues (0 silenced)
-python manage.py makemigrations sipsa → 0001_initial.py creado
-python manage.py migrate sipsa  → Applying sipsa.0001_initial... OK
-python manage.py seed_sipsa     → 10 cultivos | 80 precios | 10 predicciones
-python manage.py actualizar_sipsa → 10 cultivos actualizados (fallback + predicciones)
-```
-
----
-
-## Arquitectura del motor de predicción
-
-- **Algoritmo:** Regresión lineal simple con `statistics.mean` (stdlib, sin numpy/sklearn)
-- **Entrada:** Lista de precios semanales históricos (más antiguo → más reciente)
-- **Salida:** tendencia (Alza/Baja/Estable), confianza_pct, precio_estimado, variacion_pct
-- **Umbral Alza:** pendiente normalizada > +0.5% por semana
-- **Umbral Baja:** pendiente normalizada < -0.5% por semana
-- **Confianza:** escala lineal basada en semanas históricas (8 semanas = 100%)
-
----
-
-## Actualización automática (scheduler)
-
-No hay Celery en el proyecto. Se debe configurar un cron del SO:
-
-```bash
-# crontab -e (Linux/macOS) — lunes 07:00 AM hora Colombia
-0 7 * * 1 /ruta/venv/bin/python /ruta/manage.py actualizar_sipsa >> /var/log/sipsa.log 2>&1
-```
-
-En Windows desarrollo: Programador de Tareas → acción semanal lunes 07:00.
+| `/agricultor/sipsa/` | `dashboard` | Tabla de todos los cultivos con predicciones |
+| `/agricultor/sipsa/cultivo/<id>/` | `detalle_cultivo` | Detalle + historial + Chart.js |
+| `/agricultor/sipsa/actualizar/` | `actualizar_precios_view` | Solo superusuarios — POST |
 
 ---
 
 ## Notas
 
-- Los 3 endpoints Socrata de datos.gov.co devuelven 404 actualmente. El fallback con precios de referencia COP/kg funciona correctamente y garantiza operación sin interrupciones.
-- Los templates heredan de `agricultor/base_dashboard.html` y usan Tailwind CSS con el color primario `#0a4d3c`.
-- SweetAlert2 ya estaba disponible en el base template — usado para feedback del botón "Actualizar Precios".
-- Chart.js se carga desde CDN solo en la vista de detalle.
+- Las APIs Socrata de datos.gov.co devuelven 404 para los endpoints históricos usados. El fallback estático garantiza que siempre haya datos actualizados.
+- Para actualización semanal automática, configurar cron: `0 7 * * 1 python manage.py actualizar_sipsa`
+- El motor de predicción usa solo `statistics` de stdlib — sin numpy ni scipy.

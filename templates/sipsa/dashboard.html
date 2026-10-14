@@ -24,6 +24,7 @@
             {% endif %}
         </p>
     </div>
+    {% if request.user.is_superuser %}
     <div class="flex items-center gap-3">
         <button id="btn-actualizar"
                 onclick="actualizarSipsa()"
@@ -32,6 +33,7 @@
             <span id="label-actualizar">Actualizar Precios</span>
         </button>
     </div>
+    {% endif %}
 </div>
 
 {# ── TABLA ────────────────────────────────────────────────────────── #}
@@ -133,7 +135,7 @@
                 <tr>
                     <td colspan="9" class="p-10 text-center text-gray-400 dark:text-gray-500">
                         <i class="fa-solid fa-circle-info text-2xl mb-2 block"></i>
-                        No hay datos SIPSA. Ejecuta <code class="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-xs">python manage.py seed_sipsa</code>
+                        No hay datos SIPSA. Ejecuta <code class="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">python manage.py seed_sipsa</code>
                     </td>
                 </tr>
                 {% endfor %}
@@ -148,7 +150,7 @@
         <i class="fa-solid fa-circle-info text-primary mr-2"></i>
         <strong>Metodología de predicción:</strong> Regresión lineal sobre las últimas semanas históricas SIPSA.
         Un precio estimado con confianza ≥ 75% indica suficiente historial para la proyección.
-        Fuente oficial: <a href="https://www.datos.gov.co" target="_blank" class="text-primary underline">datos.gov.co — DANE/SIPSA</a>.
+        Fuente oficial: <a href="https://www.datos.gov.co" target="_blank" rel="noopener noreferrer" class="text-primary underline">datos.gov.co — DANE/SIPSA</a>.
         Actualización automática: lunes de cada semana (cron del servidor).
     </p>
 </div>
@@ -156,6 +158,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% if request.user.is_superuser %}
 <script>
 function getCookie(name) {
     let v = null;
@@ -178,41 +181,22 @@ async function actualizarSipsa() {
     try {
         const resp = await fetch("{% url 'sipsa:actualizar_precios' %}", {
             method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'Content-Type': 'application/json'
-            },
+            headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
         });
         const data = await resp.json();
         if (resp.ok && data.status === 'ok') {
-            Swal.fire({
-                icon: 'success',
-                title: 'SIPSA actualizado',
-                text: data.message,
-                confirmButtonColor: '#0a4d3c',
-                timer: 2500,
-                timerProgressBar: true,
+            Swal.fire({ icon: 'success', title: 'SIPSA actualizado', text: data.message,
+                confirmButtonColor: '#0a4d3c', timer: 2500, timerProgressBar: true,
             }).then(() => location.reload());
         } else {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Actualización parcial',
-                text: data.message,
-                confirmButtonColor: '#0a4d3c'
-            });
+            Swal.fire({ icon: 'warning', title: 'Actualización parcial', text: data.message, confirmButtonColor: '#0a4d3c' });
         }
     } catch(e) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'No se pudo conectar.',
-            confirmButtonColor: '#0a4d3c'
-        });
+        Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo conectar.', confirmButtonColor: '#0a4d3c' });
     } finally {
-        btn.disabled = false;
-        icon.classList.remove('fa-spin');
-        label.textContent = 'Actualizar Precios';
+        btn.disabled = false; icon.classList.remove('fa-spin'); label.textContent = 'Actualizar Precios';
     }
 }
 </script>
+{% endif %}
 {% endblock %}
