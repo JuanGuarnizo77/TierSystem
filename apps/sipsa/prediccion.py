@@ -6,7 +6,12 @@ import statistics
 from typing import List, Dict, Any
 
 
-# Umbrales para clasificar la pendiente normalizada como Alza/Baja/Estable
+# Umbrales para clasificar la pendiente normalizada como Alza/Baja/Estable.
+# 0.5 %/semana × 7 semanas ≈ 3.5 % de variación total, lo que cubre el
+# criterio de negocio del 3 % establecido en el requerimiento original.
+# Se trabaja sobre la pendiente normalizada (% por semana) en lugar de sobre
+# la variación acumulada para mantener consistencia independientemente del
+# número de semanas históricas disponibles.
 UMBRAL_ALZA = 0.5       # pendiente > +0.5% por semana → Alza
 UMBRAL_BAJA = -0.5      # pendiente < -0.5% por semana → Baja
 

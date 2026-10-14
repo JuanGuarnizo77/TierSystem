@@ -58,6 +58,56 @@ def detalle_cultivo(request, cultivo_id):
 
 
 @login_required
+def api_json(request, cultivo_id):
+    """
+    Devuelve JSON con la serie histórica de PrecioSemanal y la PrediccionPrecio
+    del cultivo indicado. Consumido por Chart.js en detalle_cultivo.html y por
+    clientes externos que quieran los datos brutos.
+
+    GET /agricultor/sipsa/cultivo/<id>/api/
+    Respuesta:
+    {
+      "cultivo": {"id": 1, "nombre": "...", "unidad": "kg"},
+      "precios": [{"semana": "Sem 40-2026", "fecha": "2026-09-28", "precio_kg": 2650.0, "precio_local": 2570.5}, ...],
+      "prediccion": {"tendencia": "Baja", "confianza_pct": 100.0, "precio_estimado": 2230.0, "variacion_estimada_pct": -1.33, "semanas_usadas": 8} | null
+    }
+    """
+    cultivo = get_object_or_404(CultivoSipsa, pk=cultivo_id, activo=True)
+    precios_qs = cultivo.precios_semanales.order_by('fecha_semana')
+
+    precios_data = [
+        {
+            'semana': p.semana_label,
+            'fecha': p.fecha_semana.isoformat(),
+            'precio_kg': float(p.precio_kg),
+            'precio_local': float(p.precio_local) if p.precio_local is not None else None,
+        }
+        for p in precios_qs
+    ]
+
+    pred = getattr(cultivo, 'prediccion', None)
+    prediccion_data = None
+    if pred:
+        prediccion_data = {
+            'tendencia': pred.tendencia_predicha,
+            'confianza_pct': pred.confianza_pct,
+            'precio_estimado': float(pred.precio_estimado) if pred.precio_estimado is not None else None,
+            'variacion_estimada_pct': pred.variacion_estimada_pct,
+            'semanas_usadas': pred.semanas_usadas,
+        }
+
+    return JsonResponse({
+        'cultivo': {
+            'id': cultivo.pk,
+            'nombre': cultivo.nombre,
+            'unidad': cultivo.unidad,
+        },
+        'precios': precios_data,
+        'prediccion': prediccion_data,
+    })
+
+
+@login_required
 @user_passes_test(lambda u: u.is_superuser, login_url='/agricultor/sipsa/')
 def actualizar_precios_view(request):
     """POST → solo superusuarios; llama actualizar_sipsa y devuelve JSON."""
