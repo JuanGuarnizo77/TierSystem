@@ -98,3 +98,24 @@ def captura_estable(request):
         "mensaje": "Conexión Exitosa. Datos estabilizados.",
         "datos": datos_estables
     })
+
+@csrf_exempt
+def guardar_punto(request, punto_id):
+    if request.method == "POST":
+        from apps.analisis.models import PuntoMuestreo
+        try:
+            datos = json.loads(request.body)
+            punto = PuntoMuestreo.objects.get(id=punto_id)
+            punto.humedad = datos.get("humedad")
+            punto.temperatura = datos.get("temperatura")
+            punto.conductividad = datos.get("conductividad")
+            punto.ph = datos.get("ph")
+            punto.nitrogeno = datos.get("nitrogeno")
+            punto.fosforo = datos.get("fosforo")
+            punto.potasio = datos.get("potasio")
+            punto.estado = 'TOMADO'
+            punto.save()
+            return JsonResponse({"estado": "ok", "mensaje": "Punto guardado exitosamente"})
+        except Exception as e:
+            return JsonResponse({"estado": "error", "mensaje": str(e)}, status=500)
+    return JsonResponse({"estado": "error"}, status=400)

@@ -6,6 +6,7 @@ urlpatterns = [
     path('agricultor/dashboard/', views.dashboard_agricultor, name='dashboard_agricultor'),
     path('agricultor/cultivos/', views.catalogo_cultivos, name='catalogo_cultivos'),
     path('laboratorista/dashboard/', views.dashboard_laboratorista, name='dashboard_laboratorista'),
+    path('laboratorista/toma-muestras/', views.toma_muestras_laboratorista, name='toma_muestras_laboratorista'),
     
     # Rutas Administrador
     path('administrador/dashboard/', views.dashboard_admin, name='dashboard_admin'),

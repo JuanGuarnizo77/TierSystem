@@ -133,11 +133,11 @@
                 <span>Mis Tareas</span>
             </a>
             
-            <a href="{% url 'dashboard_laboratorista' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'dashboard_laboratorista' %}menu-active{% else %}text-gray-600 dark:text-gray-400 hover:bg-[#e8f5e9] hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary font-medium{% endif %} transition-all group">
-                <div class="w-8 h-8 rounded-lg flex items-center justify-center {% if request.resolver_match.url_name == 'dashboard_laboratorista' %}bg-primary text-white shadow-md shadow-primary/30{% else %}bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 group-hover:text-primary dark:group-hover:text-primary{% endif %} transition-all">
-                    <i class="fa-solid fa-microchip text-sm"></i>
+            <a href="{% url 'toma_muestras_laboratorista' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'toma_muestras_laboratorista' %}menu-active{% else %}text-gray-600 dark:text-gray-400 hover:bg-[#e8f5e9] hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary font-medium{% endif %} transition-all group">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center {% if request.resolver_match.url_name == 'toma_muestras_laboratorista' %}bg-primary text-white shadow-md shadow-primary/30{% else %}bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 group-hover:text-primary dark:group-hover:text-primary{% endif %} transition-all">
+                    <i class="fa-solid fa-flask text-sm"></i>
                 </div>
-                <span>Conexión ESP32</span>
+                <span>Análisis y Muestras</span>
             </a>
             
             <a href="{% url 'analisis:historial' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl {% if request.resolver_match.url_name == 'historial' %}menu-active{% else %}text-gray-600 dark:text-gray-400 hover:bg-[#e8f5e9] hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary font-medium{% endif %} transition-all group">

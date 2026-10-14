@@ -40,7 +40,7 @@ def catalogo_cultivos(request):
 def dashboard_laboratorista(request):
     if hasattr(request.user, 'perfil') and request.user.perfil.rol == 'LABORATORISTA':
         from apps.solicitudes.models import SolicitudAnalisis
-        from apps.analisis.models import RegistroAnalisis
+        from apps.analisis.models import RegistroAnalisis, PuntoMuestreo
         
         solicitud_id = request.GET.get('solicitud_id')
         context = {
@@ -48,14 +48,61 @@ def dashboard_laboratorista(request):
             'total_completados': RegistroAnalisis.objects.filter(solicitud__laboratorista_asignado=request.user).count(),
         }
         
+        return render(request, 'laboratorista/dashboard.html', context)
+    return redirect('home')
+
+@login_required(login_url='login')
+def toma_muestras_laboratorista(request):
+    if hasattr(request.user, 'perfil') and request.user.perfil.rol == 'LABORATORISTA':
+        from apps.solicitudes.models import SolicitudAnalisis
+        from apps.analisis.models import PuntoMuestreo
+        
+        solicitud_id = request.GET.get('solicitud_id')
+        context = {}
+        
         if solicitud_id:
             try:
                 solicitud = SolicitudAnalisis.objects.get(id=solicitud_id, laboratorista_asignado=request.user)
                 context['solicitud_activa'] = solicitud
+                
+                # Generación de puntos de muestreo solo si la modalidad es VISITA a campo
+                if solicitud.modalidad == 'VISITA':
+                    puntos = PuntoMuestreo.objects.filter(solicitud=solicitud)
+                    if not puntos.exists():
+                        hectareas = float(solicitud.terreno.hectareas)
+                        if hectareas <= 1:
+                            num_puntos = 5
+                        elif hectareas <= 5:
+                            num_puntos = 10
+                        elif hectareas <= 10:
+                            num_puntos = 15
+                        else:
+                            num_puntos = 20
+                            
+                        nuevos_puntos = [
+                            PuntoMuestreo(solicitud=solicitud, numero=i) 
+                            for i in range(1, num_puntos + 1)
+                        ]
+                        PuntoMuestreo.objects.bulk_create(nuevos_puntos)
+                        puntos = PuntoMuestreo.objects.filter(solicitud=solicitud)
+                    
+                    context['puntos_muestreo'] = puntos
+                    context['puntos_tomados'] = puntos.filter(estado='TOMADO').count()
+                    context['total_puntos'] = puntos.count()
+                else:
+                    context['puntos_muestreo'] = []
+                    context['puntos_tomados'] = 0
+                    context['total_puntos'] = 0
+
+                try:
+                    context['analisis_existente'] = getattr(solicitud, 'analisis_resultado', None)
+                except Exception:
+                    context['analisis_existente'] = None
+                
             except SolicitudAnalisis.DoesNotExist:
                 pass
                 
-        return render(request, 'laboratorista/dashboard.html', context)
+        return render(request, 'laboratorista/toma_muestras.html', context)
     else:
         return redirect('home')
 

@@ -20,3 +20,19 @@ class RegistroAnalisis(models.Model):
 
     def __str__(self):
         return f"Análisis de Solicitud #{self.solicitud.id} - {self.fecha_analisis.strftime('%d/%m/%Y')}"
+
+class PuntoMuestreo(models.Model):
+    solicitud = models.ForeignKey(SolicitudAnalisis, on_delete=models.CASCADE, related_name='puntos_muestreo')
+    numero = models.IntegerField()
+    estado = models.CharField(max_length=20, default='PENDIENTE', choices=[('PENDIENTE', 'Pendiente'), ('TOMADO', 'Tomado')])
+    
+    humedad = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    temperatura = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    conductividad = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    ph = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
+    nitrogeno = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    fosforo = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    potasio = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    
+    def __str__(self):
+        return f"Punto {self.numero} - Solicitud #{self.solicitud.id}"
