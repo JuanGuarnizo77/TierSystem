@@ -13,4 +13,5 @@ urlpatterns = [
     path('historial/exportar-pdf/', views.exportar_historial_pdf, name='exportar_historial_pdf'),
     path('historial/exportar-excel/', views.exportar_historial_excel, name='exportar_historial_excel'),
     path('resultado/<int:solicitud_id>/exportar-pdf/', views.exportar_analisis_individual_pdf, name='exportar_analisis_pdf'),
+    path('resultado/<int:solicitud_id>/exportar-excel/', views.exportar_analisis_individual_excel, name='exportar_analisis_excel'),
 ]

@@ -765,3 +765,104 @@ def exportar_analisis_individual_pdf(request, solicitud_id):
     buffer.seek(0)
     
     return FileResponse(buffer, as_attachment=True, filename=f"reporte_analisis_{solicitud.id}.pdf")
+
+@login_required(login_url='login')
+def exportar_analisis_individual_excel(request, solicitud_id):
+    """
+    US-0012: Exporta la ficha técnica de un análisis individual en formato Excel (.xlsx).
+    """
+    if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
+        return redirect('home')
+
+    solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id, agricultor=request.user)
+    if not hasattr(solicitud, 'analisis_resultado'):
+        return redirect('solicitudes_agricultor:mis_solicitudes')
+
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+
+    a = solicitud.analisis_resultado
+    ev = _evaluar_parametros_agronomicos(a, solicitud.cultivo_deseado)
+
+    wb = Workbook()
+
+    # ─── Hoja 1: Parámetros ───────────────────────────────────────────────────
+    ws_params = wb.active
+    ws_params.title = "Parametros"
+
+    # Título principal
+    ws_params.merge_cells('A1:I1')
+    ws_params['A1'] = "TIERSYSTEM - FICHA TECNICA ANALISIS DE SUELO"
+    ws_params['A1'].font = Font(name='Arial', size=14, bold=True, color='FFFFFF')
+    ws_params['A1'].fill = PatternFill(start_color='0A4D3C', end_color='0A4D3C', fill_type='solid')
+    ws_params['A1'].alignment = Alignment(horizontal='center', vertical='center')
+
+    # Metadatos
+    lab_nombre = str(solicitud.laboratorista_asignado) if solicitud.laboratorista_asignado else 'N/A'
+    metadata = [
+        ("ID Solicitud", f"#{solicitud.id}"),
+        ("Agricultor", solicitud.agricultor.get_full_name() or solicitud.agricultor.username),
+        ("Finca", solicitud.terreno.nombre),
+        ("Hectáreas", f"{solicitud.terreno.hectareas} ha"),
+        ("Cultivo Objetivo", solicitud.cultivo_deseado),
+        ("Fecha Muestreo", solicitud.fecha_solicitud.strftime('%d/%m/%Y')),
+        ("Laboratorista", lab_nombre),
+        ("Compatibilidad %", f"{ev['compatibilidad']}% ({ev['nivel_compatibilidad']})"),
+    ]
+    for label, value in metadata:
+        ws_params.append([label, value])
+
+    ws_params.append([])  # separador
+
+    # Encabezados de tabla de parámetros
+    param_headers = ["Parametro", "Valor Medido", "Unidad", "Rango Ideal", "Estado Agronomico"]
+    ws_params.append(param_headers)
+    header_row = ws_params.max_row
+    for cell in ws_params[header_row]:
+        cell.font = Font(bold=True, color='FFFFFF')
+        cell.fill = PatternFill(start_color='10B981', end_color='10B981', fill_type='solid')
+        cell.alignment = Alignment(horizontal='center')
+
+    # Filas de parámetros
+    for pr in ev['parametros']:
+        ws_params.append([
+            pr['nombre'],
+            pr['medido'],
+            pr['unidad'],
+            pr['ideal'],
+            pr['estado'],
+        ])
+
+    # ─── Hoja 2: Recomendaciones ──────────────────────────────────────────────
+    ws_recs = wb.create_sheet(title="Recomendaciones")
+
+    rec_headers = ["Parametro", "Tipo", "Detalle", "Accion Sugerida", "Mejora Estimada"]
+    ws_recs.append(rec_headers)
+    for cell in ws_recs[1]:
+        cell.font = Font(bold=True, color='FFFFFF')
+        cell.fill = PatternFill(start_color='10B981', end_color='10B981', fill_type='solid')
+        cell.alignment = Alignment(horizontal='center')
+
+    if ev['recomendaciones']:
+        for rec in ev['recomendaciones']:
+            ws_recs.append([
+                rec['parametro'],
+                rec['tipo'],
+                rec['detalle'],
+                rec['accion'],
+                rec['mejora'],
+            ])
+    else:
+        ws_recs.append(["Todos los parametros en rango optimo", "", "", "", ""])
+
+    # ─── Respuesta HTTP ───────────────────────────────────────────────────────
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    response = HttpResponse(
+        buffer.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="reporte_analisis_{solicitud.id}.xlsx"'
+    return response

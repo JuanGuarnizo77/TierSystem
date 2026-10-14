@@ -1,0 +1,24 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Install reportlab, add exportar_analisis_individual_excel view, and register its URL. This feat makes both export backends complete: the PDF individual view already exists (apps/solicitudes/views.py line 688) but crashes at runtime because reportlab is not installed; the Excel individual view does not exist at all. openpyxl 3.1.5 is already installed. This feat is independent of FEAT-002 (template buttons), but FEAT-002 depends on the URLs created here.",
+  "status": "completed",
+  "steps": [
+    "Install reportlab with: pip install reportlab==4.2.5 (or latest stable). Add 'reportlab>=4.0' to requirements.txt alongside the existing entries (Django, djangorestframework, mysqlclient, python-dotenv). File: c:\\Users\\punto\\Desktop\\tyersistem clon\\requirements.txt",
+    "Add function exportar_analisis_individual_excel(request, solicitud_id) to apps/solicitudes/views.py, after the existing exportar_analisis_individual_pdf function (after line ~750). The function must: (a) check perfil.rol == 'AGRICULTOR', redirect to 'home' if not; (b) load solicitud with get_object_or_404(SolicitudAnalisis, id=solicitud_id, agricultor=request.user); (c) check hasattr(solicitud, 'analisis_resultado'), redirect to 'solicitudes_agricultor:mis_solicitudes' if not; (d) call ev = _evaluar_parametros_agronomicos(solicitud.analisis_resultado, solicitud.cultivo_deseado); (e) build openpyxl Workbook with two sheets: 'Parametros' and 'Recomendaciones'; (f) Sheet 'Parametros': merge A1:I1 with dark-green header (0A4D3C) showing 'TIERSYSTEM - FICHA TECNICA ANALISIS DE SUELO', then metadata rows (ID solicitud, Agricultor, Finca, Hectareas, Cultivo, Fecha, Laboratorista, Compatibilidad %), then a separator, then a parameter table header row (green 10B981): Parametro | Valor Medido | Unidad | Rango Ideal | Estado Agronomico, then 7 data rows iterating ev['parametros']; (g) Sheet 'Recomendaciones': header row: Parametro | Tipo | Detalle | Accion Sugerida | Mejora Estimada, then rows from ev['recomendaciones']; if no recomendaciones, write a single row 'Todos los parametros en rango optimo'; (h) save to io.BytesIO buffer; (i) return HttpResponse with content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' and Content-Disposition header filename='reporte_analisis_<solicitud.id>.xlsx'. Use from openpyxl import Workbook and from openpyxl.styles import Font, PatternFill, Alignment — same imports as exportar_historial_excel (line 624). File: c:\\Users\\punto\\Desktop\\tyersistem clon\\apps\\solicitudes\\views.py",
+    "Register the new URL in apps/solicitudes/urls_agricultor.py. Add after the existing exportar PDF individual path: path('resultado/<int:solicitud_id>/exportar-excel/', views.exportar_analisis_individual_excel, name='exportar_analisis_excel'). File: c:\\Users\\punto\\Desktop\\tyersistem clon\\apps\\solicitudes\\urls_agricultor.py"
+  ],
+  "acceptance_criteria": [
+    "python manage.py check runs with 0 errors from project root c:\\Users\\punto\\Desktop\\tyersistem clon",
+    "python -c \"import reportlab\" runs without ModuleNotFoundError",
+    "requirements.txt contains a reportlab entry",
+    "apps/solicitudes/views.py contains function exportar_analisis_individual_excel",
+    "apps/solicitudes/urls_agricultor.py contains the path 'resultado/<int:solicitud_id>/exportar-excel/' with name='exportar_analisis_excel'"
+  ],
+  "verification": [
+    "cd 'c:\\Users\\punto\\Desktop\\tyersistem clon' && python manage.py check",
+    "python -c \"import reportlab; print('OK', reportlab.Version)\""
+  ],
+  "blocked_reason": null,
+  "findings": "URL name for individual PDF export is 'exportar_analisis_pdf' (namespace: solicitudes_agricultor). URL name for individual Excel export is 'exportar_analisis_excel' (namespace: solicitudes_agricultor). Both use the pattern resultado/<int:solicitud_id>/exportar-{pdf,excel}/. FEAT-002 should add buttons to templates/agricultor/resultado_detalle.html using: {% url 'solicitudes_agricultor:exportar_analisis_pdf' solicitud.id %} and {% url 'solicitudes_agricultor:exportar_analisis_excel' solicitud.id %}. The ev dict keys used in Excel are: ev['parametros'] (list with keys: nombre, medido, unidad, ideal, estado) and ev['recomendaciones'] (list with keys: parametro, tipo, detalle, accion, mejora). ev['compatibilidad'] is an int, ev['nivel_compatibilidad'] is a string (ALTA/MEDIA/BAJA)."
+}

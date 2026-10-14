@@ -2,3 +2,4 @@ Django>=4.2,<5.0
 djangorestframework>=3.14.0
 mysqlclient>=2.2.0
 python-dotenv>=1.0.0
+reportlab>=4.0
