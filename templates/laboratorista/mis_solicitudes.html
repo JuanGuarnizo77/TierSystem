@@ -61,7 +61,7 @@
                     {% endif %}
                 </div>
                 
-                <a href="{% url 'dashboard_laboratorista' %}?solicitud_id={{ sol.id }}" class="relative z-10 w-full bg-primary hover:bg-secondary text-white font-bold py-3 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 group-hover:scale-[1.02]">
+                <a href="{% url 'toma_muestras_laboratorista' %}?solicitud_id={{ sol.id }}" class="relative z-10 w-full bg-primary hover:bg-secondary text-white font-bold py-3 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 group-hover:scale-[1.02]">
                     <i class="fa-solid fa-microchip group-hover:rotate-12 transition-transform"></i> Iniciar Análisis ESP32
                 </a>
             </div>

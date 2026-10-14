@@ -1,194 +1,88 @@
 {% extends 'agricultor/base_dashboard.html' %}
 
-{% block title %}Resultados & Historial — Agricultor | TierSystem{% endblock %}
-{% block header_title %}Resultados & Historial{% endblock %}
-
-{% block extra_css %}
-<!-- DataTables CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
-<style>
-/* ── DataTables: inputs & selects ── */
-.dataTables_wrapper .dataTables_filter input,
-.dataTables_wrapper .dataTables_length select {
-    border: 1px solid #e5e7eb;
-    background: #fff;
-    color: #1f2937;
-    border-radius: 0.5rem;
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-}
-.dark .dataTables_wrapper .dataTables_filter input,
-.dark .dataTables_wrapper .dataTables_length select {
-    border-color: #374151;
-    background: #1f2937;
-    color: #f3f4f6;
-}
-
-/* ── DataTables: labels & info ── */
-.dataTables_wrapper .dataTables_info,
-.dataTables_wrapper .dataTables_filter label,
-.dataTables_wrapper .dataTables_length label {
-    font-size: 0.75rem;
-    color: #6b7280;
-}
-.dark .dataTables_wrapper .dataTables_info,
-.dark .dataTables_wrapper .dataTables_filter label,
-.dark .dataTables_wrapper .dataTables_length label {
-    color: #9ca3af;
-}
-
-/* ── DataTables: pagination buttons ── */
-.dataTables_wrapper .dataTables_paginate .paginate_button {
-    border-radius: 0.5rem;
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-    color: #4b5563 !important;
-    border: 1px solid transparent !important;
-}
-.dataTables_wrapper .dataTables_paginate .paginate_button.current,
-.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-    background: #059669 !important;
-    color: #fff !important;
-    border: none !important;
-}
-.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-    background: #ecfdf5 !important;
-    color: #065f46 !important;
-    border: none !important;
-}
-.dark .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-    background: rgba(6,95,70,0.3) !important;
-    color: #6ee7b7 !important;
-}
-
-/* ── DataTables Buttons ── */
-.dt-button {
-    background-color: #059669 !important;
-    color: #fff !important;
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 0.5rem 1rem;
-    border-radius: 0.75rem;
-    border: none !important;
-    cursor: pointer;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    margin-right: 4px;
-    transition: background-color 0.15s;
-}
-.dt-button:hover {
-    background-color: #047857 !important;
-    color: #fff !important;
-}
-.dt-buttons { display: inline-flex; gap: 4px; flex-wrap: wrap; }
-
-/* ── Table structure ── */
-#tabla-historial { width: 100%; border-collapse: collapse; }
-#tabla-historial thead th {
-    background: #f9fafb;
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #f3f4f6;
-    white-space: nowrap;
-}
-.dark #tabla-historial thead th {
-    background: #111827;
-    color: #9ca3af;
-    border-bottom-color: #374151;
-}
-#tabla-historial tbody td {
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-    color: #1f2937;
-    border-bottom: 1px solid #f9fafb;
-    vertical-align: middle;
-}
-.dark #tabla-historial tbody td {
-    color: #e5e7eb;
-    border-bottom-color: #1f2937;
-}
-#tabla-historial tbody tr:hover td {
-    background: #ecfdf5;
-}
-.dark #tabla-historial tbody tr:hover td {
-    background: rgba(6,95,70,0.1);
-}
-</style>
-{% endblock %}
+{% block title %}Historial y Resultados de Suelo - TierSystem{% endblock %}
+{% block header_title %}Historial y Resultados{% endblock %}
 
 {% block content %}
-<div class="space-y-6">
-
-    <!-- Header & Action Buttons -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white font-heading">
-                Mis Análisis de Suelo
-            </h2>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                Historial cronológico de todos los muestreos procesados en tus fincas.
-            </p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2">
-            <!-- Botones PDF/Excel los inyecta DataTables automáticamente -->
-            <button onclick="compararSeleccionados()" class="bg-primary hover:bg-secondary text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2">
-                <i class="fa-solid fa-code-compare"></i> Comparar 2
-            </button>
-        </div>
+<div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white font-heading">Historial de Análisis</h2>
+        <p class="text-gray-500 dark:text-gray-400 mt-1 font-medium">Consulta los resultados de suelo compartidos por el laboratorio y evalúa nuevos cultivos con IA.</p>
     </div>
+</div>
 
-    <div class="bento-card p-6">
-        {% if historial_lista %}
-        <div class="overflow-x-auto">
-            <table id="tabla-historial" class="w-full text-left">
-                <thead>
-                    <tr>
-                        <th></th><!-- Checkbox -->
-                        <th>Fecha</th>
-                        <th>#ID</th>
-                        <th>Cultivo</th>
-                        <th>Finca</th>
-                        <th>Laboratorista</th>
-                        <th>pH</th>
-                        <th>N (mg/kg)</th>
-                        <th>P (mg/kg)</th>
-                        <th>K (mg/kg)</th>
-                        <th>Compatibilidad</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in historial_lista %}
-                    <tr>
-                        <td>
-                            <input type="checkbox" value="{{ item.solicitud.id }}" class="analisis-check w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary focus:ring-2 cursor-pointer">
-                        </td>
-                        <td>{{ item.solicitud.fecha_solicitud|date:"d/m/Y" }}</td>
-                        <td>#{{ item.solicitud.id }}</td>
-                        <td>{{ item.solicitud.cultivo_deseado }}</td>
-                        <td>{{ item.solicitud.terreno.nombre }}</td>
-                        <td>{{ item.solicitud.laboratorista_asignado.get_full_name|default:item.solicitud.laboratorista_asignado.username|default:"Laboratorista SENA" }}</td>
-                        <td>{{ item.analisis.ph }}</td>
-                        <td>{{ item.analisis.nitrogeno }}</td>
-                        <td>{{ item.analisis.fosforo }}</td>
-                        <td>{{ item.analisis.potasio }}</td>
-                        <td data-order="{{ item.compatibilidad }}">
-                            <span class="inline-block text-xs font-black px-2 py-1 rounded-full {% if item.color == 'green' %}bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300{% elif item.color == 'amber' %}bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300{% else %}bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300{% endif %}">{{ item.compatibilidad }}%</span>
-                        </td>
-                        <td>
-                            <a href="{% url 'solicitudes_agricultor:resultado_detalle' item.solicitud.id %}" class="bg-gray-100 hover:bg-primary hover:text-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold py-1.5 px-3 rounded-xl transition-all inline-flex items-center gap-1">
-                                Ver <i class="fa-solid fa-arrow-right text-[10px]"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<div class="bento-card overflow-hidden">
+    <div class="p-6">
+        {% if solicitudes %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for s in solicitudes %}
+            <div class="bento-card overflow-hidden group relative flex flex-col hover:!border-primary transition-all">
+                <div class="p-5 flex-1 flex flex-col relative z-10">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white font-heading">{{ s.terreno.nombre }}</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                <i class="fa-solid fa-location-dot mr-1 text-primary"></i> {{ s.terreno.municipio|default:'Huila, Colombia' }}
+                            </p>
+                        </div>
+                        <span class="bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-400 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap border border-green-200 dark:border-green-800 flex items-center gap-1">
+                            <i class="fa-solid fa-check-circle"></i> Completada
+                        </span>
+                    </div>
+                    
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                        <i class="fa-regular fa-calendar mr-1"></i> {{ s.fecha_solicitud|date:"d M Y" }}
+                    </p>
+
+                    <!-- Resumen rápido de nutrientes del sensor -->
+                    {% if s.analisis_resultado %}
+                    <div class="p-3 bg-gray-50 dark:bg-gray-800/60 rounded-xl border border-gray-100 dark:border-gray-700 mb-3 space-y-1.5 text-xs">
+                        <div class="flex justify-between items-center text-gray-600 dark:text-gray-300">
+                            <span><i class="fa-solid fa-droplet text-blue-500 mr-1"></i> Humedad:</span>
+                            <strong class="text-blue-600 dark:text-blue-400">{{ s.analisis_resultado.humedad }}%</strong>
+                        </div>
+                        <div class="flex justify-between items-center text-gray-600 dark:text-gray-300">
+                            <span><i class="fa-solid fa-flask text-purple-500 mr-1"></i> pH Suelo:</span>
+                            <strong class="text-purple-600 dark:text-purple-400">{{ s.analisis_resultado.ph }}</strong>
+                        </div>
+                        <div class="flex justify-between items-center text-gray-600 dark:text-gray-300">
+                            <span><i class="fa-solid fa-dna text-green-500 mr-1"></i> N-P-K:</span>
+                            <strong class="text-primary dark:text-green-400">{{ s.analisis_resultado.nitrogeno }}-{{ s.analisis_resultado.fosforo }}-{{ s.analisis_resultado.potasio }}</strong>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="flex flex-wrap gap-2 text-xs mb-4">
+                        <span class="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2.5 py-1 rounded-lg border border-blue-100 dark:border-blue-800 font-medium">
+                            <i class="fa-solid fa-seedling mr-1 text-green-500"></i> {{ s.cultivo_deseado }}
+                        </span>
+                        <span class="bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-lg border border-purple-100 dark:border-purple-800 font-medium">
+                            <i class="fa-solid fa-flask-vial mr-1 text-purple-500"></i> {{ s.get_modalidad_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
+                        <script type="application/json" id="raw-reporte-agri-{{ s.id }}">{{ s.analisis_resultado.diagnostico_ia|safe }}</script>
+                        <button type="button"
+                            data-solicitud-id="{{ s.id }}"
+                            data-terreno="{{ s.terreno.nombre }}"
+                            data-cultivo="{{ s.cultivo_deseado }}"
+                            data-fecha="{{ s.fecha_solicitud|date:'d M Y' }}"
+                            data-humedad="{{ s.analisis_resultado.humedad|default:'--' }}"
+                            data-ph="{{ s.analisis_resultado.ph|default:'--' }}"
+                            data-n="{{ s.analisis_resultado.nitrogeno|default:'--' }}"
+                            data-p="{{ s.analisis_resultado.fosforo|default:'--' }}"
+                            data-k="{{ s.analisis_resultado.potasio|default:'--' }}"
+                            data-conductividad="{{ s.analisis_resultado.conductividad|default:'--' }}"
+                            data-temperatura="{{ s.analisis_resultado.temperatura|default:'--' }}"
+                            onclick="verReporteCompleto(this)"
+                            class="w-full bg-primary hover:bg-secondary text-white font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm text-sm">
+                            <i class="fa-solid fa-microchip"></i> Ver Resultados y Consultar IA
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
         </div>
         {% else %}
         <div class="text-center py-16">
@@ -205,82 +99,261 @@
         </div>
         {% endif %}
     </div>
+</div>
 
+<!-- Modal Detallado con Consulta IA (HU-0031) -->
+<div id="modalReporte" class="hidden fixed inset-0 z-50 bg-gray-900/80 flex items-center justify-center p-4 overflow-y-auto py-8">
+    <div class="bento-card max-w-3xl w-full p-6 md:p-8 relative bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[92vh] flex flex-col">
+        <button onclick="cerrarReporte()" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-full w-9 h-9 flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+        
+        <div class="flex items-center gap-3 pb-4 border-b border-gray-100 dark:border-gray-800">
+            <div class="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center text-2xl font-bold">
+                <i class="fa-solid fa-file-waveform"></i>
+            </div>
+            <div>
+                <h3 id="modalTerrenoNombre" class="text-2xl font-bold text-gray-900 dark:text-white font-heading">Resultados del Suelo</h3>
+                <p id="modalSubtitulo" class="text-xs text-gray-500 dark:text-gray-400">Datos obtenidos mediante sensores calibrados</p>
+            </div>
+        </div>
+
+        <div class="overflow-y-auto flex-1 py-4 space-y-6 pr-1">
+            <!-- Grid de Mediciones Reales de Suelo -->
+            <div>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-primary"></i> Mediciones de Sensor en tu Predio
+                </h4>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                    <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 p-3 rounded-2xl text-center">
+                        <span class="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 block">Humedad</span>
+                        <strong id="mHumedad" class="text-base text-gray-800 dark:text-white">--</strong>
+                    </div>
+                    <div class="bg-purple-50 dark:bg-purple-950/30 border border-purple-100 dark:border-purple-900/40 p-3 rounded-2xl text-center">
+                        <span class="text-[10px] uppercase font-bold text-purple-600 dark:text-purple-400 block">pH</span>
+                        <strong id="mPh" class="text-base text-gray-800 dark:text-white">--</strong>
+                    </div>
+                    <div class="bg-green-50 dark:bg-green-950/30 border border-green-100 dark:border-green-900/40 p-3 rounded-2xl text-center">
+                        <span class="text-[10px] uppercase font-bold text-green-600 dark:text-green-400 block">Nitrógeno (N)</span>
+                        <strong id="mN" class="text-base text-gray-800 dark:text-white">--</strong>
+                    </div>
+                    <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40 p-3 rounded-2xl text-center">
+                        <span class="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 block">Fósforo (P)</span>
+                        <strong id="mP" class="text-base text-gray-800 dark:text-white">--</strong>
+                    </div>
+                    <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 p-3 rounded-2xl text-center">
+                        <span class="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 block">Potasio (K)</span>
+                        <strong id="mK" class="text-base text-gray-800 dark:text-white">--</strong>
+                    </div>
+                    <div class="bg-cyan-50 dark:bg-cyan-950/30 border border-cyan-100 dark:border-cyan-900/40 p-3 rounded-2xl text-center">
+                        <span class="text-[10px] uppercase font-bold text-cyan-600 dark:text-cyan-400 block">Cond. Eléc.</span>
+                        <strong id="mCond" class="text-base text-gray-800 dark:text-white">--</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recomendaciones Oficiales del Laboratorio -->
+            <div>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-green-500"></i> Recomendaciones Agronómicas para este Suelo
+                </h4>
+                <div id="contenidoReporte" class="space-y-3"></div>
+            </div>
+
+            <!-- Módulo Interactivo: Consultar otro cultivo con IA (HU-0031) -->
+            <div class="p-5 bg-gradient-to-br from-blue-50/70 to-emerald-50/70 dark:from-gray-800 dark:to-gray-800 rounded-3xl border border-blue-200/80 dark:border-gray-700 space-y-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center text-sm shadow-sm">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-gray-900 dark:text-white font-heading">Consultar otro cultivo con IA para este terreno</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">¿Quieres saber si otro cultivo prosperaría en este suelo con estas mismas propiedades?</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="inputCultivoIA" placeholder="Ej: Aguacate Hass, Cacao, Café, Maíz, Tomate..." class="flex-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary focus:outline-none">
+                    <button onclick="consultarCultivoConIA()" id="btnConsultarIA" class="bg-primary hover:bg-secondary text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Consultar IA
+                    </button>
+                </div>
+
+                <!-- Chips de sugerencia rápida -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-[11px] text-gray-500 font-medium">Sugerencias:</span>
+                    <button type="button" onclick="seleccionarChip('Aguacate Hass')" class="text-[11px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-2.5 py-1 rounded-lg text-gray-700 dark:text-gray-300 hover:border-primary transition-colors">Aguacate Hass</button>
+                    <button type="button" onclick="seleccionarChip('Café Castillo')" class="text-[11px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-2.5 py-1 rounded-lg text-gray-700 dark:text-gray-300 hover:border-primary transition-colors">Café Castillo</button>
+                    <button type="button" onclick="seleccionarChip('Cacao')" class="text-[11px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-2.5 py-1 rounded-lg text-gray-700 dark:text-gray-300 hover:border-primary transition-colors">Cacao</button>
+                    <button type="button" onclick="seleccionarChip('Plátano Hartón')" class="text-[11px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-2.5 py-1 rounded-lg text-gray-700 dark:text-gray-300 hover:border-primary transition-colors">Plátano Hartón</button>
+                    <button type="button" onclick="seleccionarChip('Maíz')" class="text-[11px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 px-2.5 py-1 rounded-lg text-gray-700 dark:text-gray-300 hover:border-primary transition-colors">Maíz</button>
+                </div>
+
+                <!-- Resultado de Consulta IA -->
+                <div id="resultadoConsultaIA" class="hidden p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-3">
+                    <!-- Dinámico -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="pt-4 border-t border-gray-100 dark:border-gray-800 flex justify-end">
+            <button class="bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold py-2.5 px-6 rounded-xl transition-all text-xs" onclick="cerrarReporte()">
+                Cerrar Reporte
+            </button>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- jQuery (requerido por DataTables) -->
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<!-- DataTables core -->
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<!-- JSZip (para Excel) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<!-- pdfmake (para PDF) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-<!-- DataTables Buttons -->
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
-
 <script>
-    $(document).ready(function () {
-        if ($('#tabla-historial').length) {
-            $('#tabla-historial').DataTable({
-                dom: 'Bfrtip',
-                buttons: [
-                    {
-                        extend: 'pdf',
-                        text: '<i class="fa-solid fa-file-pdf"></i> PDF',
-                        className: 'dt-button',
-                        title: 'TierSystem — Historial de Análisis de Suelo',
-                        exportOptions: { columns: [1,2,3,4,5,6,7,8,9,10] }
-                    },
-                    {
-                        extend: 'excel',
-                        text: '<i class="fa-solid fa-file-excel"></i> Excel',
-                        className: 'dt-button',
-                        title: 'TierSystem — Historial de Análisis de Suelo',
-                        exportOptions: { columns: [1,2,3,4,5,6,7,8,9,10] }
-                    },
-                    {
-                        extend: 'print',
-                        text: '<i class="fa-solid fa-print"></i> Imprimir',
-                        className: 'dt-button',
-                        title: 'TierSystem — Historial de Análisis de Suelo',
-                        exportOptions: { columns: [1,2,3,4,5,6,7,8,9,10] }
-                    }
-                ],
-                language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-                },
-                order: [[1, 'desc']],
-                pageLength: 10,
-                columnDefs: [
-                    { orderable: false, searchable: false, targets: [0, 11] }
-                ],
-                responsive: true
-            });
-        }
-    });
+    let activeSolicitudId = null;
 
-    function compararSeleccionados() {
-        const checkboxes = document.querySelectorAll('.analisis-check:checked');
-        if (checkboxes.length !== 2) {
-            Swal.fire({
-                title: 'Selecciona 2 análisis',
-                text: 'Debes marcar exactamente 2 casillas de verificación para compararlos cara a cara.',
-                icon: 'info',
-                confirmButtonColor: '#0a4d3c',
-                confirmButtonText: 'Entendido'
-            });
+    function seleccionarChip(cultivo) {
+        document.getElementById('inputCultivoIA').value = cultivo;
+    }
+
+    function cerrarReporte() {
+        document.getElementById('modalReporte').classList.add('hidden');
+        activeSolicitudId = null;
+    }
+
+    function verReporteCompleto(source) {
+        const data = (source instanceof HTMLElement) ? source.dataset : source;
+        activeSolicitudId = data.solicitudId;
+        const modal = document.getElementById('modalReporte');
+        
+        document.getElementById('modalTerrenoNombre').innerText = `Resultados: ${data.terreno}`;
+        document.getElementById('modalSubtitulo').innerText = `Cultivo proyectado: ${data.cultivo} | Fecha: ${data.fecha}`;
+        
+        document.getElementById('mHumedad').innerText = data.humedad !== '--' ? `${data.humedad}%` : '--';
+        document.getElementById('mPh').innerText = data.ph;
+        document.getElementById('mN').innerText = data.n !== '--' ? `${data.n} mg/kg` : '--';
+        document.getElementById('mP').innerText = data.p !== '--' ? `${data.p} mg/kg` : '--';
+        document.getElementById('mK').innerText = data.k !== '--' ? `${data.k} mg/kg` : '--';
+        document.getElementById('mCond').innerText = data.conductividad !== '--' ? `${data.conductividad} µS/cm` : '--';
+        
+        // Reset consulta IA
+        document.getElementById('inputCultivoIA').value = '';
+        document.getElementById('resultadoConsultaIA').classList.add('hidden');
+        document.getElementById('resultadoConsultaIA').innerHTML = '';
+
+        const container = document.getElementById('contenidoReporte');
+        const scriptTag = document.getElementById(`raw-reporte-agri-${data.solicitudId}`);
+        const rawJson = scriptTag ? scriptTag.textContent.trim() : (data.diagnostico || '{}');
+
+        let parsed = null;
+        try {
+            parsed = JSON.parse(rawJson);
+        } catch (e1) {
+            try {
+                parsed = JSON.parse(rawJson.replace(/\\"/g, '"'));
+            } catch (e2) {
+                console.error("Error al parsear reporte:", rawJson, e2);
+            }
+        }
+
+        if (parsed) {
+            let html = '';
+            if (parsed.recomendaciones && parsed.recomendaciones.length > 0) {
+                parsed.recomendaciones.forEach(rec => {
+                    let color = rec.compatibilidad >= 70 ? 'bg-green-500' : (rec.compatibilidad >= 40 ? 'bg-amber-500' : 'bg-red-500');
+                    html += `
+                    <div class="border border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-800/70 rounded-2xl p-4">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <h5 class="font-bold text-base text-gray-800 dark:text-gray-200 font-heading">${rec.cultivo}</h5>
+                            <span class="${color} text-white font-bold px-3 py-0.5 rounded-full text-xs shadow-xs">
+                                ${rec.compatibilidad}% Ideal
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed font-medium">${rec.descripcion}</p>
+                    </div>`;
+                });
+            }
+            if (parsed.consejo_general) {
+                html += `
+                <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/40 rounded-2xl p-3.5 mt-2">
+                    <p class="text-xs text-blue-900 dark:text-blue-300 font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-lightbulb text-amber-500"></i> ${parsed.consejo_general}
+                    </p>
+                </div>`;
+            }
+            container.innerHTML = html || '<p class="text-xs text-gray-500">No hay recomendaciones adicionales registradas.</p>';
+        } else {
+            container.innerHTML = '<p class="text-xs text-gray-500 italic">Reporte guardado sin formato estructurado.</p>';
+        }
+
+        modal.classList.remove('hidden');
+    }
+
+    async function consultarCultivoConIA() {
+        const cultivo = document.getElementById('inputCultivoIA').value.trim();
+        const resBox = document.getElementById('resultadoConsultaIA');
+        const btn = document.getElementById('btnConsultarIA');
+
+        if (!cultivo) {
+            alert('Por favor escribe un cultivo a consultar.');
             return;
         }
 
-        const id1 = checkboxes[0].value;
-        const id2 = checkboxes[1].value;
-        window.location.href = `{% url 'solicitudes_agricultor:comparar_analisis' %}?id1=${id1}&id2=${id2}`;
+        if (!activeSolicitudId) {
+            alert('No hay análisis activo seleccionado.');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analizando...';
+        resBox.classList.remove('hidden');
+        resBox.innerHTML = `
+            <div class="text-center py-4 text-xs text-gray-500">
+                <i class="fa-solid fa-dna fa-spin text-primary text-xl mb-2"></i>
+                <p>Consultando compatibilidad agronómica para <strong>${cultivo}</strong>...</p>
+            </div>
+        `;
+
+        try {
+            const resp = await fetch('/api/ia/consultar-agricultor/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    solicitud_id: activeSolicitudId,
+                    cultivo: cultivo
+                })
+            });
+            const data = await resp.json();
+
+            if (data.estado === 'ok' && data.evaluacion) {
+                const ev = data.evaluacion;
+                const bgBadge = ev.compatibilidad >= 70 ? 'bg-green-500' : (ev.compatibilidad >= 40 ? 'bg-amber-500' : 'bg-red-500');
+                
+                resBox.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2">
+                        <h5 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-seedling text-green-500"></i> ${ev.cultivo}
+                        </h5>
+                        <span class="${bgBadge} text-white font-bold px-2.5 py-0.5 rounded-full text-xs">
+                            ${ev.compatibilidad}% de Compatibilidad
+                        </span>
+                    </div>
+                    <div class="text-xs text-gray-600 dark:text-gray-300 space-y-2">
+                        <p><strong class="text-gray-800 dark:text-gray-200">Diagnóstico:</strong> ${ev.descripcion}</p>
+                        ${ev.recomendacion_suelo ? `
+                        <div class="p-2.5 bg-green-50/70 dark:bg-green-950/20 border border-green-200 dark:border-green-900/40 rounded-xl">
+                            <strong class="text-green-800 dark:text-green-300 block mb-0.5"><i class="fa-solid fa-screwdriver-wrench mr-1"></i> Manejo Recomendado:</strong>
+                            <span class="text-green-700 dark:text-green-400 font-medium">${ev.recomendacion_suelo}</span>
+                        </div>` : ''}
+                    </div>
+                `;
+            } else {
+                resBox.innerHTML = `<p class="text-xs text-red-500 font-bold">${data.mensaje || 'No se pudo obtener recomendación.'}</p>`;
+            }
+        } catch (err) {
+            console.error(err);
+            resBox.innerHTML = '<p class="text-xs text-red-500 font-bold">Error al conectar con el servicio de recomendaciones.</p>';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Consultar IA';
+        }
     }
 </script>
 {% endblock %}
