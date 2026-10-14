@@ -1,0 +1,218 @@
+{% extends 'agricultor/base_dashboard.html' %}
+
+{% block title %}Reportes SIPSA/DANE — TierSystem{% endblock %}
+{% block header_title %}Reportes SIPSA / DANE{% endblock %}
+
+{% block content %}
+
+{# ── ENCABEZADO ──────────────────────────────────────────────────── #}
+<div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div>
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white font-heading flex items-center gap-3">
+            <span class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-md shrink-0">
+                <i class="fa-solid fa-database text-lg"></i>
+            </span>
+            Precios Oficiales SIPSA / DANE
+        </h2>
+        <p class="text-gray-500 dark:text-gray-400 mt-1 ml-13">
+            Precios mayoristas nacionales con predicción de tendencia semanal —
+            <span class="font-semibold text-gray-700 dark:text-gray-300">
+                {{ total_cultivos }} cultivos registrados
+            </span>
+            {% if ultima_actualizacion %}
+            · Actualizado: <span class="font-semibold">{{ ultima_actualizacion|date:"d/m/Y H:i" }}</span>
+            {% endif %}
+        </p>
+    </div>
+    <div class="flex items-center gap-3">
+        <button id="btn-actualizar"
+                onclick="actualizarSipsa()"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-primary text-white hover:bg-secondary transition-colors shadow-sm disabled:opacity-60">
+            <i id="icon-actualizar" class="fa-solid fa-rotate-right"></i>
+            <span id="label-actualizar">Actualizar Precios</span>
+        </button>
+    </div>
+</div>
+
+{# ── TABLA ────────────────────────────────────────────────────────── #}
+<div class="bento-card overflow-hidden">
+    <div class="p-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-between items-center">
+        <h3 class="font-bold text-gray-800 dark:text-white text-sm uppercase tracking-wide">
+            <i class="fa-solid fa-list text-primary mr-2"></i> Precios semanales DANE ({{ total_cultivos }} cultivos)
+        </h3>
+        <span class="text-xs text-gray-500 dark:text-gray-400">Haz clic en un cultivo para ver historial completo</span>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+            <thead>
+                <tr class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+                    <th class="p-4 font-semibold">Cultivo</th>
+                    <th class="p-4 font-semibold">Categoría</th>
+                    <th class="p-4 font-semibold">Último Precio</th>
+                    <th class="p-4 font-semibold">Semana</th>
+                    <th class="p-4 font-semibold">Predicción</th>
+                    <th class="p-4 font-semibold">Confianza</th>
+                    <th class="p-4 font-semibold">Precio Estimado</th>
+                    <th class="p-4 font-semibold">Variación Est.</th>
+                    <th class="p-4 font-semibold">Acción</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
+                {% for fila in tabla %}
+                <tr class="hover:bg-emerald-50/40 dark:hover:bg-primary/10 transition-colors">
+                    <td class="p-4">
+                        <span class="font-bold text-gray-900 dark:text-white">{{ fila.cultivo.nombre }}</span>
+                    </td>
+                    <td class="p-4 text-xs text-gray-500 dark:text-gray-400">{{ fila.cultivo.categoria }}</td>
+                    <td class="p-4 font-mono font-semibold text-gray-800 dark:text-gray-200">
+                        {% if fila.ultimo_precio %}
+                            ${{ fila.ultimo_precio.precio_kg|floatformat:0 }}
+                            <span class="text-gray-400 font-normal text-xs">/ {{ fila.cultivo.unidad }}</span>
+                        {% else %}
+                            <span class="text-gray-400 text-xs italic">Sin datos</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-4 text-xs text-gray-500 dark:text-gray-400">
+                        {{ fila.ultimo_precio.semana_label|default:"—" }}
+                    </td>
+                    <td class="p-4">
+                        {% if fila.prediccion %}
+                            {% if fila.prediccion.tendencia_predicha == 'Alza' %}
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-400 border border-green-200 dark:border-green-800">
+                                    <i class="fa-solid fa-arrow-trend-up"></i> Alza
+                                </span>
+                            {% elif fila.prediccion.tendencia_predicha == 'Baja' %}
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-800">
+                                    <i class="fa-solid fa-arrow-trend-down"></i> Baja
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
+                                    <i class="fa-solid fa-minus"></i> Estable
+                                </span>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-gray-400 text-xs italic">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-4">
+                        {% if fila.prediccion %}
+                            <div class="flex items-center gap-2">
+                                <div class="w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                    <div class="bg-primary rounded-full h-2"
+                                         style="width: {{ fila.prediccion.confianza_pct|floatformat:0 }}%"></div>
+                                </div>
+                                <span class="text-xs font-mono text-gray-600 dark:text-gray-400">
+                                    {{ fila.prediccion.confianza_pct|floatformat:0 }}%
+                                </span>
+                            </div>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td class="p-4 font-mono text-sm text-gray-700 dark:text-gray-300">
+                        {% if fila.prediccion and fila.prediccion.precio_estimado %}
+                            ${{ fila.prediccion.precio_estimado|floatformat:0 }}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td class="p-4 font-mono font-semibold text-sm
+                        {% if fila.prediccion %}
+                            {% if fila.prediccion.variacion_estimada_pct > 0 %}text-green-600 dark:text-green-400
+                            {% elif fila.prediccion.variacion_estimada_pct < 0 %}text-red-600 dark:text-red-400
+                            {% else %}text-gray-500{% endif %}
+                        {% endif %}">
+                        {% if fila.prediccion %}
+                            {% if fila.prediccion.variacion_estimada_pct > 0 %}+{% endif %}{{ fila.prediccion.variacion_estimada_pct|floatformat:1 }}%
+                        {% else %}—{% endif %}
+                    </td>
+                    <td class="p-4">
+                        <a href="{% url 'sipsa:detalle_cultivo' fila.cultivo.pk %}"
+                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors">
+                            <i class="fa-solid fa-chart-line"></i> Ver historial
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="p-10 text-center text-gray-400 dark:text-gray-500">
+                        <i class="fa-solid fa-circle-info text-2xl mb-2 block"></i>
+                        No hay datos SIPSA. Ejecuta <code class="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-xs">python manage.py seed_sipsa</code>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{# ── NOTA METODOLÓGICA ──────────────────────────────────────────── #}
+<div class="mt-6 rounded-xl p-5 border border-gray-100 dark:border-gray-800 border-l-4 border-l-primary shadow-sm">
+    <p class="text-sm text-gray-500 dark:text-gray-400">
+        <i class="fa-solid fa-circle-info text-primary mr-2"></i>
+        <strong>Metodología de predicción:</strong> Regresión lineal sobre las últimas semanas históricas SIPSA.
+        Un precio estimado con confianza ≥ 75% indica suficiente historial para la proyección.
+        Fuente oficial: <a href="https://www.datos.gov.co" target="_blank" class="text-primary underline">datos.gov.co — DANE/SIPSA</a>.
+        Actualización automática: lunes de cada semana (cron del servidor).
+    </p>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function getCookie(name) {
+    let v = null;
+    if (document.cookie) {
+        document.cookie.split(';').forEach(c => {
+            const [k, val] = c.trim().split('=');
+            if (k === name) v = decodeURIComponent(val);
+        });
+    }
+    return v;
+}
+
+async function actualizarSipsa() {
+    const btn = document.getElementById('btn-actualizar');
+    const icon = document.getElementById('icon-actualizar');
+    const label = document.getElementById('label-actualizar');
+    btn.disabled = true;
+    icon.classList.add('fa-spin');
+    label.textContent = 'Actualizando…';
+    try {
+        const resp = await fetch("{% url 'sipsa:actualizar_precios' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+        });
+        const data = await resp.json();
+        if (resp.ok && data.status === 'ok') {
+            Swal.fire({
+                icon: 'success',
+                title: 'SIPSA actualizado',
+                text: data.message,
+                confirmButtonColor: '#0a4d3c',
+                timer: 2500,
+                timerProgressBar: true,
+            }).then(() => location.reload());
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Actualización parcial',
+                text: data.message,
+                confirmButtonColor: '#0a4d3c'
+            });
+        }
+    } catch(e) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo conectar.',
+            confirmButtonColor: '#0a4d3c'
+        });
+    } finally {
+        btn.disabled = false;
+        icon.classList.remove('fa-spin');
+        label.textContent = 'Actualizar Precios';
+    }
+}
+</script>
+{% endblock %}

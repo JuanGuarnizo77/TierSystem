@@ -103,6 +103,11 @@
                 <i class="fa-solid fa-chart-line w-5 text-center"></i>
                 <span>Mercado SIPSA</span>
             </a>
+
+            <a href="{% url 'sipsa:dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-[#e8f5e9] hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary transition-all font-medium {% if request.resolver_match.namespace == 'sipsa' %}menu-active{% endif %}">
+                <i class="fa-solid fa-database w-5 text-center"></i>
+                <span>Reportes SIPSA/DANE</span>
+            </a>
         </nav>
 
         <!-- Sidebar Footer / Logout -->

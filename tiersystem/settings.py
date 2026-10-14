@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'apps.analisis',
     'apps.ia_recomendaciones',
     'apps.mercado',
+    'apps.sipsa',
     'core',
 ]
 
