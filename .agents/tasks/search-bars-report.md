@@ -1,46 +1,59 @@
-# Reporte: Barras de búsqueda en módulos con cultivos
+# Search Bars Implementation Report
 
-## Vistas modificadas
+## Iteration: Review Corrections (search-review.json)
 
-Ninguna vista (`views.py`) fue modificada. Toda la búsqueda es **client-side** (JS), como indica el plan, ya que los conjuntos de datos son pequeños (máximo ~40 cultivos).
+This report documents the corrections applied in response to the three findings in `search-review.json`.
 
-## Templates modificados
+---
 
-| Template | Cambio |
-|----------|--------|
-| `templates/sipsa/dashboard.html` | Añadida barra `id="buscarCultivoSipsa"` + `data-nombre`/`data-categoria` en cada `<tr>` + fila "sin resultados" + JS de filtrado en `{% block extra_js %}` |
-| `templates/agricultor/precios_sipsa.html` | Añadida barra `id="buscarPrecioSipsa"` + `data-cultivo` en cada `<tr>` principal + fila "sin resultados" + JS que oculta también la fila de detalle expandible (slugified) |
-| `templates/agricultor/historial.html` | Añadida barra `id="buscarHistorial"` (solo visible cuando hay solicitudes) + `data-terreno`/`data-cultivo` en cada card + div "sin resultados" + JS en `{% block extra_js %}` |
-| `templates/laboratorista/historial.html` | Añadida barra `id="buscarHistorialLab"` + `data-search` (terreno + cultivo + agricultor) en cada `<tr>` + fila "sin resultados" colspan=7 + JS que no interfiere con checkboxes de comparación |
-| `templates/agricultor/mi_tienda.html` | Añadida barra `id="buscarMiTienda"` + `data-nombre` en cada card de producto + div "sin resultados" + JS en `{% block extra_js %}` |
+## Findings Fixed
 
-## Templates NO modificados (ya tenían búsqueda funcional)
+### Finding 1 — HIGH: Double-match selector in `agricultor/historial.html`
 
-| Template | Razón |
-|----------|-------|
-| `templates/agricultor/cultivos.html` | Ya tiene `id="searchInput"` con `applyFilters()` completo |
-| `templates/agricultor/mercado.html` | Ya tiene `id="buscarProducto"` con JS funcional |
-| `templates/admin/cultivos.html` | Ya tiene `id="buscarCultivo"` con filtrado sobre `.cultivo-card` |
+**Problem:** `querySelectorAll('[data-terreno][data-cultivo]')` matched both the outer `div.bento-card` and the inner `<button>` inside each card (both carry `data-terreno` and `data-cultivo`). This caused `visibles` to equal the button count (N) after filtering, so `sinResultadosHistorial` was never shown.
 
-## Resultado de `python manage.py check`
+**Fix applied (2 changes in `templates/agricultor/historial.html`):**
+1. Added `id="gridHistorial"` to the grid container `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`.
+2. Changed JS selector from `document.querySelectorAll('[data-terreno][data-cultivo]')` to `document.querySelectorAll('#gridHistorial > [data-terreno][data-cultivo]')` — direct children only, scoped to the grid.
 
+### Finding 2 — LOW: Inert `col-span-full` on non-grid-child `sinResultadosHistorial`
+
+**Problem:** `sinResultadosHistorial` had class `col-span-full` but is a sibling of the grid container, not a grid child, making the class inert and misleading.
+
+**Fix applied:** Removed `col-span-full` from `<div id="sinResultadosHistorial" ...>` in `templates/agricultor/historial.html`.
+
+### Finding 3 — LOW: Dual "no results" state risk in `precios_sipsa.html`
+
+**Problem:** `sinResultadosPrecio` (JS-controlled) and the Django `{% empty %}` block both live in the same `<tbody>`. If `{% empty %}` is ever removed, both messages could display simultaneously.
+
+**Fix applied:** Added an explanatory HTML comment immediately before `<tr id="sinResultadosPrecio">` in `templates/agricultor/precios_sipsa.html` documenting the dependency.
+
+---
+
+## Files Modified
+
+| File | Change |
+|------|--------|
+| `templates/agricultor/historial.html` | Added `id="gridHistorial"` to grid div; scoped JS selector to `#gridHistorial > [data-terreno][data-cultivo]`; removed `col-span-full` from `sinResultadosHistorial` |
+| `templates/agricultor/precios_sipsa.html` | Added comment before `sinResultadosPrecio` explaining dependency with `{% empty %}` |
+
+---
+
+## Verification
+
+### `python manage.py check`
 ```
 System check identified no issues (0 silenced).
 ```
 
-## Resultado de validación de templates
+### No views.py changes
+All search implementations are client-side JS. No Python files were modified in this iteration. No `py_compile` runs needed.
 
-```
-OK: sipsa/dashboard.html
-OK: agricultor/precios_sipsa.html
-OK: agricultor/historial.html
-OK: laboratorista/historial.html
-OK: agricultor/mi_tienda.html
-```
+---
 
-## Notas
+## Summary
 
-- La búsqueda es case-insensitive (todo comparado en lowercase vía filtros Django `|lower` y `.toLowerCase()` en JS).
-- Los filtros y funciones existentes (`toggleDetalle`, `actualizarSeleccionComparar`, `verReporte`, etc.) no fueron modificados.
-- El JS de búsqueda del laboratorista usa `data-search` únicamente; no toca los atributos `data-id` de los checkboxes.
-- La barra de historial agricultor solo se renderiza cuando hay solicitudes (condición `{% if solicitudes %}`), evitando un widget vacío en la vista vacía.
+All 3 findings from `search-review.json` have been resolved:
+- The broken "no results" state in the agricultor historial (HIGH) is fixed by scoping the JS selector.
+- The inert CSS class (LOW) was removed.
+- The dual-message risk (LOW) is documented with a comment for future maintainers.

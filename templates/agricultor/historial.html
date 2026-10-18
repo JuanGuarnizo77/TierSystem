@@ -38,7 +38,7 @@
 <div class="bento-card overflow-hidden">
     <div class="p-6">
         {% if solicitudes %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="gridHistorial">
             {% for s in solicitudes %}
             <div class="bento-card overflow-hidden group relative flex flex-col hover:!border-primary transition-all"
                  data-terreno="{{ s.terreno.nombre|lower }}"
@@ -110,7 +110,7 @@
             </div>
             {% endfor %}
         </div>
-        <div id="sinResultadosHistorial" style="display:none;" class="col-span-full py-8 text-center text-gray-400 dark:text-gray-500 text-sm italic">
+        <div id="sinResultadosHistorial" style="display:none;" class="py-8 text-center text-gray-400 dark:text-gray-500 text-sm italic">
             <i class="fa-solid fa-magnifying-glass-minus text-2xl mb-2 block"></i>
             No hay análisis que coincidan con la búsqueda.
         </div>
@@ -244,7 +244,7 @@
         var noRes = document.getElementById('sinResultadosHistorial');
         input.addEventListener('input', function() {
             var term = this.value.toLowerCase().trim();
-            var cards = document.querySelectorAll('[data-terreno][data-cultivo]');
+            var cards = document.querySelectorAll('#gridHistorial > [data-terreno][data-cultivo]');
             var visibles = 0;
             cards.forEach(function(card) {
                 var terreno = card.dataset.terreno || '';

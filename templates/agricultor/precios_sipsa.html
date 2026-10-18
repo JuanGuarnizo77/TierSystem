@@ -297,6 +297,9 @@
                     </td>
                 </tr>
                 {% endfor %}
+                {# Nota: esta fila es controlada por JS de búsqueda. Solo se activa cuando precios_tabla
+                   tiene elementos pero ninguno coincide con el término. Si se elimina el bloque empty de
+                   arriba, ambos mensajes podrían mostrarse simultáneamente — mantenerlos sincronizados. #}
                 <tr id="sinResultadosPrecio" style="display:none;">
                     <td colspan="8" class="p-8 text-center text-gray-400 dark:text-gray-500 text-sm italic">
                         <i class="fa-solid fa-magnifying-glass-minus text-2xl mb-2 block"></i>
