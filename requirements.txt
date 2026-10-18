@@ -1,4 +1,12 @@
 Django>=4.2,<5.0
 djangorestframework>=3.14.0
-mysqlclient>=2.2.0
+djangorestframework-simplejwt==5.3.1
+drf-spectacular>=0.27.0
 python-dotenv>=1.0.0
+requests>=2.20.0
+
+
+# Opcionales (instalar manualmente si se usan)
+# google-generativeai
+# reportlab
+# openpyxl
