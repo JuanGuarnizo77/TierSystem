@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>TierSystem — Mockups v2</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g50:#EAF3DE;--g100:#C0DD97;--g200:#97C459;--g400:#639922;--g600:#3B6D11;--g800:#27500A;--g900:#173404;
+  --white:#fff;--gray50:#F1EFE8;--gray100:#D3D1C7;--gray200:#B4B2A9;--gray400:#888780;--gray600:#5F5E5A;
+  --red:#E24B4A;--amber:#BA7517;--blue:#185FA5;--purple:#6B3FA0;
+}
+body{font-family:'Segoe UI',sans-serif;background:var(--gray50);color:#222;font-size:14px}
+
+/* ── Layout ── */
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:230px;background:var(--g800);color:#fff;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sidebar-logo{padding:16px;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:9px}
+.logo-icon{width:34px;height:34px;background:var(--g200);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sidebar-section{padding:10px 0 3px 14px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.4);margin-top:4px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 14px;font-size:12px;cursor:pointer;color:rgba(255,255,255,.72);transition:background .13s;white-space:nowrap}
+.nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
+.nav-item.active{background:var(--g400);color:#fff;font-weight:600}
+.nav-item .ni{font-size:15px;flex-shrink:0}
+
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:#fff;border-bottom:1px solid var(--gray100);padding:0 22px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px}
+.topbar-left{display:flex;align-items:center;gap:10px;min-width:0}
+.topbar-title{font-size:15px;font-weight:600;color:var(--g800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.role-badge{font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;flex-shrink:0}
+.role-admin{background:#E6F1FB;color:var(--blue)}
+.role-lab{background:#F0EBF8;color:var(--purple)}
+.role-farmer{background:var(--g50);color:var(--g800)}
+.topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--g400);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.screen-badge{background:var(--g50);color:var(--g800);border:1px solid var(--g100);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:500;white-space:nowrap}
+.content{flex:1;overflow-y:auto;padding:20px 24px;background:var(--gray50)}
+
+/* ── Screens ── */
+.screen{display:none}.screen.active{display:block}
+
+/* ── Cards ── */
+.card{background:#fff;border:.5px solid var(--gray100);border-radius:12px;padding:16px 20px;margin-bottom:14px}
+.card-title{font-size:13px;font-weight:600;color:var(--g800);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+
+/* ── Stat grid ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.stat-card{background:#fff;border:.5px solid var(--gray100);border-radius:10px;padding:13px 15px}
+.stat-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:9px}
+.stat-icon.green{background:var(--g50)}.stat-icon.amber{background:#FAEEDA}.stat-icon.blue{background:#E6F1FB}.stat-icon.red{background:#FCEBEB}.stat-icon.purple{background:#F0EBF8}
+.stat-val{font-size:21px;font-weight:700;color:#222}
+.stat-lbl{font-size:11px;color:var(--gray400);margin-top:2px}
+.stat-trend{font-size:11px;color:var(--g400);margin-top:3px}
+
+/* ── Forms ── */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:12px;font-weight:500;color:var(--gray600)}
+.form-group input,.form-group select,.form-group textarea{border:1px solid var(--gray100);border-radius:8px;padding:8px 12px;font-size:13px;color:#222;background:#fff;font-family:inherit}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--g400)}
+.form-group .err{border-color:var(--red)}
+.form-group .err-msg{font-size:11px;color:var(--red)}
+.form-group .ok-msg{font-size:11px;color:var(--g600)}
+
+/* ── Buttons ── */
+.btn{border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;line-height:1}
+.btn-primary{background:var(--g400);color:#fff}.btn-primary:hover{background:var(--g600)}
+.btn-secondary{background:var(--g50);color:var(--g800);border:1px solid var(--g100)}.btn-secondary:hover{background:var(--g100)}
+.btn-danger{background:#FCEBEB;color:var(--red);border:1px solid #F7C1C1}
+.btn-blue{background:#E6F1FB;color:var(--blue);border:1px solid #B8D5F5}
+.btn-purple{background:#F0EBF8;color:var(--purple);border:1px solid #D4BFEF}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:6px}
+.btn-full{width:100%;justify-content:center}
+
+/* ── Tables ── */
+.table{width:100%;border-collapse:collapse;font-size:13px}
+.table th{text-align:left;padding:8px 12px;font-size:11px;font-weight:600;color:var(--gray400);border-bottom:1px solid var(--gray100);text-transform:uppercase;letter-spacing:.5px}
+.table td{padding:10px 12px;border-bottom:.5px solid var(--gray50);color:#222;vertical-align:middle}
+.table tr:last-child td{border-bottom:none}
+.table tr:hover td{background:var(--g50)}
+
+/* ── Pills ── */
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:500}
+.pill-green{background:var(--g50);color:var(--g800)}.pill-red{background:#FCEBEB;color:var(--red)}.pill-amber{background:#FAEEDA;color:var(--amber)}.pill-gray{background:var(--gray50);color:var(--gray600)}.pill-blue{background:#E6F1FB;color:var(--blue)}.pill-purple{background:#F0EBF8;color:var(--purple)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
+
+/* ── Login ── */
+.login-wrap{min-height:500px;background:linear-gradient(135deg,var(--g800) 0%,var(--g600) 100%);display:flex;align-items:center;justify-content:center;padding:20px;border-radius:10px}
+.login-box{background:#fff;border-radius:14px;padding:32px 36px;width:100%;max-width:380px}
+.login-logo{width:52px;height:52px;background:var(--g50);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px}
+.login-title{font-size:19px;font-weight:700;text-align:center;color:var(--g800);margin-bottom:3px}
+.login-sub{font-size:12px;color:var(--gray400);text-align:center;margin-bottom:22px;line-height:1.5}
+
+/* ── Banners ── */
+.banner{border-radius:8px;padding:9px 13px;font-size:12px;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.banner-online{background:var(--g50);border:1px solid var(--g100);color:var(--g800)}
+.banner-offline{background:#FAEEDA;border:1px solid #FAC775;color:var(--amber)}
+.banner-info{background:#E6F1FB;border:1px solid #B8D5F5;color:var(--blue)}
+.banner-error{background:#FCEBEB;border:1px solid #F7C1C1;color:var(--red)}
+.banner-success{background:var(--g50);border:1px solid var(--g100);color:var(--g600)}
+
+/* ── Misc ── */
+.search-bar{display:flex;align-items:center;gap:8px;background:var(--gray50);border:1px solid var(--gray100);border-radius:8px;padding:7px 12px;margin-bottom:12px}
+.search-bar input{border:none;background:transparent;font-size:13px;color:#222;flex:1;outline:none}
+.page-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.page-nav h2{font-size:15px;font-weight:600;color:var(--g800);display:flex;align-items:center;gap:7px}
+.filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.filter-select{border:1px solid var(--gray100);border-radius:8px;padding:6px 12px;font-size:12px;background:#fff;color:#222;cursor:pointer}
+.sec-divider{font-size:11px;font-weight:600;color:var(--gray400);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 6px;padding-bottom:5px;border-bottom:.5px solid var(--gray100)}
+.timeline-bar{height:7px;border-radius:4px;background:var(--g50);overflow:hidden;margin-top:5px}
+.timeline-fill{height:100%;border-radius:4px;background:var(--g400)}
+.chart-bar-wrap{display:flex;align-items:flex-end;gap:6px;height:80px;padding:0 2px}
+.chart-bar{flex:1;border-radius:4px 4px 0 0;background:var(--g200)}.chart-bar:hover{background:var(--g400)}
+.chart-labels{display:flex;gap:6px;margin-top:4px;padding:0 2px}
+.chart-label{flex:1;text-align:center;font-size:10px;color:var(--gray400);line-height:1.3}
+
+/* ── Profile ── */
+.profile-avatar{width:56px;height:56px;border-radius:50%;background:var(--g400);color:#fff;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-right:14px;flex-shrink:0}
+
+/* ── Step indicator ── */
+.step-indicator{display:flex;gap:0;margin-bottom:18px}
+.step{flex:1;text-align:center;position:relative}
+.step::after{content:'';position:absolute;top:14px;right:-50%;width:100%;height:2px;background:var(--gray100)}
+.step:last-child::after{display:none}
+.step-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--gray100);background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;margin:0 auto 4px;position:relative;z-index:1;color:var(--gray400)}
+.step-dot.done{background:var(--g400);border-color:var(--g400);color:#fff}
+.step-dot.active{background:#fff;border-color:var(--g400);color:var(--g400)}
+.step-label{font-size:10px;color:var(--gray400)}
+
+/* ── Sensor / Hardware ── */
+.sensor-status{display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:10px;font-size:13px;font-weight:500}
+.sensor-ok{background:var(--g50);color:var(--g800);border:1px solid var(--g100)}
+.sensor-err{background:#FCEBEB;color:var(--red);border:1px solid #F7C1C1}
+.sensor-warn{background:#FAEEDA;color:var(--amber);border:1px solid #FAC775}
+.sensor-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.s-green{background:var(--g400)}.s-red{background:var(--red)}.s-amber{background:var(--amber)}
+.hw-card{background:var(--g50);border-radius:10px;padding:13px;border:.5px solid var(--g100)}
+.hw-card-title{font-size:11px;color:var(--g600);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.hw-val{font-size:19px;font-weight:700;color:var(--g800)}
+
+/* ── Params ── */
+.param-row{display:grid;grid-template-columns:130px 80px 90px 90px 1fr;gap:0;align-items:center;padding:9px 12px;border-bottom:.5px solid var(--gray50);font-size:13px}
+.param-row:last-child{border-bottom:none}
+.param-name{font-weight:500}
+.param-val{text-align:center;font-weight:600}
+.param-ideal{text-align:center;color:var(--gray400);font-size:12px}
+.param-bar-wrap{height:6px;background:var(--gray50);border-radius:3px;overflow:hidden}
+.param-bar{height:100%;border-radius:3px}
+.bar-green{background:var(--g400)}.bar-amber{background:#EF9F27}.bar-red{background:var(--red)}
+
+/* ── Compat circle ── */
+.compat-circle{width:104px;height:104px;border-radius:50%;background:var(--g50);border:6px solid var(--g400);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 13px}
+.compat-pct{font-size:25px;font-weight:700;color:var(--g800)}
+.compat-lbl{font-size:10px;color:var(--gray400)}
+
+/* ── List items ── */
+.list-item{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-radius:9px;border:.5px solid var(--gray100);margin-bottom:8px;cursor:pointer;background:#fff}
+.list-item:hover{background:var(--g50)}
+
+/* ── Terrain / Range ── */
+.range-wrap{background:var(--g50);border-radius:9px;padding:12px;margin-bottom:9px}
+.range-param{font-size:13px;font-weight:500;color:var(--g800);margin-bottom:7px}
+.range-inputs{display:flex;gap:8px;align-items:center}
+.range-input{border:1px solid var(--g100);border-radius:6px;padding:5px 9px;font-size:13px;width:80px;background:#fff}
+.range-sep{color:var(--gray400);font-size:12px}
+
+/* ── Market ── */
+.mkt-price{font-size:30px;font-weight:700;color:var(--g800)}
+.mkt-trend{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px}
+
+/* ── Sampling map ── */
+.sampling-map{background:var(--g50);border:1px solid var(--g100);border-radius:10px;padding:14px;height:165px;display:flex;align-items:center;justify-content:center}
+.map-grid{display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(3,1fr);gap:8px;width:100%}
+.map-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--g400);background:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--g800);margin:auto;cursor:pointer;transition:all .15s}
+.map-dot.done{background:var(--g400);color:#fff;border-color:var(--g600)}
+.map-dot.active{border-color:var(--amber);box-shadow:0 0 0 3px rgba(186,117,23,.2)}
+
+/* ── Comparison ── */
+.comp-col{flex:1;padding:12px;background:var(--g50);border-radius:10px;border:1px solid var(--g100)}
+.comp-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:.5px solid var(--g100);font-size:13px}
+.comp-row:last-child{border-bottom:none}
+
+/* ── Modal ── */
+.modal-overlay{position:relative;background:rgba(0,0,0,.35);border-radius:12px;padding:30px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;min-height:150px}
+.modal-box{background:#fff;border-radius:12px;padding:22px;width:100%;max-width:330px;text-align:center}
+.modal-icon{font-size:30px;margin-bottom:9px}
+.modal-title{font-size:14px;font-weight:600;color:#222;margin-bottom:5px}
+.modal-body{font-size:12px;color:var(--gray600);margin-bottom:16px}
+
+/* ── Request card (Laboratorista) ── */
+.request-card{background:#fff;border:.5px solid var(--gray100);border-radius:10px;padding:14px 16px;margin-bottom:9px}
+.request-card:hover{border-color:var(--g200)}
+.request-status-badge{display:inline-flex;align-items:center;gap:4px;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600}
+
+/* ── Reading grid ── */
+.reading-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.reading-box{background:#fff;border-radius:8px;padding:9px 11px}
+.reading-label{color:var(--gray400);font-size:11px;margin-bottom:2px}
+.reading-val{font-size:17px;font-weight:700}
+
+/* ── Activity log ── */
+.activity-row{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:.5px solid var(--gray50);font-size:12px}
+.activity-row:last-child{border-bottom:none}
+
+/* ── Register screen ── */
+.register-note{background:var(--g50);border-radius:8px;padding:10px 13px;font-size:12px;color:var(--g800);margin-top:10px;display:flex;align-items:flex-start;gap:7px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ══════ SIDEBAR ══════ -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🌱</div>
+      <div><div style="font-size:13px;font-weight:700">TierSystem</div><div style="font-size:10px;opacity:.55">SENA La Angostura</div></div>
+    </div>
+
+    <div class="sidebar-section">Autenticación</div>
+    <div class="nav-item active" onclick="goTo(0,this)"><i class="ti ti-login ni"></i>Iniciar sesión</div>
+    <div class="nav-item" onclick="goTo(1,this)"><i class="ti ti-user-plus ni"></i>Registrarse</div>
+    <div class="nav-item" onclick="goTo(2,this)"><i class="ti ti-send ni"></i>Recuperar contraseña</div>
+    <div class="nav-item" onclick="goTo(3,this)"><i class="ti ti-key ni"></i>Restablecer contraseña</div>
+
+    <div class="sidebar-section">Administrador</div>
+    <div class="nav-item" onclick="goTo(4,this)"><i class="ti ti-dashboard ni"></i>Dashboard Admin</div>
+    <div class="nav-item" onclick="goTo(5,this)"><i class="ti ti-users ni"></i>Lista usuarios</div>
+    <div class="nav-item" onclick="goTo(6,this)"><i class="ti ti-user-plus ni"></i>Crear usuario</div>
+    <div class="nav-item" onclick="goTo(7,this)"><i class="ti ti-id ni"></i>Perfil usuario (admin)</div>
+    <div class="nav-item" onclick="goTo(8,this)"><i class="ti ti-eye ni"></i>Supervisar análisis</div>
+    <div class="nav-item" onclick="goTo(9,this)"><i class="ti ti-activity ni"></i>Actividad laboratorista</div>
+    <div class="nav-item" onclick="goTo(10,this)"><i class="ti ti-report ni"></i>Módulo reportes</div>
+    <div class="nav-item" onclick="goTo(11,this)"><i class="ti ti-file-download ni"></i>Reporte generado</div>
+    <div class="nav-item" onclick="goTo(12,this)"><i class="ti ti-cpu ni"></i>Estado hardware</div>
+    <div class="nav-item" onclick="goTo(13,this)"><i class="ti ti-sliders ni"></i>Config. rangos</div>
+    <div class="nav-item" onclick="goTo(14,this)"><i class="ti ti-settings-2 ni"></i>Config. IA offline</div>
+    <div class="nav-item" onclick="goTo(15,this)"><i class="ti ti-plant ni"></i>BBDD cultivos</div>
+
+    <div class="sidebar-section">Laboratorista</div>
+    <div class="nav-item" onclick="goTo(16,this)"><i class="ti ti-home ni"></i>Dashboard Lab</div>
+    <div class="nav-item" onclick="goTo(17,this)"><i class="ti ti-clipboard-list ni"></i>Solicitudes pendientes</div>
+    <div class="nav-item" onclick="goTo(18,this)"><i class="ti ti-file-description ni"></i>Detalle solicitud</div>
+    <div class="nav-item" onclick="goTo(19,this)"><i class="ti ti-wifi ni"></i>Conexión sensor</div>
+    <div class="nav-item" onclick="goTo(20,this)"><i class="ti ti-map ni"></i>Guía muestreo</div>
+    <div class="nav-item" onclick="goTo(21,this)"><i class="ti ti-antenna ni"></i>Captura de datos</div>
+    <div class="nav-item" onclick="goTo(22,this)"><i class="ti ti-layers-intersect ni"></i>Perfil suelo (promedio)</div>
+    <div class="nav-item" onclick="goTo(23,this)"><i class="ti ti-seeding ni"></i>Cultivo objetivo</div>
+    <div class="nav-item" onclick="goTo(24,this)"><i class="ti ti-chart-pie ni"></i>Resultado análisis (lab)</div>
+    <div class="nav-item" onclick="goTo(25,this)"><i class="ti ti-share ni"></i>Compartir resultados</div>
+    <div class="nav-item" onclick="goTo(26,this)"><i class="ti ti-history ni"></i>Historial análisis (lab)</div>
+
+    <div class="sidebar-section">Agricultor</div>
+    <div class="nav-item" onclick="goTo(27,this)"><i class="ti ti-home ni"></i>Dashboard Agricultor</div>
+    <div class="nav-item" onclick="goTo(28,this)"><i class="ti ti-file-plus ni"></i>Crear solicitud</div>
+    <div class="nav-item" onclick="goTo(29,this)"><i class="ti ti-clipboard-check ni"></i>Mis solicitudes</div>
+    <div class="nav-item" onclick="goTo(30,this)"><i class="ti ti-chart-pie ni"></i>Resultado análisis</div>
+    <div class="nav-item" onclick="goTo(31,this)"><i class="ti ti-list-details ni"></i>Detalle parámetros</div>
+    <div class="nav-item" onclick="goTo(32,this)"><i class="ti ti-bulb ni"></i>Recomendaciones</div>
+    <div class="nav-item" onclick="goTo(33,this)"><i class="ti ti-git-compare ni"></i>Cultivos alternativos</div>
+    <div class="nav-item" onclick="goTo(34,this)"><i class="ti ti-history ni"></i>Historial análisis</div>
+    <div class="nav-item" onclick="goTo(35,this)"><i class="ti ti-arrows-diff ni"></i>Comparar análisis</div>
+    <div class="nav-item" onclick="goTo(36,this)"><i class="ti ti-user-circle ni"></i>Mi perfil</div>
+    <div class="nav-item" onclick="goTo(37,this)"><i class="ti ti-map-pin ni"></i>Mis terrenos</div>
+    <div class="nav-item" onclick="goTo(38,this)"><i class="ti ti-trending-up ni"></i>Mercado</div>
+    <div class="nav-item" onclick="goTo(39,this)"><i class="ti ti-chart-line ni"></i>Historial precios</div>
+    <div class="nav-item" onclick="goTo(40,this)"><i class="ti ti-building-store ni"></i>Compradores</div>
+  </div>
+
+  <!-- ══════ MAIN ══════ -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title" id="topbar-title">Iniciar sesión</div>
+        <span class="role-badge role-admin" id="role-badge" style="display:none"></span>
+      </div>
+      <div class="topbar-right">
+        <span class="screen-badge" id="screen-badge">Pantalla 1 / 41</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" onclick="prevScreen()">‹ Ant</button>
+          <button class="btn btn-primary btn-sm" onclick="nextScreen()">Sig ›</button>
+        </div>
+        <div class="avatar" id="topbar-avatar">AD</div>
+      </div>
+    </div>
+
+    <div class="content" id="content">
+
+      <!-- ══════════════════════════════════════════
+           S0 · LOGIN  (US-0002)
+      ══════════════════════════════════════════ -->
+      <div class="screen active" id="s0">
+        <div class="login-wrap">
+          <div class="login-box">
+            <div class="login-logo">🌱</div>
+            <div class="login-title">TierSystem</div>
+            <div class="login-sub">SENA La Angostura — Sistema de análisis de suelos</div>
+            <div class="form-group" style="margin-bottom:11px">
+              <label>Correo electrónico</label>
+              <input type="email" placeholder="usuario@sena.edu.co" value="admin@sena.edu.co"/>
+            </div>
+            <div class="form-group" style="margin-bottom:6px">
+              <label>Contraseña</label>
+              <input type="password" class="err" value="••••••••"/>
+              <span class="err-msg">Usuario o contraseña no válidos</span>
+            </div>
+            <div style="text-align:right;font-size:12px;color:var(--g400);cursor:pointer;margin-bottom:16px">¿Olvidaste tu contraseña?</div>
+            <button class="btn btn-primary btn-full" style="margin-bottom:10px"><i class="ti ti-login"></i> Iniciar sesión</button>
+            <div style="text-align:center;font-size:12px;color:var(--gray400)">¿No tienes cuenta? <span style="color:var(--g400);cursor:pointer;font-weight:500">Regístrate aquí</span></div>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--gray400);text-align:center">Escenario mostrado: credenciales incorrectas · US-0002 E2</div>
+      </div>
+
+      <!-- S1 · REGISTRO AGRICULTOR  (US-0001) -->
+      <div class="screen" id="s1">
+        <div class="login-wrap">
+          <div class="login-box" style="max-width:420px">
+            <div class="login-logo">👨‍🌾</div>
+            <div class="login-title">Crear cuenta</div>
+            <div class="login-sub">Completa tus datos para registrarte como Agricultor</div>
+            <div class="form-row">
+              <div class="form-group"><label>Nombre completo *</label><input placeholder="Ej. Carlos Medina" value="Carlos Medina"/></div>
+              <div class="form-group"><label>N.º de documento *</label><input placeholder="Ej. 1098765432" value="1098765432"/></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Correo electrónico *</label><input class="err" value="c.medina@mail.com"/><span class="err-msg">Este correo ya está vinculado a una cuenta existente. ¿Olvidaste tu contraseña?</span></div>
+              <div class="form-group"><label>Teléfono</label><input value="3001234567"/></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Contraseña *</label><input type="password" class="err" placeholder="Min. 8 caracteres"/><span class="err-msg">Debe incluir mayúsculas y un número</span></div>
+              <div class="form-group"><label>Confirmar contraseña *</label><input type="password" placeholder="Repite la contraseña"/></div>
+            </div>
+            <button class="btn btn-primary btn-full" style="margin-top:6px"><i class="ti ti-user-check"></i> Registrarme</button>
+            <div style="text-align:center;font-size:12px;color:var(--gray400);margin-top:10px">¿Ya tienes cuenta? <span style="color:var(--g400);cursor:pointer;font-weight:500">Inicia sesión</span></div>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--gray400);text-align:center">US-0001 · E3 correo duplicado / E4 contraseña insegura</div>
+      </div>
+
+      <!-- S2 · RECUPERAR CONTRASEÑA  (US-0004) -->
+      <div class="screen" id="s2">
+        <div class="login-wrap">
+          <div class="login-box">
+            <div class="login-logo">🔑</div>
+            <div class="login-title">Recuperar acceso</div>
+            <div class="login-sub">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña</div>
+            <div class="form-group" style="margin-bottom:16px">
+              <label>Correo electrónico registrado</label>
+              <input type="email" placeholder="tu@correo.com" value="c.medina@mail.com"/>
+            </div>
+            <button class="btn btn-primary btn-full" style="margin-bottom:11px"><i class="ti ti-send"></i> Enviar enlace de recuperación</button>
+            <div class="banner banner-success"><i class="ti ti-mail-check"></i> Te enviamos un enlace. Revisa tu bandeja de entrada.</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--gray400);text-align:center">US-0004 · E1 envío exitoso</div>
+      </div>
+
+      <!-- S3 · RESTABLECER CONTRASEÑA  (US-0004 E3) -->
+      <div class="screen" id="s3">
+        <div class="login-wrap">
+          <div class="login-box">
+            <div class="login-logo">🔒</div>
+            <div class="login-title">Nueva contraseña</div>
+            <div class="login-sub">Ingresa y confirma tu nueva contraseña</div>
+            <div class="form-group" style="margin-bottom:11px"><label>Nueva contraseña</label><input type="password" placeholder="Min. 8 caracteres" value="••••••••••"/></div>
+            <div class="form-group" style="margin-bottom:18px"><label>Confirmar contraseña</label><input type="password" placeholder="Repite la contraseña" value="••••••••••"/></div>
+            <button class="btn btn-primary btn-full"><i class="ti ti-check"></i> Restablecer contraseña</button>
+            <div class="banner banner-success" style="margin-top:12px"><i class="ti ti-check-circle"></i> Contraseña restablecida correctamente. Puedes iniciar sesión.</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--gray400);text-align:center">US-0004 · E3 restablecimiento exitoso</div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           ADMINISTRADOR
+      ══════════════════════════════════════════ -->
+
+      <!-- S4 · DASHBOARD ADMIN  (US-0034, US-0036, US-0040) -->
+      <div class="screen" id="s4">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon blue"><i class="ti ti-users" style="color:var(--blue)"></i></div><div class="stat-val">24</div><div class="stat-lbl">Agricultores activos</div><div class="stat-trend">↑ 3 este mes</div></div>
+          <div class="stat-card"><div class="stat-icon purple"><i class="ti ti-flask" style="color:var(--purple)"></i></div><div class="stat-val">4</div><div class="stat-lbl">Laboratoristas activos</div><div class="stat-trend">↑ 1 nuevo</div></div>
+          <div class="stat-card"><div class="stat-icon green"><i class="ti ti-chart-bar" style="color:var(--g400)"></i></div><div class="stat-val">187</div><div class="stat-lbl">Análisis totales</div><div class="stat-trend">↑ 12 esta semana</div></div>
+          <div class="stat-card"><div class="stat-icon amber"><i class="ti ti-cpu" style="color:var(--amber)"></i></div><div class="stat-val">3/4</div><div class="stat-lbl">Sensores activos</div><div class="stat-trend" style="color:var(--amber)">⚠ 1 con falla</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="card">
+            <div class="card-title"><i class="ti ti-chart-bar" style="color:var(--g400)"></i> Análisis por semana</div>
+            <div class="chart-bar-wrap"><div class="chart-bar" style="height:40%"></div><div class="chart-bar" style="height:60%"></div><div class="chart-bar" style="height:50%"></div><div class="chart-bar" style="height:80%"></div><div class="chart-bar" style="height:65%"></div><div class="chart-bar" style="height:90%"></div><div class="chart-bar" style="height:70%"></div></div>
+            <div class="chart-labels"><span class="chart-label">L</span><span class="chart-label">M</span><span class="chart-label">X</span><span class="chart-label">J</span><span class="chart-label">V</span><span class="chart-label">S</span><span class="chart-label">D</span></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="ti ti-activity" style="color:var(--g400)"></i> Actividad reciente</div>
+            <div class="activity-row"><span>Lab. Gómez finalizó análisis <b>Maíz</b> — Carlos M.</span><span style="color:var(--gray400);white-space:nowrap;margin-left:8px">hace 5 min</span></div>
+            <div class="activity-row"><span>Ana R. creó solicitud — <b>Terreno Sur</b></span><span style="color:var(--gray400);white-space:nowrap;margin-left:8px">hace 22 min</span></div>
+            <div class="activity-row"><span>Pedro G. — <span style="color:var(--amber)">Sensor desconectado</span></span><span style="color:var(--gray400);white-space:nowrap;margin-left:8px">hace 1 h</span></div>
+            <div class="activity-row"><span>Admin — BBDD cultivos actualizada</span><span style="color:var(--gray400);white-space:nowrap;margin-left:8px">hace 2 h</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S5 · LISTA USUARIOS  (US-0018, US-0019, US-0020) -->
+      <div class="screen" id="s5">
+        <div class="card">
+          <div class="page-nav">
+            <h2><i class="ti ti-users" style="color:var(--g400)"></i> Usuarios del sistema</h2>
+            <button class="btn btn-primary btn-sm"><i class="ti ti-user-plus"></i> Nuevo usuario</button>
+          </div>
+          <div class="filter-row">
+            <select class="filter-select"><option>Todos los roles</option><option>Laboratorista</option><option>Agricultor</option></select>
+            <select class="filter-select"><option>Todos los estados</option><option>Activos</option><option>Inactivos</option></select>
+            <div class="search-bar" style="flex:1;margin-bottom:0"><i class="ti ti-search"></i><input placeholder="Buscar por nombre o correo..."/></div>
+          </div>
+          <table class="table">
+            <thead><tr><th>Nombre</th><th>Rol</th><th>Correo</th><th>Estado</th><th>Análisis</th><th>Última actividad</th><th>Acciones</th></tr></thead>
+            <tbody>
+              <tr><td><b>Luis Gómez</b></td><td><span class="pill pill-purple">Laboratorista</span></td><td>l.gomez@sena.edu.co</td><td><span class="pill pill-green"><span class="dot"></span> Activo</span></td><td>52</td><td>Hace 5 min</td><td><button class="btn btn-secondary btn-sm">Ver</button> <button class="btn btn-danger btn-sm">Desactivar</button></td></tr>
+              <tr><td><b>Carlos Medina</b></td><td><span class="pill pill-green">Agricultor</span></td><td>c.medina@mail.com</td><td><span class="pill pill-green"><span class="dot"></span> Activo</span></td><td>14</td><td>Hace 22 min</td><td><button class="btn btn-secondary btn-sm">Ver</button> <button class="btn btn-danger btn-sm">Desactivar</button></td></tr>
+              <tr><td><b>Ana Rodríguez</b></td><td><span class="pill pill-green">Agricultor</span></td><td>a.rodriguez@mail.com</td><td><span class="pill pill-green"><span class="dot"></span> Activo</span></td><td>8</td><td>Hace 1 h</td><td><button class="btn btn-secondary btn-sm">Ver</button> <button class="btn btn-danger btn-sm">Desactivar</button></td></tr>
+              <tr><td><b>Pedro Gómez</b></td><td><span class="pill pill-green">Agricultor</span></td><td>p.gomez@mail.com</td><td><span class="pill pill-red"><span class="dot"></span> Inactivo</span></td><td>3</td><td>Hace 3 días</td><td><button class="btn btn-secondary btn-sm">Ver</button> <button class="btn btn-blue btn-sm">Activar</button> <button class="btn btn-danger btn-sm">Eliminar</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- S6 · CREAR USUARIO  (US-0018) -->
+      <div class="screen" id="s6">
+        <div class="card" style="max-width:520px">
+          <div class="card-title"><i class="ti ti-user-plus" style="color:var(--g400)"></i> Registrar nuevo usuario</div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label>Rol del usuario *</label>
+            <select><option>Laboratorista</option><option>Agricultor</option></select>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Nombre completo *</label><input placeholder="Ej. Luis Gómez" value="Luis Gómez"/></div>
+            <div class="form-group"><label>N.º de documento</label><input placeholder="Ej. 1023456789" value="1023456789"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Correo electrónico *</label><input class="err" value="l.gomez@sena.edu.co"/><span class="err-msg">Este correo ya está vinculado a una cuenta existente</span></div>
+            <div class="form-group"><label>Teléfono</label><input placeholder="Ej. 3101234567" value="3101234567"/></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Contraseña *</label><input type="password" value="••••••••"/></div>
+            <div class="form-group"><label>Confirmar contraseña *</label><input type="password" value="••••••••"/></div>
+          </div>
+          <div style="display:flex;gap:9px;margin-top:8px">
+            <button class="btn btn-primary"><i class="ti ti-check"></i> Registrar usuario</button>
+            <button class="btn btn-secondary">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- S7 · PERFIL USUARIO (admin)  (US-0005, US-0019, US-0020) -->
+      <div class="screen" id="s7">
+        <div class="card">
+          <div style="display:flex;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+            <div class="profile-avatar">LG</div>
+            <div style="flex:1">
+              <div style="font-size:17px;font-weight:700">Luis Gómez</div>
+              <div style="font-size:12px;color:var(--gray400)">l.gomez@sena.edu.co</div>
+              <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap"><span class="pill pill-purple">Laboratorista</span><span class="pill pill-green"><span class="dot"></span> Activo</span><span class="pill pill-gray">52 análisis</span></div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-danger btn-sm">Desactivar cuenta</button>
+              <button class="btn btn-danger btn-sm" style="background:#fff1f1;border-color:#F7C1C1">Eliminar permanentemente</button>
+            </div>
+          </div>
+          <div class="modal-overlay" style="min-height:130px">
+            <div class="modal-box">
+              <div class="modal-icon">⚠️</div>
+              <div class="modal-title">¿Eliminar cuenta permanentemente?</div>
+              <div class="modal-body">Esta acción eliminará la cuenta de <b>Luis Gómez</b> y todos sus datos asociados. Esta acción no se puede deshacer.</div>
+              <div style="display:flex;gap:8px;justify-content:center">
+                <button class="btn btn-danger btn-sm">Sí, eliminar</button>
+                <button class="btn btn-secondary btn-sm">Cancelar</button>
+              </div>
+            </div>
+          </div>
+          <div class="sec-divider">Información de cuenta</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+            <div><span style="color:var(--gray400)">Fecha registro:</span> 10/01/2025</div>
+            <div><span style="color:var(--gray400)">Última sesión:</span> Hace 5 min</div>
+            <div><span style="color:var(--gray400)">Solicitudes atendidas:</span> 52</div>
+            <div><span style="color:var(--gray400)">Incidencias:</span> 0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S8 · SUPERVISAR ANÁLISIS  (US-0034) -->
+      <div class="screen" id="s8">
+        <div class="card">
+          <div class="page-nav"><h2><i class="ti ti-eye" style="color:var(--g400)"></i> Supervisión de análisis</h2></div>
+          <div class="filter-row">
+            <select class="filter-select"><option>Todos los usuarios</option><option>Carlos Medina</option><option>Ana Rodríguez</option></select>
+            <input type="date" class="filter-select" value="2025-05-01"/>
+            <input type="date" class="filter-select" value="2025-06-02"/>
+            <button class="btn btn-primary btn-sm"><i class="ti ti-filter"></i> Filtrar</button>
+          </div>
+          <table class="table">
+            <thead><tr><th>Agricultor</th><th>Laboratorista</th><th>Fecha</th><th>Cultivo</th><th>Compat.</th><th>Modo</th></tr></thead>
+            <tbody>
+              <tr><td>Carlos Medina</td><td>Luis Gómez</td><td>02/06/25 09:14</td><td>Maíz</td><td><span class="pill pill-green">82%</span></td><td><span class="pill pill-blue">Online</span></td></tr>
+              <tr><td>Ana Rodríguez</td><td>Luis Gómez</td><td>01/06/25 16:40</td><td>Frijol</td><td><span class="pill pill-amber">61%</span></td><td><span class="pill pill-blue">Online</span></td></tr>
+              <tr><td>Lucía Torres</td><td>M. Pérez</td><td>31/05/25 08:22</td><td>Papa</td><td><span class="pill pill-red">38%</span></td><td><span class="pill pill-amber">Local</span></td></tr>
+            </tbody>
+          </table>
+          <div style="background:var(--g50);border-radius:8px;padding:9px 13px;font-size:12px;color:var(--gray400);margin-top:10px"><i class="ti ti-info-circle"></i> Los análisis en modo <b>Local</b> fueron procesados por el motor offline y pueden diferir de los resultados de IA.</div>
+        </div>
+      </div>
+
+      <!-- S9 · ACTIVIDAD LABORATORISTA  (US-0040) -->
+      <div class="screen" id="s9">
+        <div class="card">
+          <div class="page-nav"><h2><i class="ti ti-activity" style="color:var(--g400)"></i> Actividad — Luis Gómez</h2></div>
+          <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+            <div class="stat-card"><div class="stat-icon purple"><i class="ti ti-clipboard-check" style="color:var(--purple)"></i></div><div class="stat-val">52</div><div class="stat-lbl">Solicitudes atendidas</div></div>
+            <div class="stat-card"><div class="stat-icon green"><i class="ti ti-chart-pie" style="color:var(--g400)"></i></div><div class="stat-val">52</div><div class="stat-lbl">Análisis finalizados</div></div>
+            <div class="stat-card"><div class="stat-icon amber"><i class="ti ti-alert-triangle" style="color:var(--amber)"></i></div><div class="stat-val">0</div><div class="stat-lbl">Incidencias registradas</div></div>
+          </div>
+          <div class="card" style="margin-bottom:0">
+            <div class="card-title"><i class="ti ti-list" style="color:var(--g400)"></i> Últimas acciones</div>
+            <div class="activity-row"><span>Finalizó análisis <b>Maíz</b> — Carlos Medina</span><span style="color:var(--gray400)">02/06/25 09:18</span></div>
+            <div class="activity-row"><span>Compartió resultados con Ana Rodríguez — <b>Frijol</b></span><span style="color:var(--gray400)">01/06/25 17:10</span></div>
+            <div class="activity-row"><span>Aceptó solicitud de Lucía Torres — <b>Papa</b></span><span style="color:var(--gray400)">31/05/25 08:00</span></div>
+            <div class="activity-row"><span>Inició sesión</span><span style="color:var(--gray400)">31/05/25 07:55</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S10 · MÓDULO REPORTES  (US-0035) -->
+      <div class="screen" id="s10">
+        <div class="card" style="max-width:520px">
+          <div class="card-title"><i class="ti ti-report" style="color:var(--g400)"></i> Generar reporte</div>
+          <div class="form-group" style="margin-bottom:11px"><label>Usuario (opcional)</label><select><option>Todos los usuarios</option><option>Carlos Medina</option><option>Ana Rodríguez</option><option>Luis Gómez (Lab)</option></select></div>
+          <div class="form-row">
+            <div class="form-group"><label>Fecha inicio</label><input type="date" value="2025-05-01"/></div>
+            <div class="form-group"><label>Fecha fin</label><input type="date" value="2025-06-02"/></div>
+          </div>
+          <div class="form-group" style="margin-bottom:14px"><label>Cultivo (opcional)</label><select><option>Todos los cultivos</option><option>Maíz</option><option>Frijol</option><option>Papa</option></select></div>
+          <button class="btn btn-primary"><i class="ti ti-report-analytics"></i> Generar reporte</button>
+          <div class="banner banner-info" style="margin-top:11px"><i class="ti ti-info-circle"></i> Se encontraron <b>23 análisis</b> con los filtros seleccionados</div>
+        </div>
+      </div>
+
+      <!-- S11 · REPORTE GENERADO  (US-0035) -->
+      <div class="screen" id="s11">
+        <div class="card">
+          <div class="page-nav"><h2><i class="ti ti-file-text" style="color:var(--g400)"></i> Reporte — Mayo 2025</h2>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-secondary btn-sm"><i class="ti ti-file-type-pdf"></i> PDF</button>
+              <button class="btn btn-secondary btn-sm"><i class="ti ti-file-spreadsheet"></i> Excel</button>
+            </div>
+          </div>
+          <div class="stats-grid" style="margin-bottom:12px">
+            <div class="stat-card"><div class="stat-icon green"><i class="ti ti-chart-bar" style="color:var(--g400)"></i></div><div class="stat-val">23</div><div class="stat-lbl">Análisis totales</div></div>
+            <div class="stat-card"><div class="stat-icon green"><i class="ti ti-trending-up" style="color:var(--g400)"></i></div><div class="stat-val">68%</div><div class="stat-lbl">Compat. promedio</div></div>
+            <div class="stat-card"><div class="stat-icon blue"><i class="ti ti-users" style="color:var(--blue)"></i></div><div class="stat-val">8</div><div class="stat-lbl">Agricultores activos</div></div>
+            <div class="stat-card"><div class="stat-icon amber"><i class="ti ti-plant" style="color:var(--amber)"></i></div><div class="stat-val">Maíz</div><div class="stat-lbl">Cultivo más analizado</div></div>
+          </div>
+          <table class="table">
+            <thead><tr><th>Agricultor</th><th>Cultivo</th><th>Fecha</th><th>Laboratorista</th><th>Compat.</th><th>Modo</th></tr></thead>
+            <tbody>
+              <tr><td>Carlos Medina</td><td>Maíz</td><td>02/06/25</td><td>Luis Gómez</td><td><span class="pill pill-green">82%</span></td><td><span class="pill pill-blue">Online</span></td></tr>
+              <tr><td>Ana Rodríguez</td><td>Frijol</td><td>01/06/25</td><td>Luis Gómez</td><td><span class="pill pill-amber">61%</span></td><td><span class="pill pill-blue">Online</span></td></tr>
+              <tr><td>Lucía Torres</td><td>Papa</td><td>31/05/25</td><td>M. Pérez</td><td><span class="pill pill-red">38%</span></td><td><span class="pill pill-amber">Local</span></td></tr>
+            </tbody>
+          </table>
+          <div class="banner banner-success" style="margin-top:12px"><i class="ti ti-download"></i> Exportación completada — <span style="font-weight:600">reporte_mayo_2025.pdf</span></div>
+        </div>
+      </div>
+
+      <!-- S12 · HARDWARE  (US-0036) -->
+      <div class="screen" id="s12">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-cpu" style="color:var(--g400)"></i> Estado del hardware</div>
+          <div class="banner banner-error"><i class="ti ti-alert-triangle"></i> <b>Alerta:</b> Señal WiFi débil detectada. Revisar antena del ESP32.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="hw-card"><div class="hw-card-title"><i class="ti ti-antenna"></i> Sensor ESP32</div><div class="hw-val" style="color:var(--g400)">Activo</div><div style="font-size:11px;color:var(--gray400);margin-top:3px">Última lectura: hace 3 min</div><div style="margin-top:8px"><span class="pill pill-green"><span class="dot"></span> Conectado vía WiFi</span></div></div>
+            <div class="hw-card"><div class="hw-card-title"><i class="ti ti-bolt"></i> Batería solar</div><div class="hw-val">74%</div><div class="timeline-bar" style="margin-top:6px"><div class="timeline-fill" style="width:74%"></div></div><div style="font-size:11px;color:var(--gray400);margin-top:4px">Estado: cargando</div></div>
+            <div class="hw-card" style="border-color:var(--amber);background:#FAEEDA"><div class="hw-card-title" style="color:var(--amber)"><i class="ti ti-wifi"></i> Señal WiFi</div><div class="hw-val" style="color:var(--amber)">Débil</div><div style="font-size:11px;color:var(--amber);margin-top:3px">RSSI: -78 dBm</div><div style="margin-top:8px"><span class="pill pill-amber"><span class="dot"></span> Revisar antena</span></div></div>
+            <div class="hw-card"><div class="hw-card-title"><i class="ti ti-bluetooth"></i> Bluetooth</div><div class="hw-val" style="color:var(--g400)">Disponible</div><div style="font-size:11px;color:var(--gray400);margin-top:3px">Sin dispositivos emparejados</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S13 · CONFIG RANGOS  (US-0038) -->
+      <div class="screen" id="s13">
+        <div class="card" style="max-width:540px">
+          <div class="card-title"><i class="ti ti-sliders" style="color:var(--g400)"></i> Configurar rangos agronómicos</div>
+          <div style="font-size:12px;color:var(--gray400);margin-bottom:13px">Define los rangos mínimo y máximo para cada parámetro del sensor. Se aplicarán en todos los análisis futuros.</div>
+          <div class="range-wrap"><div class="range-param">pH</div><div class="range-inputs"><input class="range-input" value="5.5"/><span class="range-sep">—</span><input class="range-input" value="7.5"/><span style="font-size:12px;color:var(--gray400)">unidades</span></div></div>
+          <div class="range-wrap"><div class="range-param">Nitrógeno (N)</div><div class="range-inputs"><input class="range-input" value="20"/><span class="range-sep">—</span><input class="range-input" value="50"/><span style="font-size:12px;color:var(--gray400)">mg/kg</span></div></div>
+          <div class="range-wrap"><div class="range-param">Fósforo (P)</div><div class="range-inputs"><input class="range-input" value="15"/><span class="range-sep">—</span><input class="range-input" value="40"/><span style="font-size:12px;color:var(--gray400)">mg/kg</span></div></div>
+          <div class="range-wrap"><div class="range-param">Potasio (K)</div><div class="range-inputs"><input class="range-input" value="80"/><span class="range-sep">—</span><input class="range-input" value="200"/><span style="font-size:12px;color:var(--gray400)">mg/kg</span></div></div>
+          <div class="range-wrap"><div class="range-param">Humedad</div><div class="range-inputs"><input class="range-input" value="40"/><span class="range-sep">—</span><input class="range-input" value="70"/><span style="font-size:12px;color:var(--gray400)">%</span></div></div>
+          <div class="range-wrap"><div class="range-param">Conductividad Eléctrica (CE)</div><div class="range-inputs"><input class="range-input err" value="-5"/><span class="range-sep">—</span><input class="range-input" value="2.5"/><span style="font-size:12px;color:var(--gray400)">dS/m</span></div><div style="font-size:11px;color:var(--red);margin-top:5px"><i class="ti ti-alert-circle"></i> Valor no válido para este parámetro</div></div>
+          <div class="range-wrap"><div class="range-param">Temperatura</div><div class="range-inputs"><input class="range-input" value="15"/><span class="range-sep">—</span><input class="range-input" value="32"/><span style="font-size:12px;color:var(--gray400)">°C</span></div></div>
+          <div style="display:flex;gap:9px;margin-top:12px">
+            <button class="btn btn-primary"><i class="ti ti-device-floppy"></i> Guardar configuración</button>
+            <button class="btn btn-secondary">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- S14 · CONFIG IA OFFLINE  (US-0039) -->
+      <div class="screen" id="s14">
+        <div class="card" style="max-width:520px">
+          <div class="card-title"><i class="ti ti-settings-2" style="color:var(--g400)"></i> Configuración — IA y modo offline</div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label>Tiempo máximo de espera de la IA (segundos)</label>
+            <input type="number" value="10" min="5" max="60"/>
+            <span class="ok-msg"><i class="ti ti-info-circle"></i> Se aplicará como límite en todas las consultas al servicio externo</span>
+          </div>
+          <div class="form-group" style="margin-bottom:16px">
+            <label>Acción cuando la IA no responde</label>
+            <select>
+              <option selected>Usar base de datos local automáticamente</option>
+              <option>Notificar al usuario y cancelar el análisis</option>
+            </select>
+          </div>
+          <div class="banner banner-info"><i class="ti ti-info-circle"></i> Cuando se usa el motor local, el resultado se etiqueta como <b>"Análisis generado en modo local"</b>. Al recuperar la conexión, se reenvía a la IA en segundo plano.</div>
+          <div style="display:flex;gap:9px;margin-top:14px">
+            <button class="btn btn-primary"><i class="ti ti-device-floppy"></i> Guardar</button>
+            <button class="btn btn-secondary">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- S15 · BBDD CULTIVOS  (US-0037) -->
+      <div class="screen" id="s15">
+        <div class="card">
+          <div class="page-nav"><h2><i class="ti ti-plant" style="color:var(--g400)"></i> Base de datos local de cultivos</h2><button class="btn btn-primary btn-sm"><i class="ti ti-plus"></i> Agregar cultivo</button></div>
+          <div class="search-bar"><i class="ti ti-search"></i><input placeholder="Buscar cultivo..."/></div>
+          <table class="table">
+            <thead><tr><th>Cultivo</th><th>pH ideal</th><th>N (mg/kg)</th><th>P (mg/kg)</th><th>K (mg/kg)</th><th>CE (dS/m)</th><th>Humedad</th><th>Temp.</th><th>Acciones</th></tr></thead>
+            <tbody>
+              <tr><td><b>Maíz</b></td><td>5.8–7.0</td><td>30–50</td><td>20–40</td><td>100–180</td><td>0.5–1.5</td><td>50–70%</td><td>18–30°C</td><td><button class="btn btn-secondary btn-sm"><i class="ti ti-edit"></i></button> <button class="btn btn-danger btn-sm"><i class="ti ti-trash"></i></button></td></tr>
+              <tr><td><b>Frijol</b></td><td>6.0–7.5</td><td>20–35</td><td>15–30</td><td>80–150</td><td>0.3–1.2</td><td>45–65%</td><td>18–28°C</td><td><button class="btn btn-secondary btn-sm"><i class="ti ti-edit"></i></button> <button class="btn btn-danger btn-sm"><i class="ti ti-trash"></i></button></td></tr>
+              <tr><td><b>Papa</b></td><td>5.0–6.5</td><td>40–60</td><td>25–45</td><td>120–200</td><td>0.8–2.0</td><td>60–80%</td><td>12–22°C</td><td><button class="btn btn-secondary btn-sm"><i class="ti ti-edit"></i></button> <button class="btn btn-danger btn-sm"><i class="ti ti-trash"></i></button></td></tr>
+              <tr><td><b>Tomate</b></td><td>6.0–7.0</td><td>35–55</td><td>20–35</td><td>90–160</td><td>1.0–2.5</td><td>55–75%</td><td>18–28°C</td><td><button class="btn btn-secondary btn-sm"><i class="ti ti-edit"></i></button> <button class="btn btn-danger btn-sm"><i class="ti ti-trash"></i></button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           LABORATORISTA
+      ══════════════════════════════════════════ -->
+
+      <!-- S16 · DASHBOARD LAB  (US-0021, US-0024) -->
+      <div class="screen" id="s16">
+        <div class="banner banner-online"><i class="ti ti-wifi"></i><b>Online</b> — Servicio de IA disponible</div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon purple"><i class="ti ti-clipboard-list" style="color:var(--purple)"></i></div><div class="stat-val">3</div><div class="stat-lbl">Solicitudes pendientes</div><div class="stat-trend" style="color:var(--amber)">↑ 1 nueva hoy</div></div>
+          <div class="stat-card"><div class="stat-icon green"><i class="ti ti-chart-pie" style="color:var(--g400)"></i></div><div class="stat-val">52</div><div class="stat-lbl">Análisis finalizados</div></div>
+          <div class="stat-card"><div class="stat-icon green"><i class="ti ti-antenna" style="color:var(--g400)"></i></div><div class="stat-val">Listo</div><div class="stat-lbl">Estado del sensor</div></div>
+          <div class="stat-card"><div class="stat-icon amber"><i class="ti ti-history" style="color:var(--amber)"></i></div><div class="stat-val">1</div><div class="stat-lbl">Datos sin sincronizar</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="card">
+            <div class="card-title"><i class="ti ti-plus" style="color:var(--g400)"></i> Acciones rápidas</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn btn-primary" style="justify-content:flex-start"><i class="ti ti-clipboard-list"></i> Ver solicitudes pendientes (3)</button>
+              <button class="btn btn-secondary" style="justify-content:flex-start"><i class="ti ti-wifi"></i> Conectar sensor</button>
+              <button class="btn btn-secondary" style="justify-content:flex-start"><i class="ti ti-history"></i> Historial de análisis</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="ti ti-clock" style="color:var(--g400)"></i> Solicitud más reciente</div>
+            <div style="font-size:13px;margin-bottom:10px"><b>Carlos Medina</b> — Terreno Norte (2.5 ha)<br/><span style="color:var(--gray400);font-size:12px">Maíz · Entrega en campo · 02/06/2025 08:45</span></div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-primary btn-sm"><i class="ti ti-check"></i> Aceptar</button>
+              <button class="btn btn-danger btn-sm"><i class="ti ti-x"></i> Rechazar</button>
+              <button class="btn btn-secondary btn-sm">Ver detalle</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S17 · SOLICITUDES PENDIENTES  (US-0021, US-0022) -->
+      <div class="screen" id="s17">
+        <div class="card">
+          <div class="page-nav"><h2><i class="ti ti-clipboard-list" style="color:var(--g400)"></i> Solicitudes de análisis</h2></div>
+          <div class="filter-row">
+            <select class="filter-select"><option>Todos los estados</option><option selected>Pendiente</option><option>Aceptada</option><option>En proceso</option><option>Finalizada</option><option>Rechazada</option></select>
+            <select class="filter-select"><option>Todos los agricultores</option><option>Carlos Medina</option><option>Ana Rodríguez</option></select>
+          </div>
+          <div class="request-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+              <div><div style="font-size:14px;font-weight:600">Carlos Medina — Terreno Norte</div><div style="font-size:12px;color:var(--gray400)">02/06/2025 08:45 · Entrega en campo · 🌽 Maíz</div></div>
+              <span class="pill pill-amber"><span class="dot"></span> Pendiente</span>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-primary btn-sm"><i class="ti ti-check"></i> Aceptar solicitud</button>
+              <button class="btn btn-danger btn-sm"><i class="ti ti-x"></i> Rechazar</button>
+              <button class="btn btn-secondary btn-sm"><i class="ti ti-map-pin"></i> Info terreno</button>
+              <button class="btn btn-secondary btn-sm"><i class="ti ti-calendar"></i> Asignar fecha</button>
+            </div>
+          </div>
+          <div class="request-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+              <div><div style="font-size:14px;font-weight:600">Ana Rodríguez — Terreno Sur</div><div style="font-size:12px;color:var(--gray400)">01/06/2025 14:20 · Entrega en campo · 🫘 Frijol</div></div>
+              <span class="pill pill-blue"><span class="dot"></span> Aceptada · 05/06/2025</span>
+            </div>
+            <div style="display:flex;gap:8px"><button class="btn btn-purple btn-sm"><i class="ti ti-player-play"></i> Marcar en proceso</button><button class="btn btn-secondary btn-sm">Ver detalle</button></div>
+          </div>
+          <div style="font-size:12px;color:var(--gray400);text-align:center;padding:10px"><i class="ti ti-circle-check" style="color:var(--g400)"></i> No hay más solicitudes pendientes</div>
+        </div>
+      </div>
+
+      <!-- S18 · DETALLE SOLICITUD  (US-0022, US-0023) -->
+      <div class="screen" id="s18">
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+            <div style="font-size:28px">👨‍🌾</div>
+            <div style="flex:1">
+              <div style="font-size:16px;font-weight:700">Carlos Medina</div>
+              <div style="font-size:12px;color:var(--gray400)">c.medina@mail.com · 3001234567</div>
+            </div>
+            <span class="pill pill-amber"><span class="dot"></span> Pendiente</span>
+          </div>
+          <div class="sec-divider">Datos de la solicitud</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;font-size:13px;margin-bottom:14px">
+            <div><span style="color:var(--gray400)">Terreno:</span> <b>Terreno Norte</b></div>
+            <div><span style="color:var(--gray400)">Área:</span> 2.5 ha</div>
+            <div><span style="color:var(--gray400)">Cultivo deseado:</span> 🌽 <b>Maíz</b></div>
+            <div><span style="color:var(--gray400)">Modalidad:</span> Entrega en campo</div>
+            <div><span style="color:var(--gray400)">Fecha de solicitud:</span> 02/06/2025 08:45</div>
+            <div><span style="color:var(--gray400)">Fecha de atención:</span> Sin asignar</div>
+          </div>
+          <div class="sec-divider">Acción</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+            <button class="btn btn-primary"><i class="ti ti-check"></i> Aceptar solicitud</button>
+            <button class="btn btn-danger"><i class="ti ti-x"></i> Rechazar solicitud</button>
+            <button class="btn btn-secondary"><i class="ti ti-calendar"></i> Asignar fecha</button>
+          </div>
+          <div class="form-group">
+            <label>Motivo de rechazo (requerido al rechazar)</label>
+            <textarea rows="2" placeholder="Explica brevemente por qué no es posible atender esta solicitud ahora..." style="resize:vertical"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- S19 · CONEXIÓN SENSOR  (US-0024) -->
+      <div class="screen" id="s19">
+        <div class="card" style="max-width:480px">
+          <div class="card-title"><i class="ti ti-wifi" style="color:var(--g400)"></i> Verificación del sensor ESP32</div>
+          <div class="step-indicator">
+            <div class="step"><div class="step-dot done"><i class="ti ti-check"></i></div><div class="step-label">Buscar</div></div>
+            <div class="step"><div class="step-dot done"><i class="ti ti-check"></i></div><div class="step-label">Conectar</div></div>
+            <div class="step"><div class="step-dot active">3</div><div class="step-label">Verificar</div></div>
+            <div class="step"><div class="step-dot">4</div><div class="step-label">Capturar</div></div>
+          </div>
+          <div class="sensor-status sensor-ok" style="margin-bottom:12px"><div class="sensor-dot s-green"></div>ESP32-TierSensor — Conectado vía WiFi</div>
+          <div class="sec-divider">Estado de componentes</div>
+          <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;font-size:13px">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span><i class="ti ti-antenna"></i> Conexión activa</span><span class="pill pill-green">✓ OK</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center"><span><i class="ti ti-bolt"></i> Nivel de batería</span><span class="pill pill-green">74%</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center"><span><i class="ti ti-clock"></i> Última lectura exitosa</span><span class="pill pill-green">hace 8 min</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center"><span><i class="ti ti-plug"></i> Sonda RS485</span><span class="pill pill-green">✓ Respondiendo</span></div>
+          </div>
+          <button class="btn btn-primary btn-full"><i class="ti ti-arrow-right"></i> Continuar a muestreo</button>
+        </div>
+        <div style="margin-top:10px">
+          <div class="card" style="max-width:480px;border-color:var(--red)">
+            <div class="card-title" style="color:var(--red)"><i class="ti ti-wifi-off"></i> Escenario alternativo: sensor no detectado</div>
+            <div class="sensor-status sensor-err" style="margin-bottom:10px"><div class="sensor-dot s-red"></div>No se pudo conectar con el sensor</div>
+            <div style="font-size:12px;color:var(--gray600)">Verifique que el equipo esté encendido y dentro del rango de alcance.</div>
+            <button class="btn btn-secondary btn-sm" style="margin-top:10px"><i class="ti ti-refresh"></i> Reintentar conexión</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- S20 · GUÍA MUESTREO  (US-0026) -->
+      <div class="screen" id="s20">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-map" style="color:var(--g400)"></i> Guía de muestreo — Terreno Norte (2.5 ha)</div>
+          <div style="font-size:12px;color:var(--gray400);margin-bottom:11px">Toma las muestras en los puntos indicados. Se requieren mínimo <b>8 de 10</b> puntos para un análisis representativo.</div>
+          <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+            <div style="flex:1;min-width:220px">
+              <div class="sampling-map">
+                <div class="map-grid">
+                  <div class="map-dot done">1</div><div class="map-dot done">2</div><div class="map-dot done">3</div><div class="map-dot done">4</div><div class="map-dot">5</div>
+                  <div class="map-dot done">6</div><div class="map-dot done">7</div><div class="map-dot active">8</div><div class="map-dot">9</div><div class="map-dot">10</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:8px;font-size:11px;color:var(--gray400)">
+                <div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:12px;border-radius:50%;background:var(--g400)"></div>Tomado</div>
+                <div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:12px;border-radius:50%;border:2px solid var(--amber);background:#fff"></div>En curso</div>
+                <div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:12px;border-radius:50%;border:2px solid var(--g400);background:#fff"></div>Pendiente</div>
+              </div>
+            </div>
+            <div style="width:155px;flex-shrink:0">
+              <div style="font-size:12px;font-weight:600;color:var(--g800);margin-bottom:7px">Progreso</div>
+              <div style="font-size:26px;font-weight:700;color:var(--g800)">7 / 10</div>
+              <div class="timeline-bar" style="margin-bottom:9px"><div class="timeline-fill" style="width:70%"></div></div>
+              <div style="font-size:12px;color:var(--amber);margin-bottom:10px">⚠ Mínimo: 8 puntos</div>
+              <button class="btn btn-secondary btn-sm btn-full" style="margin-bottom:8px"><i class="ti ti-map-pin"></i> Marcar punto 8</button>
+              <button class="btn btn-primary btn-sm btn-full">Finalizar muestreo</button>
+            </div>
+          </div>
+          <div class="banner banner-offline" style="margin-top:10px"><i class="ti ti-alert-triangle"></i> Has tomado 7 de 10 puntos recomendados. Un análisis con menos puntos puede no ser representativo del terreno.</div>
+        </div>
+      </div>
+
+      <!-- S21 · CAPTURA DE DATOS  (US-0025, US-0032) -->
+      <div class="screen" id="s21">
+        <div class="card" style="max-width:520px">
+          <div class="card-title"><i class="ti ti-antenna" style="color:var(--g400)"></i> Captura de datos del suelo — Punto 8</div>
+          <div class="banner banner-offline"><i class="ti ti-wifi-off"></i> <b>Sin conexión</b> — Los datos se guardarán localmente y se sincronizarán al recuperar señal</div>
+          <div class="sensor-status sensor-ok" style="margin-bottom:13px"><div class="sensor-dot s-green"></div>Sensor conectado · Listo para leer</div>
+          <div style="background:var(--g50);border-radius:10px;padding:13px;margin-bottom:13px">
+            <div style="font-size:11px;font-weight:600;color:var(--g600);margin-bottom:9px;text-transform:uppercase;letter-spacing:.5px">Lecturas en tiempo real</div>
+            <div class="reading-grid">
+              <div class="reading-box"><div class="reading-label">pH</div><div class="reading-val" style="color:var(--g800)">6.4</div></div>
+              <div class="reading-box"><div class="reading-label">Nitrógeno (N)</div><div class="reading-val" style="color:var(--amber)">18 mg/kg</div></div>
+              <div class="reading-box"><div class="reading-label">Fósforo (P)</div><div class="reading-val" style="color:var(--g800)">28 mg/kg</div></div>
+              <div class="reading-box"><div class="reading-label">Potasio (K)</div><div class="reading-val" style="color:var(--g800)">142 mg/kg</div></div>
+              <div class="reading-box"><div class="reading-label">Humedad</div><div class="reading-val" style="color:var(--red)">78%</div></div>
+              <div class="reading-box"><div class="reading-label">CE</div><div class="reading-val" style="color:var(--g800)">1.1 dS/m</div></div>
+              <div class="reading-box"><div class="reading-label">Temperatura</div><div class="reading-val" style="color:var(--g800)">22°C</div></div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--gray400);margin-bottom:11px">Capturado: 02/06/2025 09:14:32 · Guardado localmente</div>
+          <div style="display:flex;gap:9px">
+            <button class="btn btn-secondary"><i class="ti ti-refresh"></i> Nueva lectura</button>
+            <button class="btn btn-primary"><i class="ti ti-check"></i> Confirmar punto 8</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- S22 · PERFIL SUELO PROMEDIO  (US-0027) -->
+      <div class="screen" id="s22">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-layers-intersect" style="color:var(--g400)"></i> Perfil promedio del suelo — Terreno Norte</div>
+          <div style="font-size:12px;color:var(--gray400);margin-bottom:13px">Promedio calculado de <b>10/10 puntos</b> de muestreo. Usará estos valores para el análisis de compatibilidad.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div>
+              <div class="sec-divider">Promedio del terreno</div>
+              <div class="reading-grid" style="margin-bottom:13px">
+                <div class="reading-box"><div class="reading-label">pH</div><div class="reading-val" style="color:var(--g800)">6.2</div></div>
+                <div class="reading-box"><div class="reading-label">N (mg/kg)</div><div class="reading-val" style="color:var(--amber)">19</div></div>
+                <div class="reading-box"><div class="reading-label">P (mg/kg)</div><div class="reading-val" style="color:var(--g800)">27</div></div>
+                <div class="reading-box"><div class="reading-label">K (mg/kg)</div><div class="reading-val" style="color:var(--g800)">138</div></div>
+                <div class="reading-box"><div class="reading-label">Humedad</div><div class="reading-val" style="color:var(--red)">76%</div></div>
+                <div class="reading-box"><div class="reading-label">CE (dS/m)</div><div class="reading-val" style="color:var(--g800)">1.0</div></div>
+              </div>
+              <button class="btn btn-primary"><i class="ti ti-brain"></i> Enviar a IA para análisis</button>
+            </div>
+            <div>
+              <div class="sec-divider">Detalle por punto</div>
+              <table class="table" style="font-size:11px">
+                <thead><tr><th>Punto</th><th>pH</th><th>N</th><th>Hum.</th></tr></thead>
+                <tbody>
+                  <tr><td>1</td><td>6.3</td><td>20</td><td>74%</td></tr>
+                  <tr><td>2</td><td>6.1</td><td>18</td><td>78%</td></tr>
+                  <tr><td>3</td><td>6.4</td><td>21</td><td>75%</td></tr>
+                  <tr><td style="color:var(--gray400)" colspan="4">… 7 puntos más</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S23 · CULTIVO OBJETIVO  (US-0028) -->
+      <div class="screen" id="s23">
+        <div class="card" style="max-width:520px">
+          <div class="card-title"><i class="ti ti-seeding" style="color:var(--g400)"></i> Cultivo objetivo — indicado por el Agricultor</div>
+          <div style="display:flex;align-items:center;gap:12px;padding:13px;background:var(--g50);border-radius:10px;margin-bottom:14px">
+            <div style="font-size:36px">🌽</div>
+            <div><div style="font-size:16px;font-weight:700;color:var(--g800)">Maíz</div><div style="font-size:12px;color:var(--gray400)">Zea mays · Cereal · Cultivo indicado en la solicitud</div></div>
+          </div>
+          <div class="sec-divider">Parámetros ideales de referencia</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:14px">
+            <div style="background:#fff;border-radius:8px;padding:8px 12px;border:.5px solid var(--gray100)"><span style="color:var(--gray400)">pH:</span> <b>5.8 – 7.0</b></div>
+            <div style="background:#fff;border-radius:8px;padding:8px 12px;border:.5px solid var(--gray100)"><span style="color:var(--gray400)">N:</span> <b>30 – 50 mg/kg</b></div>
+            <div style="background:#fff;border-radius:8px;padding:8px 12px;border:.5px solid var(--gray100)"><span style="color:var(--gray400)">P:</span> <b>20 – 40 mg/kg</b></div>
+            <div style="background:#fff;border-radius:8px;padding:8px 12px;border:.5px solid var(--gray100)"><span style="color:var(--gray400)">K:</span> <b>100 – 180 mg/kg</b></div>
+            <div style="background:#fff;border-radius:8px;padding:8px 12px;border:.5px solid var(--gray100)"><span style="color:var(--gray400)">Humedad:</span> <b>50 – 70%</b></div>
+            <div style="background:#fff;border-radius:8px;padding:8px 12px;border:.5px solid var(--gray100)"><span style="color:var(--gray400)">CE:</span> <b>0.5 – 1.5 dS/m</b></div>
+          </div>
+          <button class="btn btn-primary"><i class="ti ti-brain"></i> Continuar con el análisis</button>
+        </div>
+      </div>
+
+      <!-- S24 · RESULTADO ANÁLISIS (LAB)  (US-0029, US-0030) -->
+      <div class="screen" id="s24">
+        <div style="display:grid;grid-template-columns:190px 1fr;gap:13px">
+          <div class="card" style="text-align:center">
+            <div style="font-size:11px;color:var(--gray400);margin-bottom:8px">Compatibilidad con</div>
+            <div style="font-size:15px;font-weight:700;color:var(--g800);margin-bottom:11px">🌽 Maíz</div>
+            <div class="compat-circle"><div class="compat-pct">82%</div><div class="compat-lbl">ALTA</div></div>
+            <span class="pill pill-green">Alta compatibilidad</span>
+            <div style="margin-top:10px"><span class="pill pill-blue"><i class="ti ti-brain"></i> Análisis IA</span></div>
+            <div style="font-size:11px;color:var(--gray400);margin-top:8px">02/06/2025 09:31</div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:12px">
+              <div class="card-title"><i class="ti ti-list-details" style="color:var(--g400)"></i> Parámetros del suelo</div>
+              <div style="display:grid;grid-template-columns:130px 80px 90px 90px 1fr;gap:0;padding:5px 12px;font-size:11px;font-weight:600;color:var(--gray400);text-transform:uppercase;border-bottom:1px solid var(--gray100)">
+                <span>Parámetro</span><span style="text-align:center">Medido</span><span style="text-align:center">Ideal</span><span style="text-align:center">Estado</span><span style="padding-left:8px">Nivel</span>
+              </div>
+              <div class="param-row"><span class="param-name">pH</span><span class="param-val" style="color:var(--g400)">6.4</span><span class="param-ideal">5.8–7.0</span><span class="pill pill-green" style="font-size:10px">Óptimo</span><div style="padding-left:8px"><div class="param-bar-wrap"><div class="param-bar bar-green" style="width:85%"></div></div></div></div>
+              <div class="param-row"><span class="param-name">Nitrógeno</span><span class="param-val" style="color:var(--amber)">18</span><span class="param-ideal">30–50</span><span class="pill pill-amber" style="font-size:10px">Deficiente</span><div style="padding-left:8px"><div class="param-bar-wrap"><div class="param-bar bar-amber" style="width:35%"></div></div></div></div>
+              <div class="param-row"><span class="param-name">Fósforo</span><span class="param-val" style="color:var(--g400)">28</span><span class="param-ideal">20–40</span><span class="pill pill-green" style="font-size:10px">Óptimo</span><div style="padding-left:8px"><div class="param-bar-wrap"><div class="param-bar bar-green" style="width:70%"></div></div></div></div>
+              <div class="param-row"><span class="param-name">Potasio</span><span class="param-val" style="color:var(--g400)">142</span><span class="param-ideal">100–180</span><span class="pill pill-green" style="font-size:10px">Óptimo</span><div style="padding-left:8px"><div class="param-bar-wrap"><div class="param-bar bar-green" style="width:75%"></div></div></div></div>
+              <div class="param-row"><span class="param-name">Humedad</span><span class="param-val" style="color:var(--red)">78%</span><span class="param-ideal">50–70%</span><span class="pill pill-red" style="font-size:10px">Excesivo</span><div style="padding-left:8px"><div class="param-bar-wrap"><div class="param-bar bar-red" style="width:92%"></div></div></div></div>
+              <div class="param-row"><span class="param-name">CE</span><span class="param-val" style="color:var(--g400)">1.1</span><span class="param-ideal">0.5–1.5</span><span class="pill pill-green" style="font-size:10px">Óptimo</span><div style="padding-left:8px"><div class="param-bar-wrap"><div class="param-bar bar-green" style="width:60%"></div></div></div></div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-primary"><i class="ti ti-share"></i> Compartir con agricultor</button>
+              <button class="btn btn-secondary btn-sm"><i class="ti ti-bulb"></i> Ver recomendaciones</button>
+              <button class="btn btn-secondary btn-sm"><i class="ti ti-git-compare"></i> Alternativas</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S25 · COMPARTIR RESULTADOS  (US-0031) -->
+      <div class="screen" id="s25">
+        <div class="card" style="max-width:480px">
+          <div class="card-title"><i class="ti ti-share" style="color:var(--g400)"></i> Compartir resultados con el Agricultor</div>
+          <div style="background:var(--g50);border-radius:10px;padding:14px;margin-bottom:13px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:6px">Resumen del análisis</div>
+            <div style="font-size:13px;display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--gray400)">Agricultor:</span><b>Carlos Medina</b></div>
+            <div style="font-size:13px;display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--gray400)">Cultivo:</span><b>🌽 Maíz</b></div>
+            <div style="font-size:13px;display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--gray400)">Compatibilidad:</span><span class="pill pill-green">82%</span></div>
+            <div style="font-size:13px;display:flex;justify-content:space-between"><span style="color:var(--gray400)">Modo:</span><span class="pill pill-blue">IA Online</span></div>
+          </div>
+          <div class="modal-overlay">
+            <div class="modal-box">
+              <div class="modal-icon">✅</div>
+              <div class="modal-title">Resultados compartidos correctamente</div>
+              <div class="modal-body">Carlos Medina ya puede consultar el análisis desde su cuenta. La solicitud fue marcada como <b>Finalizada</b>.</div>
+              <button class="btn btn-primary btn-sm">Volver al panel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S26 · HISTORIAL ANÁLISIS (LAB)  (US-0033) -->
+      <div class="screen" id="s26">
+        <div class="card">
+          <div class="page-nav"><h2><i class="ti ti-history" style="color:var(--g400)"></i> Historial de análisis</h2></div>
+          <div class="filter-row">
+            <select class="filter-select"><option>Todos los agricultores</option><option>Carlos Medina</option><option>Ana Rodríguez</option></select>
+            <input type="date" class="filter-select" value="2025-05-01"/>
+            <input type="date" class="filter-select" value="2025-06-02"/>
+            <button class="btn btn-secondary btn-sm"><i class="ti ti-arrows-diff"></i> Comparar 2</button>
+          </div>
+          <table class="table">
+            <thead><tr><th></th><th>Agricultor</th><th>Terreno</th><th>Cultivo</th><th>Fecha</th><th>Compat.</th><th>Modo</th></tr></thead>
+            <tbody>
+              <tr><td><input type="checkbox" checked/></td><td>Carlos Medina</td><td>Norte</td><td>🌽 Maíz</td><td>02/06/25 09:31</td><td><span class="pill pill-green">82%</span></td><td><span class="pill pill-blue">IA</span></td></tr>
+              <tr><td><input type="checkbox" checked/></td><td>Carlos Medina</td><td>Norte</td><td>🌽 Maíz</td><td>01/05/25 08:45</td><td><span class="pill pill-amber">70%</span></td><td><span class="pill pill-blue">IA</span></td></tr>
+              <tr><td><input type="checkbox"/></td><td>Ana Rodríguez</td><td>Sur</td><td>🫘 Frijol</td><td>01/06/25 16:55</td><td><span class="pill pill-amber">61%</span></td><td><span class="pill pill-blue">IA</span></td></tr>
+              <tr><td><input type="checkbox"/></td><td>Lucía Torres</td><td>Este</td><td>🥔 Papa</td><td>31/05/25 08:30</td><td><span class="pill pill-red">38%</span></td><td><span class="pill pill-amber">Local</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════
+           AGRICULTOR
+      ══════════════════════════════════════════ -->
+
+      <!-- S27 · DASHBOARD AGRICULTOR  -->
+      <div class="screen" id="s27">
+        <div class="banner banner-online"><i class="ti ti-wifi"></i><b>Online</b> — Todas las funciones disponibles</div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon green"><i class="ti ti-chart-pie" style="color:var(--g400)"></i></div><div class="stat-val">82%</div><div class="stat-lbl">Último análisis</div><div class="stat-trend">Maíz · hace 2 h</div></div>
+          <div class="stat-card"><div class="stat-icon amber"><i class="ti ti-clipboard-list" style="color:var(--amber)"></i></div><div class="stat-val">Finalizada</div><div class="stat-lbl">Mi solicitud activa</div><div class="stat-trend" style="color:var(--g400)">Ver resultados</div></div>
+          <div class="stat-card"><div class="stat-icon green"><i class="ti ti-history" style="color:var(--g400)"></i></div><div class="stat-val">14</div><div class="stat-lbl">Análisis totales</div></div>
+          <div class="stat-card"><div class="stat-icon amber"><i class="ti ti-map-pin" style="color:var(--amber)"></i></div><div class="stat-val">2</div><div class="stat-lbl">Terrenos registrados</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px">
+          <div class="card">
+            <div class="card-title"><i class="ti ti-plus" style="color:var(--g400)"></i> Acciones rápidas</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn btn-primary" style="justify-content:flex-start"><i class="ti ti-file-plus"></i> Nueva solicitud de análisis</button>
+              <button class="btn btn-secondary" style="justify-content:flex-start"><i class="ti ti-trending-up"></i> Ver precios del mercado</button>
+              <button class="btn btn-secondary" style="justify-content:flex-start"><i class="ti ti-history"></i> Historial de análisis</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="ti ti-bulb" style="color:var(--g400)"></i> Última recomendación</div>
+            <div style="font-size:13px;color:#222;line-height:1.6">Para mejorar la compatibilidad con <b>Maíz</b>:<br/><span style="color:var(--g800)">• Aplicar abono nitrogenado (N de 18 → 30 mg/kg)</span><br/><span style="color:var(--amber)">• Reducir riego — humedad en 78% (ideal ≤70%)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S28 · CREAR SOLICITUD  (US-0009) -->
+      <div class="screen" id="s28">
+        <div class="card" style="max-width:500px">
+          <div class="card-title"><i class="ti ti-file-plus" style="color:var(--g400)"></i> Nueva solicitud de análisis</div>
+          <div class="form-group" style="margin-bottom:11px">
+            <label>Terreno *</label>
+            <select><option selected>Terreno Norte (2.5 ha)</option><option>Terreno Sur (1.2 ha)</option></select>
+          </div>
+          <div class="form-group" style="margin-bottom:11px">
+            <label>Cultivo que desea sembrar *</label>
+            <select><option selected>🌽 Maíz</option><option>🫘 Frijol</option><option>🥔 Papa</option><option>🍅 Tomate</option></select>
+          </div>
+          <div class="form-group" style="margin-bottom:16px">
+            <label>Modalidad de entrega de muestra *</label>
+            <select><option selected>Entrega en campo (el laboratorista va al terreno)</option><option>Entrega en laboratorio</option></select>
+          </div>
+          <div class="banner banner-info"><i class="ti ti-info-circle"></i> Solo puedes tener una solicitud activa a la vez. Una vez creada, podrás ver su estado en "Mis solicitudes".</div>
+          <div style="display:flex;gap:9px;margin-top:13px">
+            <button class="btn btn-primary"><i class="ti ti-send"></i> Crear solicitud</button>
+            <button class="btn btn-secondary">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- S29 · MIS SOLICITUDES  (US-0010) -->
+      <div class="screen" id="s29">
+        <div class="card">
+          <div class="page-nav"><h2><i class="ti ti-clipboard-check" style="color:var(--g400)"></i> Mis solicitudes</h2></div>
+          <div class="request-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px;flex-wrap:wrap;gap:6px">
+              <div>
+                <div style="font-size:14px;font-weight:600">Terreno Norte — 🌽 Maíz</div>
+                <div style="font-size:12px;color:var(--gray400)">Creada: 02/06/2025 08:30 · Entrega en campo</div>
+              </div>
+              <span class="pill pill-green"><span class="dot"></span> Finalizada</span>
+            </div>
+            <div style="font-size:12px;color:var(--g800);margin-bottom:9px"><i class="ti ti-check-circle"></i> Tu solicitud fue atendida. Resultados disponibles.</div>
+            <button class="btn btn-primary btn-sm"><i class="ti ti-chart-pie"></i> Ver resultados</button>
+          </div>
+          <div class="request-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px;flex-wrap:wrap;gap:6px">
+              <div>
+                <div style="font-size:14px;font-weight:600">Terreno Sur — 🫘 Frijol</div>
+                <div style="font-size:12px;color:var(--gray400)">Creada: 28/05/2025 14:10 · Entrega en campo</div>
+              </div>
+              <span class="pill pill-red"><span class="dot"></span> Rechazada</span>
+            </div>
+            <div style="font-size:12px;color:var(--red);margin-bottom:9px">Motivo: El Laboratorista no pudo atender en ese período. Crea una nueva solicitud.</div>
+            <button class="btn btn-secondary btn-sm"><i class="ti ti-plus"></i> Nueva solicitud</button>
+          </div>
+          <div style="text-align:center;padding:14px;font-size:13px;color:var(--gray400)">No hay solicitudes activas en este momento.<br/><button class="btn btn-primary btn-sm" style="margin-top:8px"><i class="ti ti-file-plus"></i> Crear nueva solicitud</button></div>
+        </div>
+      </div>
+
+      <!-- S30 · RESULTADO ANÁLISIS (AGRICULTOR)  (US-0011) -->
+      <div class="screen" id="s30">
+        <div style="display:grid;grid-template-columns:190px 1fr;gap:13px">
+          <div class="card" style="text-align:center">
+            <div style="font-size:11px;color:var(--gray400);margin-bottom:8px">Compatibilidad con</div>
+            <div style="font-size:15px;font-weight:700;color:var(--g800);margin-bottom:11px">🌽 Maíz</div>
+            <div class="compat-circle"><div class="compat-pct">82%</div><div class="compat-lbl">ALTA</div></div>
+            <span class="pill pill-green">Alta compatibilidad</span>
+            <div style="font-size:11px;color:var(--gray400);margin-top:8px">02/06/2025 09:31</div>
+            <div style="font-size:11px;color:var(--gray400);margin-top:4px">Lab: Luis Gómez</div>
+          </div>
+          <div>
+            <div class="card" style="margin-bottom:0">
+              <div class="card-title"><i class="ti ti-list-details" style="color:var(--g400)"></i> Resumen de parámetros</div>
+              <div style="display:flex;align-items:center;padding:7px 0;border-bottom:.5px solid var(--gray50)"><span style="flex:1;font-size:13px">pH</span><span style="font-size:13px;font-weight:600;width:70px;text-align:right">6.4</span><span class="pill pill-green" style="margin-left:8px">Óptimo</span></div>
+              <div style="display:flex;align-items:center;padding:7px 0;border-bottom:.5px solid var(--gray50)"><span style="flex:1;font-size:13px">Nitrógeno</span><span style="font-size:13px;font-weight:600;width:70px;text-align:right">18 mg/kg</span><span class="pill pill-amber" style="margin-left:8px">Deficiente</span></div>
+              <div style="display:flex;align-items:center;padding:7px 0;border-bottom:.5px solid var(--gray50)"><span style="flex:1;font-size:13px">Fósforo</span><span style="font-size:13px;font-weight:600;width:70px;text-align:right">28 mg/kg</span><span class="pill pill-green" style="margin-left:8px">Óptimo</span></div>
+              <div style="display:flex;align-items:center;padding:7px 0;border-bottom:.5px solid var(--gray50)"><span style="flex:1;font-size:13px">Potasio</span><span style="font-size:13px;font-weight:600;width:70px;text-align:right">142 mg/kg</span><span class="pill pill-green" style="margin-left:8px">Óptimo</span></div>
+              <div style="display:flex;align-items:center;padding:7px 0"><span style="flex:1;font-size:13px">Humedad</span><span style="font-size:13px;font-weight:600;width:70px;text-align:right">78%</span><span class="pill pill-red" style="margin-left:8px">Excesivo</span></div>
+              <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-secondary btn-sm"><i class="ti ti-bulb"></i> Recomendaciones</button>
+                <button class="btn btn-secondary btn-sm"><i class="ti ti-git-compare"></i> Alternativas</button>
+                <button class="btn btn-secondary btn-sm"><i class="ti ti-list-details"></i> Detalle parámetros</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S31 · DETALLE PARÁMETROS  -->
+      <div class="screen" id="s31">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-list-details" style="color:var(--g400)"></i> Detalle de parámetros — Maíz</div>
+          <div style="display:grid;grid-template-columns:130px 80px 90px 90px 1fr;gap:0;padding:6px 12px;font-size:11px;font-weight:600;color:var(--gray400);text-transform:uppercase;border-bottom:1px solid var(--gray100)">
+            <span>Parámetro</span><span style="text-align:center">Medido</span><span style="text-align:center">Ideal</span><span style="text-align:center">Estado</span><span style="padding-left:8px">Nivel relativo</span>
+          </div>
+          <div class="param-row"><span class="param-name">pH</span><span class="param-val" style="color:var(--g400)">6.4</span><span class="param-ideal">5.8–7.0</span><span class="pill pill-green" style="font-size:10px">Óptimo</span><div style="padding-left:8px"><div class="param-bar-wrap"><div class="param-bar bar-green" style="width:85%"></div></div></div></div>
+          <div class="param-row"><span class="param-name">Nitrógeno</span><span class="param-val" style="color:var(--amber)">18</span><span class="param-ideal">30–50</span><span class="pill pill-amber" style="font-size:10px">Deficiente</span><div style="padding-left:8px"><div class="param-bar-wrap"><div class="param-bar bar-amber" style="width:35%"></div></div></div></div>
+          <div class="param-row"><span class="param-name">Fósforo</span><span class="param-val" style="color:var(--g400)">28</span><span class="param-ideal">20–40</span><span class="pill pill-green" style="font-size:10px">Óptimo</span><div style="padding-left:8px"><div class="param-bar-wrap"><div class="param-bar bar-green" style="width:70%"></div></div></div></div>
+          <div class="param-row"><span class="param-name">Potasio</span><span class="param-val" style="color:var(--g400)">142</span><span class="param-ideal">100–180</span><span class="pill pill-green" style="font-size:10px">Óptimo</span><div style="padding-left:8px"><div class="param-bar-wrap"><div class="param-bar bar-green" style="width:75%"></div></div></div></div>
+          <div class="param-row"><span class="param-name">Humedad</span><span class="param-val" style="color:var(--red)">78%</span><span class="param-ideal">50–70%</span><span class="pill pill-red" style="font-size:10px">Excesivo</span><div style="padding-left:8px"><div class="param-bar-wrap"><div class="param-bar bar-red" style="width:92%"></div></div></div></div>
+          <div class="param-row"><span class="param-name">CE</span><span class="param-val" style="color:var(--g400)">1.1</span><span class="param-ideal">0.5–1.5</span><span class="pill pill-green" style="font-size:10px">Óptimo</span><div style="padding-left:8px"><div class="param-bar-wrap"><div class="param-bar bar-green" style="width:60%"></div></div></div></div>
+          <div class="param-row"><span class="param-name">Temperatura</span><span class="param-val" style="color:var(--g400)">22°C</span><span class="param-ideal">18–30°C</span><span class="pill pill-green" style="font-size:10px">Óptimo</span><div style="padding-left:8px"><div class="param-bar-wrap"><div class="param-bar bar-green" style="width:55%"></div></div></div></div>
+        </div>
+      </div>
+
+      <!-- S32 · RECOMENDACIONES  (US-0011 + IA US-0048) -->
+      <div class="screen" id="s32">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-bulb" style="color:var(--g400)"></i> Recomendaciones para Maíz</div>
+          <div style="background:#FAEEDA;border:1px solid #FAC775;border-radius:10px;padding:13px;margin-bottom:11px">
+            <div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:6px;display:flex;align-items:center;gap:6px"><i class="ti ti-alert-triangle"></i> Nitrógeno — Deficiente (18 mg/kg → ideal 30–50)</div>
+            <div style="font-size:13px;color:#222;margin-bottom:8px">Aplicar abono nitrogenado (urea o sulfato de amonio) para elevar N de <b>18 a 30 mg/kg</b>.</div>
+            <div style="font-size:12px;color:var(--g600);background:var(--g50);border-radius:6px;padding:6px 10px"><i class="ti ti-trending-up"></i> Mejora estimada en compatibilidad: <b>+9%</b></div>
+          </div>
+          <div style="background:#FCEBEB;border:1px solid #F7C1C1;border-radius:10px;padding:13px;margin-bottom:11px">
+            <div style="font-size:12px;font-weight:600;color:var(--red);margin-bottom:6px;display:flex;align-items:center;gap:6px"><i class="ti ti-alert-circle"></i> Humedad — Excesiva (78% → ideal ≤70%)</div>
+            <div style="font-size:13px;color:#222;margin-bottom:8px">Reducir el riego y mejorar el drenaje del suelo para bajar humedad de <b>78% a 65%</b>.</div>
+            <div style="font-size:12px;color:var(--g600);background:var(--g50);border-radius:6px;padding:6px 10px"><i class="ti ti-trending-up"></i> Mejora estimada en compatibilidad: <b>+6%</b></div>
+          </div>
+          <div style="background:var(--g50);border:1px solid var(--g100);border-radius:10px;padding:11px;font-size:13px;color:var(--g800)"><i class="ti ti-check-circle"></i> <b>pH, Fósforo, Potasio, CE y Temperatura</b> están en niveles óptimos.</div>
+        </div>
+      </div>
+
+      <!-- S33 · CULTIVOS ALTERNATIVOS  (US-0048 E3) -->
+      <div class="screen" id="s33">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-git-compare" style="color:var(--g400)"></i> Cultivos alternativos sugeridos por la IA</div>
+          <div style="font-size:12px;color:var(--gray400);margin-bottom:13px">Ordenados por mayor compatibilidad con las condiciones actuales de tu suelo</div>
+          <div class="list-item"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">🌱</span><div><b>Yuca</b><div style="font-size:11px;color:var(--gray400)">Manihot esculenta · Tubérculo</div></div></div><div style="display:flex;align-items:center;gap:8px"><span class="pill pill-green">91%</span><i class="ti ti-chevron-right" style="color:var(--gray400)"></i></div></div>
+          <div class="list-item"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">🌿</span><div><b>Plátano</b><div style="font-size:11px;color:var(--gray400)">Musa paradisiaca · Frutal</div></div></div><div style="display:flex;align-items:center;gap:8px"><span class="pill pill-green">87%</span><i class="ti ti-chevron-right" style="color:var(--gray400)"></i></div></div>
+          <div class="list-item"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">🥜</span><div><b>Maní</b><div style="font-size:11px;color:var(--gray400)">Arachis hypogaea · Leguminosa</div></div></div><div style="display:flex;align-items:center;gap:8px"><span class="pill pill-amber">74%</span><i class="ti ti-chevron-right" style="color:var(--gray400)"></i></div></div>
+          <div class="list-item"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">🍅</span><div><b>Tomate</b><div style="font-size:11px;color:var(--gray400)">Solanum lycopersicum · Hortaliza</div></div></div><div style="display:flex;align-items:center;gap:8px"><span class="pill pill-amber">68%</span><i class="ti ti-chevron-right" style="color:var(--gray400)"></i></div></div>
+        </div>
+      </div>
+
+      <!-- S34 · HISTORIAL ANÁLISIS  (US-0011, US-0012) -->
+      <div class="screen" id="s34">
+        <div class="card">
+          <div class="page-nav"><h2><i class="ti ti-history" style="color:var(--g400)"></i> Mis análisis</h2>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-secondary btn-sm"><i class="ti ti-file-type-pdf"></i> Exportar</button>
+              <button class="btn btn-secondary btn-sm"><i class="ti ti-arrows-diff"></i> Comparar 2</button>
+            </div>
+          </div>
+          <div class="list-item"><div style="display:flex;align-items:center;gap:3px"><input type="checkbox" style="margin-right:7px"/><div><div style="font-size:13px;font-weight:600">🌽 Maíz</div><div style="font-size:11px;color:var(--gray400)">02/06/2025 · 09:31 · Terreno Norte · Lab: Luis Gómez</div></div></div><div style="display:flex;align-items:center;gap:8px"><span class="pill pill-green">82%</span><i class="ti ti-chevron-right" style="color:var(--gray400)"></i></div></div>
+          <div class="list-item"><div style="display:flex;align-items:center;gap:3px"><input type="checkbox" style="margin-right:7px"/><div><div style="font-size:13px;font-weight:600">🫘 Frijol</div><div style="font-size:11px;color:var(--gray400)">28/05/2025 · 14:30 · Terreno Sur · Lab: Luis Gómez</div></div></div><div style="display:flex;align-items:center;gap:8px"><span class="pill pill-amber">61%</span><i class="ti ti-chevron-right" style="color:var(--gray400)"></i></div></div>
+          <div class="list-item"><div style="display:flex;align-items:center;gap:3px"><input type="checkbox" style="margin-right:7px"/><div><div style="font-size:13px;font-weight:600">🥔 Papa</div><div style="font-size:11px;color:var(--gray400)">15/05/2025 · 10:05 · Terreno Norte · Lab: M. Pérez</div></div></div><div style="display:flex;align-items:center;gap:8px"><span class="pill pill-red">38%</span><i class="ti ti-chevron-right" style="color:var(--gray400)"></i></div></div>
+          <div class="list-item"><div style="display:flex;align-items:center;gap:3px"><input type="checkbox" style="margin-right:7px"/><div><div style="font-size:13px;font-weight:600">🌽 Maíz</div><div style="font-size:11px;color:var(--gray400)">01/05/2025 · 08:45 · Terreno Norte · Lab: Luis Gómez</div></div></div><div style="display:flex;align-items:center;gap:8px"><span class="pill pill-amber">70%</span><i class="ti ti-chevron-right" style="color:var(--gray400)"></i></div></div>
+        </div>
+      </div>
+
+      <!-- S35 · COMPARAR ANÁLISIS  (US-0011 E4) -->
+      <div class="screen" id="s35">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-arrows-diff" style="color:var(--g400)"></i> Comparar análisis</div>
+          <div style="display:flex;gap:12px;margin-bottom:13px">
+            <div class="comp-col">
+              <div style="font-size:12px;font-weight:600;color:var(--g600);margin-bottom:10px">🌽 Maíz · 02/06/2025 <span class="pill pill-green" style="float:right">82%</span></div>
+              <div class="comp-row"><span style="color:var(--gray400)">pH</span><span style="color:var(--g400);font-weight:600">6.4</span></div>
+              <div class="comp-row"><span style="color:var(--gray400)">Nitrógeno</span><span style="color:var(--amber);font-weight:600">18 ↑</span></div>
+              <div class="comp-row"><span style="color:var(--gray400)">Fósforo</span><span style="color:var(--g400);font-weight:600">28</span></div>
+              <div class="comp-row"><span style="color:var(--gray400)">Potasio</span><span style="color:var(--g400);font-weight:600">142</span></div>
+              <div class="comp-row"><span style="color:var(--gray400)">Humedad</span><span style="color:var(--red);font-weight:600">78%</span></div>
+            </div>
+            <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 4px">
+              <i class="ti ti-arrows-horizontal" style="font-size:20px;color:var(--gray400)"></i>
+            </div>
+            <div class="comp-col">
+              <div style="font-size:12px;font-weight:600;color:var(--g600);margin-bottom:10px">🌽 Maíz · 01/05/2025 <span class="pill pill-amber" style="float:right">70%</span></div>
+              <div class="comp-row"><span style="color:var(--gray400)">pH</span><span style="color:var(--g400);font-weight:600">6.0</span></div>
+              <div class="comp-row"><span style="color:var(--gray400)">Nitrógeno</span><span style="color:var(--red);font-weight:600">10 ↓</span></div>
+              <div class="comp-row"><span style="color:var(--gray400)">Fósforo</span><span style="color:var(--g400);font-weight:600">25</span></div>
+              <div class="comp-row"><span style="color:var(--gray400)">Potasio</span><span style="color:var(--g400);font-weight:600">130</span></div>
+              <div class="comp-row"><span style="color:var(--gray400)">Humedad</span><span style="color:var(--amber);font-weight:600">72%</span></div>
+            </div>
+          </div>
+          <div style="background:var(--g50);border-radius:8px;padding:10px 13px;font-size:13px;color:var(--g800)"><i class="ti ti-trending-up"></i> El N mejoró de 10 → 18 mg/kg (+8). La humedad sigue elevada. Compatibilidad total: <b>+12%</b> respecto al análisis anterior.</div>
+        </div>
+      </div>
+
+      <!-- S36 · MI PERFIL  (US-0005) -->
+      <div class="screen" id="s36">
+        <div class="card" style="max-width:480px">
+          <div style="display:flex;align-items:center;margin-bottom:16px">
+            <div class="profile-avatar">CM</div>
+            <div><div style="font-size:16px;font-weight:700">Carlos Medina</div><div style="font-size:12px;color:var(--gray400)">c.medina@mail.com</div><div style="margin-top:5px"><span class="pill pill-green">Agricultor</span></div></div>
+          </div>
+          <div class="sec-divider">Información personal</div>
+          <div class="form-row" style="margin-top:9px">
+            <div class="form-group"><label>Nombre completo</label><input value="Carlos Medina"/></div>
+            <div class="form-group"><label>Teléfono</label><input value="3001234567"/></div>
+          </div>
+          <div class="form-group" style="margin-bottom:13px"><label>Correo electrónico</label><input value="c.medina@mail.com"/></div>
+          <div class="banner banner-success"><i class="ti ti-check-circle"></i> Perfil actualizado correctamente</div>
+          <div class="sec-divider">Cambiar contraseña</div>
+          <div class="form-row" style="margin-top:9px">
+            <div class="form-group"><label>Contraseña actual</label><input type="password" placeholder="••••••••"/></div>
+            <div class="form-group"><label>Nueva contraseña</label><input type="password" placeholder="••••••••"/></div>
+          </div>
+          <div style="display:flex;gap:9px;margin-top:10px">
+            <button class="btn btn-primary"><i class="ti ti-device-floppy"></i> Guardar cambios</button>
+            <button class="btn btn-secondary">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- S37 · MIS TERRENOS  (US-0006, US-0007, US-0008) -->
+      <div class="screen" id="s37">
+        <div class="card">
+          <div class="page-nav"><h2><i class="ti ti-map-pin" style="color:var(--g400)"></i> Mis terrenos</h2><button class="btn btn-primary btn-sm"><i class="ti ti-plus"></i> Nuevo terreno</button></div>
+          <div class="list-item"><div><div style="font-size:14px;font-weight:600">Terreno Norte</div><div style="font-size:12px;color:var(--gray400)">2.5 ha · 10 puntos de muestreo</div></div><div style="display:flex;gap:8px"><button class="btn btn-secondary btn-sm"><i class="ti ti-edit"></i> Editar</button><button class="btn btn-danger btn-sm"><i class="ti ti-trash"></i></button></div></div>
+          <div class="list-item"><div><div style="font-size:14px;font-weight:600">Terreno Sur</div><div style="font-size:12px;color:var(--gray400)">1.2 ha · 5 puntos de muestreo</div></div><div style="display:flex;gap:8px"><button class="btn btn-secondary btn-sm"><i class="ti ti-edit"></i> Editar</button><button class="btn btn-danger btn-sm"><i class="ti ti-trash"></i></button></div></div>
+          <div class="modal-overlay" style="min-height:130px">
+            <div class="modal-box">
+              <div class="modal-icon">🗑️</div>
+              <div class="modal-title">¿Eliminar Terreno Sur?</div>
+              <div class="modal-body">Se eliminarán el terreno y todos sus análisis asociados. Esta acción no se puede deshacer.</div>
+              <div style="display:flex;gap:8px;justify-content:center">
+                <button class="btn btn-danger btn-sm">Sí, eliminar</button>
+                <button class="btn btn-secondary btn-sm">Cancelar</button>
+              </div>
+            </div>
+          </div>
+          <div style="background:var(--g50);border-radius:10px;padding:13px;margin-top:6px">
+            <div style="font-size:12px;font-weight:600;color:var(--g800);margin-bottom:9px"><i class="ti ti-plus-circle"></i> Registrar nuevo terreno</div>
+            <div class="form-row">
+              <div class="form-group"><label>Nombre del terreno *</label><input placeholder="Ej. Terreno Este" class="err"/><span class="err-msg">Ya tienes un terreno registrado con ese nombre</span></div>
+              <div class="form-group"><label>Área *</label><input placeholder="Ej. 1.5 ha"/></div>
+            </div>
+            <button class="btn btn-primary btn-sm"><i class="ti ti-check"></i> Registrar terreno</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- S38 · MERCADO  (US-0013, US-0015, US-0017) -->
+      <div class="screen" id="s38">
+        <div class="card">
+          <div class="page-nav"><h2><i class="ti ti-trending-up" style="color:var(--g400)"></i> Módulo de mercado</h2></div>
+          <div class="filter-row">
+            <div class="search-bar" style="flex:1;margin-bottom:0"><i class="ti ti-search"></i><input placeholder="Buscar cultivo..." value="Maíz"/></div>
+            <button class="btn btn-secondary btn-sm">Cambiar cultivo</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px">
+            <div>
+              <div class="mkt-price">$1.450 / kg</div>
+              <div style="font-size:12px;color:var(--gray400);margin-top:3px">Última actualización: 01/06/2025</div>
+              <div class="mkt-trend" style="background:var(--g50);color:var(--g800);margin-top:6px"><i class="ti ti-trending-up"></i> <b>Precio al alza</b> +8% vs mes anterior</div>
+              <div style="margin-top:9px;font-size:12px;color:var(--gray400)">Fuente: SIPSA — Precio regional Huila</div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:600;color:var(--g600);margin-bottom:7px">Precio local vs regional</div>
+              <div class="chart-bar-wrap" style="height:60px">
+                <div class="chart-bar" style="height:60%;background:var(--g200)"></div>
+                <div class="chart-bar" style="height:75%;background:var(--g400)"></div>
+              </div>
+              <div class="chart-labels">
+                <span class="chart-label">Local<br/>$1.380</span>
+                <span class="chart-label">Regional<br/>$1.450</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="banner banner-offline"><i class="ti ti-wifi-off"></i> Sin conexión. Última actualización: 30/05/2025. Los datos pueden no reflejar el precio actual.</div>
+      </div>
+
+      <!-- S39 · HISTORIAL PRECIOS  (US-0014) -->
+      <div class="screen" id="s39">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-chart-line" style="color:var(--g400)"></i> Historial de precios — Maíz</div>
+          <div style="font-size:12px;color:var(--gray400);margin-bottom:13px">Últimos 6 meses · Precio promedio regional ($/kg) · Huila</div>
+          <div class="chart-bar-wrap" style="height:100px">
+            <div class="chart-bar" style="height:62%"></div><div class="chart-bar" style="height:55%"></div><div class="chart-bar" style="height:70%"></div><div class="chart-bar" style="height:65%"></div><div class="chart-bar" style="height:80%"></div><div class="chart-bar" style="height:90%"></div>
+          </div>
+          <div class="chart-labels">
+            <span class="chart-label">Ene<br/>$1.280</span><span class="chart-label">Feb<br/>$1.200</span><span class="chart-label">Mar<br/>$1.340</span><span class="chart-label">Abr<br/>$1.300</span><span class="chart-label">May<br/>$1.400</span><span class="chart-label">Jun<br/>$1.450</span>
+          </div>
+          <div class="banner banner-success" style="margin-top:13px"><i class="ti ti-trending-up"></i> Tendencia <b>al alza</b>. Buen momento para vender. Precio máximo histórico: <b>$1.450/kg</b></div>
+        </div>
+      </div>
+
+      <!-- S40 · COMPRADORES  (US-0016) -->
+      <div class="screen" id="s40">
+        <div class="card">
+          <div class="page-nav"><h2><i class="ti ti-building-store" style="color:var(--g400)"></i> Compradores — Maíz</h2></div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border:.5px solid var(--gray100);border-radius:9px;background:#fff"><div><div style="font-size:13px;font-weight:600">Cooperativa Agro Norte</div><div style="font-size:11px;color:var(--gray400)">Cooperativa · Caucasia, Ant.</div></div><div style="display:flex;align-items:center;gap:8px"><span class="pill pill-green">$1.460/kg</span><button class="btn btn-secondary btn-sm"><i class="ti ti-phone"></i> Contactar</button></div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border:.5px solid var(--gray100);border-radius:9px;background:#fff"><div><div style="font-size:13px;font-weight:600">Plaza Mayorista Medellín</div><div style="font-size:11px;color:var(--gray400)">Plaza de mercado · Medellín, Ant.</div></div><div style="display:flex;align-items:center;gap:8px"><span class="pill pill-amber">$1.420/kg</span><button class="btn btn-secondary btn-sm"><i class="ti ti-phone"></i> Contactar</button></div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border:.5px solid var(--gray100);border-radius:9px;background:#fff"><div><div style="font-size:13px;font-weight:600">Agrocomercial del Sur</div><div style="font-size:11px;color:var(--gray400)">Intermediario · Tarazá, Ant.</div></div><div style="display:flex;align-items:center;gap:8px"><span class="pill pill-amber">$1.390/kg</span><button class="btn btn-secondary btn-sm"><i class="ti ti-phone"></i> Contactar</button></div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border:.5px solid var(--gray100);border-radius:9px;background:#fff"><div><div style="font-size:13px;font-weight:600">Campo Directo S.A.</div><div style="font-size:11px;color:var(--gray400)">Exportador · Apartadó, Ant.</div></div><div style="display:flex;align-items:center;gap:8px"><span class="pill pill-green">$1.480/kg</span><button class="btn btn-secondary btn-sm"><i class="ti ti-phone"></i> Contactar</button></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+const TOTAL = 41;
+const titles = [
+  /* Auth */ "Iniciar sesión","Registrarse como Agricultor","Recuperar contraseña","Restablecer contraseña",
+  /* Admin */ "Dashboard Administrador","Lista de usuarios","Crear usuario","Perfil de usuario","Supervisar análisis","Actividad del Laboratorista","Módulo de reportes","Reporte generado","Estado del hardware","Configurar rangos agronómicos","Configuración IA offline","BBDD local de cultivos",
+  /* Lab */ "Dashboard Laboratorista","Solicitudes pendientes","Detalle de solicitud","Verificar sensor ESP32","Guía de muestreo","Captura de datos del suelo","Perfil promedio del suelo","Cultivo objetivo","Resultado del análisis (Lab)","Compartir resultados","Historial de análisis (Lab)",
+  /* Farmer */ "Dashboard Agricultor","Crear solicitud de análisis","Mis solicitudes","Resultado del análisis","Detalle de parámetros","Recomendaciones de mejora","Cultivos alternativos","Historial de análisis","Comparar análisis","Mi perfil","Mis terrenos","Módulo de mercado","Historial de precios","Compradores"
+];
+const roles = [
+  null,null,null,null,
+  "Administrador","Administrador","Administrador","Administrador","Administrador","Administrador","Administrador","Administrador","Administrador","Administrador","Administrador","Administrador",
+  "Laboratorista","Laboratorista","Laboratorista","Laboratorista","Laboratorista","Laboratorista","Laboratorista","Laboratorista","Laboratorista","Laboratorista","Laboratorista",
+  "Agricultor","Agricultor","Agricultor","Agricultor","Agricultor","Agricultor","Agricultor","Agricultor","Agricultor","Agricultor","Agricultor","Agricultor","Agricultor","Agricultor"
+];
+const roleClasses = {Administrador:"role-admin",Laboratorista:"role-lab",Agricultor:"role-farmer"};
+const avatarMap = {Administrador:"AD",Laboratorista:"LG",Agricultor:"CM"};
+
+let cur = 0;
+
+function goTo(i, el) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s' + i).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('topbar-title').textContent = titles[i];
+  document.getElementById('screen-badge').textContent = 'Pantalla ' + (i+1) + ' / ' + TOTAL;
+  const rb = document.getElementById('role-badge');
+  const role = roles[i];
+  if (role) {
+    rb.textContent = role;
+    rb.className = 'role-badge ' + roleClasses[role];
+    rb.style.display = '';
+    document.getElementById('topbar-avatar').textContent = avatarMap[role] || 'AD';
+  } else {
+    rb.style.display = 'none';
+    document.getElementById('topbar-avatar').textContent = '—';
+  }
+  cur = i;
+  document.getElementById('content').scrollTop = 0;
+}
+
+function nextScreen() {
+  const next = (cur + 1) % TOTAL;
+  const items = document.querySelectorAll('.nav-item');
+  goTo(next, items[next]);
+  items[next].scrollIntoView({block:'nearest'});
+}
+
+function prevScreen() {
+  const prev = (cur - 1 + TOTAL) % TOTAL;
+  const items = document.querySelectorAll('.nav-item');
+  goTo(prev, items[prev]);
+  items[prev].scrollIntoView({block:'nearest'});
+}
+</script>
+</body>
+</html>

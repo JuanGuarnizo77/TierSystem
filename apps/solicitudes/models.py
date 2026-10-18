@@ -9,6 +9,7 @@ class SolicitudAnalisis(models.Model):
         ('EN_PROCESO', 'En Proceso'),
         ('COMPLETADA', 'Completada'),
         ('RECHAZADA', 'Rechazada'),
+        ('CANCELADA', 'Cancelada'),
     )
     MODALIDADES = (
         ('VISITA', 'Solicitar Visita en Campo'),

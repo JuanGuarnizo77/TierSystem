@@ -89,6 +89,9 @@ def perfil_view(request):
             new_pass = request.POST.get('new_password')
             confirm_pass = request.POST.get('confirm_password')
             
+            if not old_pass or not new_pass:
+                return JsonResponse({'error': 'Debes indicar la contraseña actual y la nueva.'}, status=400)
+
             if confirm_pass and new_pass != confirm_pass:
                 return JsonResponse({'error': 'Las contraseñas nuevas no coinciden.'}, status=400)
                 

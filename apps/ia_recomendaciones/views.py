@@ -2,6 +2,7 @@ import json
 import os
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 from .models import CultivoIdeal
 
 # Intentar importar google.generativeai, manejando si aún no está instalado
@@ -10,17 +11,41 @@ try:
 except ImportError:
     genai = None
 
+def _guardar_diagnostico_solicitud(solicitud_id, diagnostico, h, t, c, ph, n, p, k):
+    """Helper que centraliza el guardado de RegistroAnalisis y cambio de estado."""
+    if not solicitud_id:
+        return
+    from apps.solicitudes.models import SolicitudAnalisis
+    from apps.analisis.models import RegistroAnalisis
+    try:
+        sol = SolicitudAnalisis.objects.get(id=solicitud_id)
+    except SolicitudAnalisis.DoesNotExist:
+        return
+    RegistroAnalisis.objects.update_or_create(
+        solicitud=sol,
+        defaults={
+            'humedad': h,
+            'temperatura': t,
+            'conductividad': c,
+            'ph': ph,
+            'nitrogeno': n,
+            'fosforo': p,
+            'potasio': k,
+            'diagnostico_ia': json.dumps(diagnostico),
+        }
+    )
+    sol.estado = 'COMPLETADA'
+    sol.save()
+
+
 def obtener_modelo_gemini():
-    """
-    Retorna un modelo Gemini activo disponible para la API Key.
-    Prioriza gemini-3.8-flash y gemini-flash-latest.
-    """
-    for nombre in ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.5-flash', 'gemini-2.5-flash']:
+    """Retorna un modelo Gemini activo con fallback a gemini-1.5-flash."""
+    for nombre in ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']:
         try:
             return genai.GenerativeModel(nombre)
         except Exception:
             continue
-    return genai.GenerativeModel('gemini-3.8-flash')
+    return genai.GenerativeModel('gemini-1.5-flash')
 
 def api_obtener_cultivos(request):
     """
@@ -38,7 +63,7 @@ def api_obtener_cultivos(request):
         "cultivos": datos
     })
 
-@csrf_exempt
+@login_required(login_url='login')
 def api_diagnosticar_ia(request):
     """
     MODO ONLINE:
@@ -193,9 +218,11 @@ Reglas estrictas de respuesta:
         return JsonResponse({"estado": "error", "mensaje": str(e)}, status=500)
 
 
+@login_required(login_url='login')
 def api_promedio_puntos(request):
     """
     Calcula el promedio de los puntos tomados para una solicitud de análisis.
+    Solo el laboratorista asignado puede consultar los promedios.
     """
     solicitud_id = request.GET.get('solicitud_id')
     if not solicitud_id:
@@ -206,7 +233,7 @@ def api_promedio_puntos(request):
     from django.db.models import Avg
     
     try:
-        sol = SolicitudAnalisis.objects.get(id=solicitud_id)
+        sol = SolicitudAnalisis.objects.get(id=solicitud_id, laboratorista_asignado=request.user)
         puntos_tomados = PuntoMuestreo.objects.filter(solicitud=sol, estado='TOMADO')
         
         if puntos_tomados.exists():
@@ -261,11 +288,13 @@ def api_promedio_puntos(request):
         return JsonResponse({"estado": "error", "mensaje": str(e)}, status=500)
 
 
+@login_required(login_url='login')
 @csrf_exempt
 def api_compartir_resultado(request):
     """
     HU-0031: Compartir los resultados del análisis con el agricultor.
     Guarda o actualiza RegistroAnalisis y marca la Solicitud como COMPLETADA.
+    Solo el laboratorista asignado puede compartir el resultado.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Solo POST permitido"}, status=405)
@@ -280,6 +309,10 @@ def api_compartir_resultado(request):
         from apps.analisis.models import RegistroAnalisis
         
         sol = SolicitudAnalisis.objects.get(id=solicitud_id)
+
+        # Verificar que el laboratorista asignado es quien llama
+        if sol.laboratorista_asignado != request.user:
+            return JsonResponse({'error': 'No autorizado para compartir este análisis'}, status=403)
         datos = data.get("datos", {})
         diagnostico = data.get("diagnostico", {})
         
@@ -335,6 +368,9 @@ def api_sincronizar_offline(request):
             if sol_id:
                 try:
                     sol = SolicitudAnalisis.objects.get(id=sol_id)
+                    # Solo completar solicitudes en estado válido para evitar modificaciones indebidas
+                    if sol.estado not in ('ASIGNADA', 'EN_PROCESO', 'COMPLETADA'):
+                        continue
                     RegistroAnalisis.objects.update_or_create(
                         solicitud=sol,
                         defaults={
@@ -363,11 +399,13 @@ def api_sincronizar_offline(request):
         return JsonResponse({"estado": "error", "mensaje": str(e)}, status=500)
 
 
+@login_required(login_url='login')
 @csrf_exempt
 def api_consultar_ia_agricultor(request):
     """
     Permite al agricultor consultar compatibilidad de un cultivo específico
     utilizando los parámetros de suelo registrados en su análisis completado.
+    Solo el agricultor dueño del análisis puede consultar.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Solo POST permitido"}, status=405)
@@ -381,7 +419,11 @@ def api_consultar_ia_agricultor(request):
             return JsonResponse({"estado": "error", "mensaje": "Faltan datos de consulta"}, status=400)
             
         from apps.analisis.models import RegistroAnalisis
-        analisis = RegistroAnalisis.objects.get(solicitud_id=solicitud_id)
+        # Verificar ownership — solo el agricultor dueño puede consultar su análisis
+        analisis = RegistroAnalisis.objects.get(
+            solicitud_id=solicitud_id,
+            solicitud__agricultor=request.user
+        )
         
         api_key = os.getenv("GEMINI_API_KEY")
         if api_key and genai is not None:

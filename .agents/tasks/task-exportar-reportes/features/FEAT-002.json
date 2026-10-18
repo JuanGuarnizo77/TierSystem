@@ -1,0 +1,21 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Add export buttons to both the individual analysis detail template and the historial template. Depends on FEAT-001 (URLs must exist before being referenced in templates). Three UI changes: (1) add Excel button next to existing PDF button in resultado_detalle.html; (2) add PDF + Excel historial-bulk export buttons to historial.html header; (3) those historial buttons only appear when there are results (inside {% if historial_lista %} guard).",
+  "status": "completed",
+  "steps": [
+    "In templates/agricultor/resultado_detalle.html, add an Excel export button immediately after the existing PDF button (lines 25-28). The existing PDF button is: <a href=\"{% url 'solicitudes_agricultor:exportar_analisis_pdf' solicitud.id %}\" class=\"bg-primary hover:bg-secondary text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2\"><i class=\"fa-solid fa-file-pdf\"></i> Exportar Ficha Tecnica (PDF)</a>. Insert after it, before the Comparar button: <a href=\"{% url 'solicitudes_agricultor:exportar_analisis_excel' solicitud.id %}\" class=\"bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2\"><i class=\"fa-solid fa-file-excel\"></i> Exportar Excel</a>. File: c:\\Users\\punto\\Desktop\\tyersistem clon\\templates\\agricultor\\resultado_detalle.html",
+    "In templates/agricultor/historial.html, add PDF and Excel bulk-export buttons to the page header. The header is the <div class=\"mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4\"> block at the top of {% block content %}. Add a second child div on the right side containing two buttons, wrapped in {% if historial_lista %} so they only show when there is data: {% if historial_lista %}<div class=\"flex items-center gap-2 mt-3 sm:mt-0\"><a href=\"{% url 'solicitudes_agricultor:exportar_historial_pdf' %}\" class=\"bg-primary hover:bg-secondary text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2\"><i class=\"fa-solid fa-file-pdf\"></i> Exportar todo en PDF</a><a href=\"{% url 'solicitudes_agricultor:exportar_historial_excel' %}\" class=\"bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2\"><i class=\"fa-solid fa-file-excel\"></i> Exportar todo en Excel</a></div>{% endif %}. File: c:\\Users\\punto\\Desktop\\tyersistem clon\\templates\\agricultor\\historial.html"
+  ],
+  "acceptance_criteria": [
+    "templates/agricultor/resultado_detalle.html contains {% url 'solicitudes_agricultor:exportar_analisis_excel' solicitud.id %}",
+    "templates/agricultor/historial.html contains {% url 'solicitudes_agricultor:exportar_historial_pdf' %}",
+    "templates/agricultor/historial.html contains {% url 'solicitudes_agricultor:exportar_historial_excel' %}",
+    "python manage.py check runs with 0 errors (Django will catch broken template url tags at startup)"
+  ],
+  "verification": [
+    "cd 'c:\\Users\\punto\\Desktop\\tyersistem clon' && python manage.py check"
+  ],
+  "blocked_reason": null,
+  "findings": "Added Excel export button to templates/agricultor/resultado_detalle.html (between PDF and Comparar buttons). Added PDF and Excel bulk-export buttons to templates/agricultor/historial.html header, wrapped in {% if solicitudes %} guard (the template uses 'solicitudes' not 'historial_lista' as its context variable). All URL names match FEAT-001 registered routes. python manage.py check passes with 0 errors."
+}

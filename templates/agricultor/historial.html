@@ -9,14 +9,40 @@
         <h2 class="text-3xl font-bold text-gray-900 dark:text-white font-heading">Historial de Análisis</h2>
         <p class="text-gray-500 dark:text-gray-400 mt-1 font-medium">Consulta los resultados de suelo compartidos por el laboratorio y evalúa nuevos cultivos con IA.</p>
     </div>
+    {% if solicitudes %}
+    <div class="flex items-center gap-2 mt-3 sm:mt-0">
+        <a href="{% url 'solicitudes_agricultor:exportar_historial_pdf' %}" class="bg-primary hover:bg-secondary text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2">
+            <i class="fa-solid fa-file-pdf"></i> Exportar todo en PDF
+        </a>
+        <a href="{% url 'solicitudes_agricultor:exportar_historial_excel' %}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all flex items-center gap-2">
+            <i class="fa-solid fa-file-excel"></i> Exportar todo en Excel
+        </a>
+    </div>
+    {% endif %}
 </div>
+
+{% if solicitudes %}
+{# ── Barra de búsqueda historial agricultor ─── #}
+<div class="bg-white dark:bg-[#1e293b] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6 flex flex-col md:flex-row gap-4">
+    <div class="flex-1 relative">
+        <i class="fa-solid fa-search absolute left-4 top-3.5 text-gray-400 dark:text-gray-500"></i>
+        <input type="text" id="buscarHistorial"
+               placeholder="Buscar por terreno o cultivo..."
+               class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+                      rounded-xl pl-12 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary
+                      text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500">
+    </div>
+</div>
+{% endif %}
 
 <div class="bento-card overflow-hidden">
     <div class="p-6">
         {% if solicitudes %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="gridHistorial">
             {% for s in solicitudes %}
-            <div class="bento-card overflow-hidden group relative flex flex-col hover:!border-primary transition-all">
+            <div class="bento-card overflow-hidden group relative flex flex-col hover:!border-primary transition-all"
+                 data-terreno="{{ s.terreno.nombre|lower }}"
+                 data-cultivo="{{ s.cultivo_deseado|lower }}">
                 <div class="p-5 flex-1 flex flex-col relative z-10">
                     <div class="flex justify-between items-start mb-2">
                         <div>
@@ -84,15 +110,21 @@
             </div>
             {% endfor %}
         </div>
+        <div id="sinResultadosHistorial" style="display:none;" class="py-8 text-center text-gray-400 dark:text-gray-500 text-sm italic">
+            <i class="fa-solid fa-magnifying-glass-minus text-2xl mb-2 block"></i>
+            No hay análisis que coincidan con la búsqueda.
+        </div>
         {% else %}
         <div class="text-center py-16">
-            <div class="w-24 h-24 bg-green-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 text-primary text-4xl shadow-sm border border-green-100 dark:border-gray-700">
-                <i class="fa-solid fa-clipboard-list"></i>
+            <div class="w-16 h-16 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm">
+                <i class="fa-solid fa-clipboard-check"></i>
             </div>
-            <h3 class="text-xl font-bold text-gray-700 dark:text-gray-300 font-heading">No hay análisis completados</h3>
-            <p class="text-gray-500 dark:text-gray-400 mt-2 max-w-md mx-auto">Aún no tienes resultados de análisis. Cuando un laboratorista complete tus solicitudes, los reportes aparecerán aquí.</p>
-            <a href="{% url 'solicitudes_agricultor:mis_solicitudes' %}" class="inline-block mt-6 bg-primary hover:bg-secondary text-white font-bold py-2.5 px-6 rounded-xl shadow-sm transition-all">
-                Ir a mis solicitudes
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white font-heading">No tienes análisis finalizados</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm mx-auto">
+                Cuando el laboratorista atienda y complete tus solicitudes de muestreo, aquí podrás consultar todos los resultados y reportes técnicos.
+            </p>
+            <a href="{% url 'solicitudes_agricultor:mis_solicitudes' %}" class="inline-block mt-5 bg-primary hover:bg-secondary text-white text-xs font-bold py-2.5 px-5 rounded-xl shadow-sm transition-all">
+                Ir a Mis Solicitudes
             </a>
         </div>
         {% endif %}
@@ -201,15 +233,42 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    // Búsqueda client-side para historial de análisis
+    (function() {
+        var input = document.getElementById('buscarHistorial');
+        if (!input) return;
+        var noRes = document.getElementById('sinResultadosHistorial');
+        input.addEventListener('input', function() {
+            var term = this.value.toLowerCase().trim();
+            var cards = document.querySelectorAll('#gridHistorial > [data-terreno][data-cultivo]');
+            var visibles = 0;
+            cards.forEach(function(card) {
+                var terreno = card.dataset.terreno || '';
+                var cultivo = card.dataset.cultivo || '';
+                if (terreno.includes(term) || cultivo.includes(term) || term === '') {
+                    card.style.display = '';
+                    visibles++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            if (noRes) noRes.style.display = (visibles === 0 && term !== '') ? '' : 'none';
+        });
+    })();
+
     let activeSolicitudId = null;
 
     function seleccionarChip(cultivo) {
         document.getElementById('inputCultivoIA').value = cultivo;
+    }
+
+    function cerrarReporte() {
+        document.getElementById('modalReporte').classList.add('hidden');
+        activeSolicitudId = null;
     }
 
     function verReporteCompleto(source) {
@@ -349,10 +408,5 @@
             btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Consultar IA';
         }
     }
-    
-    function cerrarReporte() {
-        document.getElementById('modalReporte').classList.add('hidden');
-    }
 </script>
 {% endblock %}
-

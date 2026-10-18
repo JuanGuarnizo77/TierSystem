@@ -1,0 +1,7 @@
+{
+  "task_id": "task-exportar-reportes",
+  "task_description": "Add individual PDF and Excel export for each analysis report in the TierSystem Django app. The agricultor should be able to download a single analysis as PDF (already partially implemented but broken — reportlab missing) and as Excel (not implemented at all). Also wire up the existing historial bulk export buttons that have views and URLs but no UI buttons.",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}

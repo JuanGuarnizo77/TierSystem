@@ -1,9 +1,11 @@
 import os
 from pathlib import Path
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +41,7 @@ INSTALLED_APPS = [
     'apps.analisis',
     'apps.ia_recomendaciones',
     'apps.mercado',
+    'apps.sipsa',
     'core',
 ]
 
@@ -65,6 +68,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.solicitud_activa',
             ],
         },
     },
@@ -73,6 +77,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'tiersystem.wsgi.application'
 
 # Database
+# For development, use SQLite to avoid external DB dependency.
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -135,7 +140,8 @@ SIMPLE_JWT = {
 }
 
 # Configuración de Correo
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+_email_user = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_USER = _email_user
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 
 if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
@@ -147,5 +153,5 @@ else:
     # Fallback para desarrollo: Imprime los correos (links y tokens) en la terminal de ejecución
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-DEFAULT_FROM_EMAIL = f'TierSystem Notificaciones <{EMAIL_HOST_USER or "soporte@tiersystem.com"}>'
-
+DEFAULT_FROM_EMAIL = f'TierSystem Notificaciones <{_email_user}>' if _email_user else 'TierSystem Notificaciones <noreply@tiersystem.co>'
+SENSOR_API_KEY = os.getenv('SENSOR_API_KEY', 'tiersystem-sensor-key-dev')

@@ -1,0 +1,155 @@
+{% extends 'agricultor/base_dashboard.html' %}
+
+{% block title %}{{ cultivo.nombre }} — SIPSA/DANE — TierSystem{% endblock %}
+{% block header_title %}Detalle SIPSA: {{ cultivo.nombre }}{% endblock %}
+
+{% block content %}
+
+<div class="mb-6">
+    <a href="{% url 'sipsa:dashboard' %}" class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary transition-colors">
+        <i class="fa-solid fa-arrow-left"></i> Volver a Reportes SIPSA
+    </a>
+</div>
+
+{# ── PANEL PREDICCIÓN ─────────────────────────────────────────────── #}
+{% if prediccion %}
+<div class="bento-card p-6 mb-6 flex flex-col md:flex-row gap-6 items-start md:items-center">
+    <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl shadow-md shrink-0
+        {% if prediccion.tendencia_predicha == 'Alza' %}bg-green-600
+        {% elif prediccion.tendencia_predicha == 'Baja' %}bg-red-500
+        {% else %}bg-gray-500{% endif %}">
+        {% if prediccion.tendencia_predicha == 'Alza' %}<i class="fa-solid fa-arrow-trend-up"></i>
+        {% elif prediccion.tendencia_predicha == 'Baja' %}<i class="fa-solid fa-arrow-trend-down"></i>
+        {% else %}<i class="fa-solid fa-minus"></i>{% endif %}
+    </div>
+    <div class="flex-1">
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+            Predicción para la próxima semana:
+            <span class="{% if prediccion.tendencia_predicha == 'Alza' %}text-green-600{% elif prediccion.tendencia_predicha == 'Baja' %}text-red-500{% else %}text-gray-500{% endif %}">
+                {{ prediccion.tendencia_predicha }}
+            </span>
+        </h3>
+        <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">
+            Basado en <strong>{{ prediccion.semanas_usadas }} semanas</strong> históricas SIPSA.
+            Precio estimado: <strong class="font-mono text-gray-800 dark:text-white">{% if prediccion.precio_estimado %}${{ prediccion.precio_estimado|floatformat:0 }} / {{ cultivo.unidad }}{% else %}—{% endif %}</strong>
+            <span class="ml-2 font-mono font-bold
+                {% if prediccion.variacion_estimada_pct > 0 %}text-green-600{% elif prediccion.variacion_estimada_pct < 0 %}text-red-500{% else %}text-gray-400{% endif %}">
+                ({% if prediccion.variacion_estimada_pct > 0 %}+{% endif %}{{ prediccion.variacion_estimada_pct|floatformat:1 }}%)
+            </span>
+        </p>
+        <div class="flex items-center gap-3 mt-3">
+            <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">Confianza del modelo:</span>
+            <div class="w-40 bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                <div class="bg-primary rounded-full h-2.5 transition-all"
+                     style="width: {{ prediccion.confianza_pct|floatformat:0 }}%"></div>
+            </div>
+            <span class="text-sm font-bold font-mono text-primary">{{ prediccion.confianza_pct|floatformat:0 }}%</span>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{# ── GRÁFICA ──────────────────────────────────────────────────────── #}
+<div class="bento-card p-6 mb-6">
+    <h3 class="font-bold text-gray-800 dark:text-white mb-4 text-sm uppercase tracking-wide">
+        <i class="fa-solid fa-chart-line text-primary mr-2"></i> Historial de precios semanales
+    </h3>
+    <canvas id="chartPrecios" height="80"></canvas>
+</div>
+
+{# ── TABLA HISTÓRICA ──────────────────────────────────────────────── #}
+<div class="bento-card overflow-hidden">
+    <div class="p-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+        <h3 class="font-bold text-gray-800 dark:text-white text-sm uppercase tracking-wide">
+            <i class="fa-solid fa-table text-primary mr-2"></i> Registro semanal SIPSA ({{ precios|length }} semanas)
+        </h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+            <thead>
+                <tr class="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 bg-gray-50/50">
+                    <th class="p-4 font-semibold">Semana</th>
+                    <th class="p-4 font-semibold">Fecha</th>
+                    <th class="p-4 font-semibold">Precio Nacional</th>
+                    <th class="p-4 font-semibold">Precio Local (Huila)</th>
+                    <th class="p-4 font-semibold">Mercado</th>
+                    <th class="p-4 font-semibold">Fuente</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
+                {% for p in precios %}
+                <tr class="hover:bg-emerald-50/40 dark:hover:bg-primary/10 transition-colors">
+                    <td class="p-4 font-mono text-xs text-gray-500 dark:text-gray-400">{{ p.semana_label }}</td>
+                    <td class="p-4 text-xs text-gray-500 dark:text-gray-400">{{ p.fecha_semana|date:"d/m/Y" }}</td>
+                    <td class="p-4 font-mono font-semibold text-gray-800 dark:text-gray-200">
+                        ${{ p.precio_kg|floatformat:0 }} <span class="text-xs text-gray-400">/ {{ cultivo.unidad }}</span>
+                    </td>
+                    <td class="p-4 font-mono text-gray-600 dark:text-gray-400">
+                        {% if p.precio_local %}${{ p.precio_local|floatformat:0 }}{% else %}—{% endif %}
+                    </td>
+                    <td class="p-4 text-xs text-gray-500 dark:text-gray-400">{{ p.mercado_referencia|truncatechars:35 }}</td>
+                    <td class="p-4 text-xs text-gray-500 dark:text-gray-400">{{ p.fuente|truncatechars:30 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="p-8 text-center text-gray-400 italic text-sm">Sin registros históricos.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// chart_labels y chart_valores ya están serializados con json.dumps en la vista,
+// así que son JSON válido y se pueden usar directamente con |safe
+const labels = {{ chart_labels|safe }};
+const valores = {{ chart_valores|safe }};
+const isDark = document.documentElement.classList.contains('dark');
+const textColor = isDark ? '#9ca3af' : '#6b7280';
+const gridColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+
+new Chart(document.getElementById('chartPrecios'), {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'COP / {{ cultivo.unidad }}',
+            data: valores,
+            borderColor: '#0a4d3c',
+            backgroundColor: 'rgba(10,77,60,0.08)',
+            borderWidth: 2.5,
+            pointRadius: 4,
+            pointBackgroundColor: '#0a4d3c',
+            tension: 0.3,
+            fill: true,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { labels: { color: textColor, font: { size: 12 } } },
+            tooltip: {
+                callbacks: {
+                    label: ctx => `$${ctx.parsed.y.toLocaleString('es-CO')} / {{ cultivo.unidad }}`
+                }
+            }
+        },
+        scales: {
+            x: { ticks: { color: textColor }, grid: { color: gridColor } },
+            y: {
+                ticks: {
+                    color: textColor,
+                    callback: v => '$' + v.toLocaleString('es-CO')
+                },
+                grid: { color: gridColor }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

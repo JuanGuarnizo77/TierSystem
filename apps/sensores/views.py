@@ -4,6 +4,7 @@ from datetime import timedelta
 from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 from .models import LecturaSensor
 
 @csrf_exempt
@@ -13,6 +14,10 @@ def recibir_datos_sensor(request):
     """
     if request.method != "POST":
         return JsonResponse({"error": "Solo se permiten peticiones POST"}, status=405)
+
+    api_key = request.headers.get('X-API-Key', '')
+    if api_key != settings.SENSOR_API_KEY:
+        return JsonResponse({'error': 'No autorizado'}, status=401)
 
     try:
         datos = json.loads(request.body)

@@ -1,7 +1,13 @@
 from django.db import models
 
 class CultivoIdeal(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
+    # NOTE: El valor de este campo debe coincidir con CultivoSipsa.nombre del catálogo
+    # canónico (apps/sipsa). No hay FK directa para evitar dependencia de esquema,
+    # pero los nombres deben mantenerse sincronizados manualmente.
+    nombre = models.CharField(
+        max_length=100, unique=True,
+        help_text="Debe coincidir con CultivoSipsa.nombre del catálogo canónico",
+    )
     descripcion = models.TextField(blank=True, null=True)
     
     # Rangos óptimos
