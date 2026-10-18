@@ -1,159 +1,139 @@
-# Reporte de Correcciones de Bugs — TierSystem
-**Fecha:** 2026-07-10  
-**Ejecutado por:** Agente de corrección automatizada  
+# Bug Correction Report — TierSystem
+
+**Fecha:** 2026-10-18  
+**Revisor:** Kiro (agente automático)  
+**Proyecto:** tyersistem — Django, Python 3.14, SQLite (dev)
 
 ---
 
-## Archivos Modificados
+## Resumen Ejecutivo
 
-| Archivo | Bugs Corregidos |
-|---------|----------------|
-| `apps/ia_recomendaciones/views.py` | BUG-01, BUG-03, BUG-04, BUG-07 |
-| `apps/sensores/views.py` | BUG-05 |
-| `apps/mercado/models.py` | BUG-06 |
-| `apps/mercado/admin.py` | BUG-06 |
-| `templates/agricultor/historial.html` | BUG-02 |
+`python manage.py check` → **0 errores del sistema** al inicio y al finalizar.  
+Todos los archivos Python superan `python -m py_compile` sin errores de sintaxis.
+
+Se encontraron y corrigieron **4 bugs reales** y se verificó que el resto del código era correcto.
 
 ---
 
-## Descripción de Correcciones
+## Bugs Encontrados y Corregidos
 
-### BUG-01 — CRÍTICO — Conflictos git en `apps/ia_recomendaciones/views.py`
-**Estado:** ✅ YA RESUELTO (encontrado limpio al iniciar la tarea)
+### Bug 1 — Migración huérfana duplicada en `apps/ia_recomendaciones`
 
-El archivo ya no contenía marcadores de conflicto git. Ambas funciones
-`_guardar_diagnostico_solicitud` y `obtener_modelo_gemini` coexisten en el archivo,
-con los modelos Gemini corregidos a nombres válidos: `gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-pro`.
-El bloque 2 usa `obtener_modelo_gemini()`.
+**Archivo:** `apps/ia_recomendaciones/migrations/`  
+**Tipo:** Migraciones inconsistentes — nodo hoja duplicado  
+**Descripción:**  
+Al ejecutar `python manage.py makemigrations --check`, Django detectaba que el campo `CultivoIdeal.nombre` tenía un `help_text` diferente al que registraba la migración anterior. Existía ya un archivo `0003_alter_cultivoideal_nombre_help_text.py` (creado previamente) que no había sido aplicado. Al ejecutar `makemigrations` de nuevo, Django generó un segundo archivo idéntico: `0003_alter_cultivoideal_nombre.py`, creando dos "nodos hoja" conflictivos en el grafo de migraciones.
 
----
+**Error al intentar migrar:**
+```
+CommandError: Conflicting migrations detected; multiple leaf nodes in the migration graph:
+(0003_alter_cultivoideal_nombre, 0003_alter_cultivoideal_nombre_help_text in ia_recomendaciones).
+```
 
-### BUG-02 — CRÍTICO — Conflictos git en `templates/agricultor/historial.html`
-**Estado:** ✅ CORREGIDO
-
-El archivo tenía 3 bloques de conflicto git que producían HTML malformado y Django
-`TemplateSyntaxError`. Se resolvió conservando **únicamente la versión nueva (rama 9db4dc3)**:
-
-- Estructura de tarjetas en grid (no tabla DataTables)
-- Modal `#modalReporte` con mediciones y consulta IA
-- Variable de contexto `solicitudes` (compatible con la vista actual)
-- JavaScript con `verReporteCompleto`, `seleccionarChip`, `activeSolicitudId`, `consultarCultivoConIA`
-- Función `cerrarReporte()` añadida (referenciada en botones del modal pero ausente en ambas versiones)
-
-Se eliminó completamente la versión HEAD (tabla DataTables con variable `historial_lista`) y
-todos los marcadores `<<<<<<<`, `=======`, `>>>>>>>`.
+**Corrección aplicada:**  
+Se eliminó el duplicado `0003_alter_cultivoideal_nombre.py` (el más reciente, generado por error). Se conservó `0003_alter_cultivoideal_nombre_help_text.py` que ya existía y luego se aplicó correctamente con `python manage.py migrate`.
 
 ---
 
-### BUG-03 — IMPORTANTE — Autenticación en `api_consultar_ia_agricultor`
-**Estado:** ✅ YA RESUELTO (encontrado corregido al iniciar la tarea)
+### Bug 2 — Migración pendiente en `apps/mercado` (campo `cultivo` ForeignKey)
 
-El endpoint ya tenía `@login_required(login_url='login')` encima de `@csrf_exempt`.
-El filtro de ownership ya estaba aplicado:
-```python
-analisis = RegistroAnalisis.objects.get(
-    solicitud_id=solicitud_id,
-    solicitud__agricultor=request.user
-)
+**Archivo:** `apps/mercado/migrations/0006_add_cultivo_fk_to_precio_mercado.py` (no aplicada)  
+**Tipo:** Migración existente pero no aplicada a la base de datos  
+**Descripción:**  
+El modelo `PrecioMercado` en `apps/mercado/models.py` tiene un campo `cultivo = ForeignKey('sipsa.CultivoSipsa', ...)` añadido en la migración `0006`. La migración existía pero no había sido aplicada, por lo que la columna no existía en la base de datos. Esto causaría un `OperationalError` en runtime al acceder a ese campo.
+
+Adicionalmente existía una migración de datos `0007_data_normalize_cultivo_nombres.py` que también estaba pendiente.
+
+**Corrección aplicada:**  
+Se ejecutó `python manage.py migrate` que aplicó correctamente ambas migraciones:
+- `mercado.0006_add_cultivo_fk_to_precio_mercado` — agrega la columna FK
+- `mercado.0007_data_normalize_cultivo_nombres` — normaliza nombres de cultivos y enlaza FKs
+
+---
+
+### Bug 3 — Campo nullable `precio_local` mostrado sin guard en template SIPSA
+
+**Archivo:** `templates/sipsa/detalle_cultivo.html` (línea ~88)  
+**Tipo:** Campo NULL sin guard — mostraría "$ " o error de renderizado  
+**Descripción:**  
+El campo `PrecioSemanal.precio_local` está definido con `null=True, blank=True` en el modelo. En la tabla histórica de `detalle_cultivo.html`, el valor se renderizaba directamente:
+```html
+${{ p.precio_local|floatformat:0 }}
+```
+Si `precio_local` es `None`, Django renderiza esto como `$ ` (signo dólar seguido de nada), lo cual es incorrecto para el usuario.
+
+**Corrección aplicada:**
+```html
+{% if p.precio_local %}${{ p.precio_local|floatformat:0 }}{% else %}—{% endif %}
 ```
 
 ---
 
-### BUG-04 — IMPORTANTE — Autenticación en `api_compartir_resultado` y `api_sincronizar_offline`
-**Estado:** ✅ YA RESUELTO (encontrado corregido al iniciar la tarea)
+### Bug 4 — Campo nullable `precio_estimado` sin guard en template de detalle de cultivo
 
-`api_compartir_resultado` ya tenía `@login_required` y verificación:
-```python
-if sol.laboratorista_asignado != request.user:
-    return JsonResponse({'error': 'No autorizado para compartir este análisis'}, status=403)
+**Archivo:** `templates/sipsa/detalle_cultivo.html` (línea ~35)  
+**Tipo:** Campo NULL sin guard en panel de predicción  
+**Descripción:**  
+`PrediccionPrecio.precio_estimado` tiene `null=True, blank=True`. En `detalle_cultivo.html`, dentro del bloque `{% if prediccion %}`, se mostraba sin verificación:
+```html
+${{ prediccion.precio_estimado|floatformat:0 }} / {{ cultivo.unidad }}
 ```
+Si `precio_estimado` es `None` (cultivo sin suficiente historial), se mostraría `$ / kg`.
 
-`api_sincronizar_offline` ya tenía validación de estado:
-```python
-if sol.estado not in ('ASIGNADA', 'EN_PROCESO', 'COMPLETADA'):
-    continue
-```
-
----
-
-### BUG-05 — IMPORTANTE — Autenticación en `guardar_punto`
-**Estado:** ✅ YA RESUELTO (encontrado corregido al iniciar la tarea)
-
-`guardar_punto` en `apps/sensores/views.py` ya tenía `@login_required(login_url='login')`
-y verificación de ownership:
-```python
-punto = PuntoMuestreo.objects.get(
-    id=punto_id,
-    solicitud__laboratorista_asignado=request.user
-)
+**Corrección aplicada:**
+```html
+{% if prediccion.precio_estimado %}${{ prediccion.precio_estimado|floatformat:0 }} / {{ cultivo.unidad }}{% else %}—{% endif %}
 ```
 
 ---
 
-### BUG-06 — MENOR — Campo duplicado `fecha_actualizacion` en `PrecioMercado`
-**Estado:** ✅ YA RESUELTO EN MODELO — Migración generada
+## Elementos Verificados y Correctos (sin bugs)
 
-El campo `fecha_actualizacion` ya había sido eliminado del modelo `apps/mercado/models.py`
-(solo existe `ultima_actualizacion`). El `admin.py` ya usaba `ultima_actualizacion` en
-`list_display`.
-
-Se ejecutó `python manage.py makemigrations mercado` que generó:
-- `apps/mercado/migrations/0005_remove_preciomercado_fecha_actualizacion.py`
-
-**⚠️ Acción manual pendiente:** Ejecutar `python manage.py migrate` para aplicar la migración a la base de datos.
+| Archivo | Estado |
+|---|---|
+| `apps/sipsa/models.py` | ✅ Sin bugs |
+| `apps/sipsa/views.py` | ✅ Sin bugs — JSON serializado correctamente con `json.dumps` |
+| `apps/sipsa/urls.py` | ✅ Sin bugs — namespace `sipsa` correcto |
+| `apps/sipsa/admin.py` | ✅ Sin bugs |
+| `apps/sipsa/prediccion.py` | ✅ División por cero protegida — devuelve `Estable` con `confianza_pct=0` si hay menos de 3 semanas |
+| `apps/sipsa/management/commands/seed_sipsa.py` | ✅ Idempotente con `get_or_create` |
+| `apps/sipsa/management/commands/actualizar_sipsa.py` | ✅ Fallback estático correcto |
+| `apps/sipsa/migrations/0001_initial.py` | ✅ Consistente con los modelos actuales |
+| `templates/sipsa/dashboard.html` | ✅ `precio_estimado` ya tiene guard: `{% if fila.prediccion and fila.prediccion.precio_estimado %}` |
+| `apps/solicitudes/views.py` | ✅ Exportaciones PDF/Excel con `reportlab` y `openpyxl` correctamente implementadas |
+| `apps/solicitudes/urls_agricultor.py` | ✅ URLs de exportación correctamente registradas |
+| `apps/analisis/views.py` | ✅ Sin bugs |
+| `apps/mercado/views.py` | ✅ Sin bugs — `precio_local` siempre tiene fallback en el contexto |
+| `apps/ia_recomendaciones/views.py` | ✅ Sin conflictos de merge residuales |
+| `tiersystem/settings.py` | ✅ `apps.sipsa` en `INSTALLED_APPS` |
+| `tiersystem/urls.py` | ✅ `path('agricultor/sipsa/', include('apps.sipsa.urls'))` presente |
 
 ---
 
-### BUG-07 — MENOR — Autenticación en `api_promedio_puntos`
-**Estado:** ✅ YA RESUELTO (encontrado corregido al iniciar la tarea)
+## Resultado de la Verificación Final
 
-`api_promedio_puntos` ya tenía `@login_required(login_url='login')` y filtro de ownership:
-```python
-sol = SolicitudAnalisis.objects.get(id=solicitud_id, laboratorista_asignado=request.user)
 ```
-
----
-
-## Resultados de Verificación
-
-### `py_compile` — Sintaxis Python
-| Archivo | Resultado |
-|---------|-----------|
-| `apps/ia_recomendaciones/views.py` | ✅ OK |
-| `apps/sensores/views.py` | ✅ OK |
-| `apps/mercado/models.py` | ✅ OK |
-| `apps/mercado/admin.py` | ✅ OK |
-
-### `manage.py check`
-```
+$ python manage.py check
 System check identified no issues (0 silenced).
-```
-✅ **0 issues**
 
-### `manage.py makemigrations mercado`
-```
-Migrations for 'mercado':
-  apps\mercado\migrations\0005_remove_preciomercado_fecha_actualizacion.py
-    - Remove field fecha_actualizacion from preciomercado
-```
-✅ Migración generada correctamente.
+$ python manage.py makemigrations --check
+No changes detected
 
-### Template `agricultor/historial.html`
+$ python manage.py migrate
+No migrations to apply.
 ```
-Template OK
-```
-✅ Se carga sin `TemplateSyntaxError`.
+
+**Todos los archivos Python compilados sin errores de sintaxis.**  
+**`python manage.py check` → 0 errores del sistema.**
 
 ---
 
-## Acciones Manuales Pendientes
+## Observaciones Importantes
 
-1. **Aplicar migración de mercado:** Ejecutar `python manage.py migrate` para que la columna `fecha_actualizacion` sea eliminada de la base de datos SQLite. Sin este paso, el modelo y la BD estarán en estado inconsistente.
+1. **Requests library**: `actualizar_sipsa.py` usa `import requests` para conectar con las APIs DANE. Esta librería debe estar instalada en el entorno (`pip install requests`). El comando tiene fallback estático robusto si falla.
 
----
+2. **Campo `precio_estimado` en predicción**: Puede ser `None` en cultivos recién creados que no tienen historial suficiente (`< 3 semanas`). El template `detalle_cultivo.html` ahora muestra `—` en ese caso.
 
-## Notas Adicionales
+3. **Migración de datos `0007` de mercado**: Esta migración de datos renombra cultivos existentes en BD para normalizar sus nombres al catálogo canónico (e.g., `"Maíz"` → `"Maíz Amarillo"`). Esto es un cambio de datos no reversible; se recomienda tener backup antes de aplicar en producción.
 
-- La arquitectura del sistema no fue modificada. Solo se aplicaron las correcciones listadas.
-- El template `historial.html` ahora usa la variable `solicitudes` (rama nueva). La vista correspondiente debe pasar ese contexto. Si la vista actualmente pasa `historial_lista`, se deberá actualizar la vista o el nombre del contexto según corresponda.
-- `api_obtener_cultivos` queda sin `@login_required` intencionalmente (datos de catálogo público necesarios para PWA offline).
+4. **`CultivoIdeal.nombre` help_text**: El cambio en `help_text` del campo no afecta el comportamiento en tiempo de ejecución, solo la documentación del campo en el admin de Django.
