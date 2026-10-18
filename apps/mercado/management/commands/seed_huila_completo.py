@@ -432,6 +432,36 @@ CULTIVOS_HUILA = [
         "precios": [620, 670, 730, 800, 870, 920, 960, 980],
     },
 
+    # ── HORTALIZAS (adicionales) ──────────────────────────────────────────────
+    {
+        "nombre": "Ahuyama",
+        "nombre_dane": "ahuyama",
+        "unidad": "kg",
+        "categoria": "Hortalizas",
+        "precio_min": 600,
+        "precio_max": 1200,
+        "precios": [620, 650, 680, 720, 760, 820, 900, 1050],
+    },
+    {
+        "nombre": "Arveja Verde",
+        "nombre_dane": "arveja verde",
+        "unidad": "kg",
+        "categoria": "Hortalizas",
+        "precio_min": 1800,
+        "precio_max": 3500,
+        "precios": [1840, 1960, 2100, 2300, 2550, 2850, 3100, 3400],
+    },
+    # ── FRUTAS EXÓTICAS (adicionales) ─────────────────────────────────────────
+    {
+        "nombre": "Tamarindo",
+        "nombre_dane": "tamarindo",
+        "unidad": "kg",
+        "categoria": "Frutas",
+        "precio_min": 2000,
+        "precio_max": 4000,
+        "precios": [2060, 2200, 2380, 2600, 2850, 3150, 3500, 3900],
+    },
+
     # ── PECES / ACUICULTURA ───────────────────────────────────────────────────
     {
         "nombre": "Tilapia",

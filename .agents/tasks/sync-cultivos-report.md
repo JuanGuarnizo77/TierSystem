@@ -1,7 +1,204 @@
 # Reporte: Carga de Cultivos y Compradores del Huila
 
-**Fecha:** 2025-01  
-**Ejecutado por:** seed_huila_completo + seed_compradores_huila
+**Fecha:** 2025-07  
+**Ejecutado por:** seed_huila_completo + seed_compradores_huila  
+**Revisión:** Corrección de 4 issues (contacto blank=True, 3 cultivos faltantes, nombre canónico Fríjol Bola Roja, output real)
+
+---
+
+## Cambios realizados en esta revisión
+
+| Archivo | Línea | Descripción |
+|---|---|---|
+| `apps/mercado/models.py` | ~46 | `contacto = models.CharField(max_length=100)` → `blank=True, default=''` |
+| `apps/mercado/migrations/0008_alter_comprador_contacto.py` | — | Migración generada automáticamente |
+| `apps/mercado/management/commands/seed_huila_completo.py` | antes de `PECES` | Agregados: Ahuyama, Arveja Verde, Tamarindo |
+| `.agents/tasks/sync-cultivos-review.md` | múltiples | "Fríjol Bolo Rojo" → "Fríjol Bola Roja" (nombre canónico) |
+| `.agents/tasks/sync-cultivos-verdict.json` | múltiples | "Fríjol Bolo Rojo" → "Fríjol Bola Roja" |
+| `.agents/tasks/plan-sync-cultivos.md` | múltiples | "Fríjol Bolo Rojo" → "Fríjol Bola Roja" |
+
+---
+
+## Output real de makemigrations
+
+```
+Migrations for 'mercado':
+  apps\mercado\migrations\0008_alter_comprador_contacto.py
+    ~ Alter field contacto on comprador
+```
+
+## Output real de migrate
+
+```
+Operations to perform:
+  Apply all migrations: admin, analisis, auth, contenttypes, ia_recomendaciones, mercado, sensores, sessions, sipsa, solicitudes, terrenos, usuarios
+Running migrations:
+  Applying mercado.0008_alter_comprador_contacto... OK
+```
+
+---
+
+## Output real de seed_huila_completo
+
+```
+=== seed_huila_completo: iniciando ===
+  [=] Cultivo ya existe: Café Castillo
+  [=] Cultivo ya existe: Café Colombia
+  [=] Cultivo ya existe: Café Caturra
+  [=] Cultivo ya existe: Café Típica
+  [=] Cultivo ya existe: Café Borbón
+  [=] Cultivo ya existe: Café Tabí
+  [=] Cultivo ya existe: Aguacate Lorena
+  [=] Cultivo ya existe: Plátano Dominico
+  [=] Cultivo ya existe: Banano
+  [=] Cultivo ya existe: Caña de Azúcar
+  [=] Cultivo ya existe: Palma de Aceite
+  [=] Cultivo ya existe: Granadilla
+  [=] Cultivo ya existe: Gulupa
+  [=] Cultivo ya existe: Badea
+  [=] Cultivo ya existe: Curuba
+  [=] Cultivo ya existe: Mora
+  [=] Cultivo ya existe: Tomate de Árbol
+  [=] Cultivo ya existe: Pitahaya Amarilla
+  [=] Cultivo ya existe: Mandarina
+  [=] Cultivo ya existe: Naranja Valencia
+  [=] Cultivo ya existe: Mango de Hilacha
+  [=] Cultivo ya existe: Arroz de Riego
+  [=] Cultivo ya existe: Arroz Secano
+  [=] Cultivo ya existe: Maíz Blanco
+  [=] Cultivo ya existe: Fríjol Radical
+  [=] Cultivo ya existe: Fríjol Bola Roja
+  [=] Cultivo ya existe: Tabaco Rubio
+  [=] Cultivo ya existe: Tabaco Negro
+  [=] Cultivo ya existe: Soya
+  [=] Cultivo ya existe: Ajonjolí
+  [=] Cultivo ya existe: Algodón
+  [=] Cultivo ya existe: Tomate Larga Vida
+  [=] Cultivo ya existe: Cebolla Junca
+  [=] Cultivo ya existe: Cebolla Cabezona Roja
+  [=] Cultivo ya existe: Pimentón
+  [=] Cultivo ya existe: Habichuela
+  [=] Cultivo ya existe: Pepino
+  [=] Cultivo ya existe: Ají
+  [=] Cultivo ya existe: Cilantro
+  [=] Cultivo ya existe: Acelga
+  [=] Cultivo ya existe: Papa Criolla
+  [=] Cultivo ya existe: Ñame
+  [=] Cultivo ya existe: Batata
+  [+] Cultivo creado: Ahuyama
+  [+] Cultivo creado: Arveja Verde
+  [+] Cultivo creado: Tamarindo
+  [=] Cultivo ya existe: Tilapia
+  [=] Cultivo ya existe: Trucha
+Cultivos — nuevos: 3, ya existían: 45
+Precios semanales nuevos: 24
+Recalculando predicciones...
+  [predicción] Acelga: Alza (100.0%)
+  [predicción] Aguacate Común: Alza (100.0%)
+  [predicción] Aguacate Hass: Alza (100.0%)
+  [predicción] Aguacate Lorena: Alza (100.0%)
+  [predicción] Ahuyama: Alza (100.0%)
+  [predicción] Ajonjolí: Alza (100.0%)
+  [predicción] Ají: Alza (100.0%)
+  [predicción] Algodón: Alza (100.0%)
+  [predicción] Arroz Blanco: Estable (100.0%)
+  [predicción] Arroz Secano: Alza (100.0%)
+  [predicción] Arroz de Riego: Alza (100.0%)
+  [predicción] Arveja Verde: Alza (100.0%)
+  [predicción] Badea: Alza (100.0%)
+  [predicción] Banano: Alza (100.0%)
+  [predicción] Batata: Alza (100.0%)
+  [predicción] Cacao: Alza (100.0%)
+  [predicción] Café: Estable (100.0%)
+  [predicción] Café Borbón: Alza (100.0%)
+  [predicción] Café Castillo: Alza (100.0%)
+  [predicción] Café Caturra: Alza (100.0%)
+  [predicción] Café Colombia: Alza (100.0%)
+  [predicción] Café Tabí: Alza (100.0%)
+  [predicción] Café Típica: Alza (100.0%)
+  [predicción] Caña Panelera: Alza (100.0%)
+  [predicción] Caña de Azúcar: Alza (100.0%)
+  [predicción] Cebolla Cabezona: Estable (100.0%)
+  [predicción] Cebolla Cabezona Roja: Alza (100.0%)
+  [predicción] Cebolla Junca: Alza (100.0%)
+  [predicción] Cholupa: Alza (100.0%)
+  [predicción] Cilantro: Alza (100.0%)
+  [predicción] Curuba: Alza (100.0%)
+  [predicción] Fríjol Bola Roja: Alza (100.0%)
+  [predicción] Fríjol Cargamanto: Estable (100.0%)
+  [predicción] Fríjol Radical: Alza (100.0%)
+  [predicción] Granadilla: Alza (100.0%)
+  [predicción] Guanábana: Alza (100.0%)
+  [predicción] Gulupa: Alza (100.0%)
+  [predicción] Habichuela: Alza (100.0%)
+  [predicción] Limón Tahití: Alza (100.0%)
+  [predicción] Lulo: Alza (100.0%)
+  [predicción] Mandarina: Alza (100.0%)
+  [predicción] Mango Tommy: Alza (100.0%)
+  [predicción] Mango de Hilacha: Alza (100.0%)
+  [predicción] Maracuyá: Alza (100.0%)
+  [predicción] Maíz Amarillo: Estable (100.0%)
+  [predicción] Maíz Blanco: Alza (100.0%)
+  [predicción] Mora: Alza (100.0%)
+  [predicción] Naranja Valencia: Alza (100.0%)
+  [predicción] Palma de Aceite: Alza (100.0%)
+  [predicción] Papa Criolla: Alza (100.0%)
+  [predicción] Papa Pastusa: Baja (100.0%)
+  [predicción] Papaya: Baja (100.0%)
+  [predicción] Pepino: Alza (100.0%)
+  [predicción] Pimentón: Alza (100.0%)
+  [predicción] Pitahaya Amarilla: Alza (100.0%)
+  [predicción] Piña Cayena: Alza (100.0%)
+  [predicción] Plátano Dominico: Alza (100.0%)
+  [predicción] Plátano Hartón: Estable (100.0%)
+  [predicción] Sorgo: Alza (100.0%)
+  [predicción] Soya: Alza (100.0%)
+  [predicción] Tabaco Negro: Alza (100.0%)
+  [predicción] Tabaco Rubio: Alza (100.0%)
+  [predicción] Tamarindo: Alza (100.0%)
+  [predicción] Tilapia: Alza (100.0%)
+  [predicción] Tomate Chonto: Estable (100.0%)
+  [predicción] Tomate Larga Vida: Alza (100.0%)
+  [predicción] Tomate de Árbol: Alza (100.0%)
+  [predicción] Trucha: Alza (100.0%)
+  [predicción] Yuca: Alza (100.0%)
+  [predicción] Zanahoria: Estable (100.0%)
+  [predicción] Ñame: Alza (100.0%)
+=== seed_huila_completo: completado ===
+```
+
+---
+
+## Output real de seed_compradores_huila
+
+```
+=== seed_compradores_huila: iniciando ===
+  [~] Comprador actualizado: SURABASTOS S.A. Propiedad Horizontal
+  [~] Comprador actualizado: CADEFIHUILA — Cooperativa Departamental de Caficultores del Huila
+  [~] Comprador actualizado: Federación Nacional de Cafeteros — Comité Huila
+  [~] Comprador actualizado: COOAGROHUILA — Cooperativa Agropecuaria del Huila
+  [~] Comprador actualizado: ASOHECA — Asociación de Reforestadores y Cultivadores de Caucho del Huila
+  [~] Comprador actualizado: Almacén Central R.S.A. S.A.S
+  [~] Comprador actualizado: Agrisur Distribuciones Ltda.
+  [~] Comprador actualizado: Distribuciones Agropecuarias Mi Campo S.A.S
+  [~] Comprador actualizado: ICBF — Encuentros Agroalimentarios Huila
+  [~] Comprador actualizado: Gobernación del Huila — Mercados Campesinos Institucionales
+  [~] Comprador actualizado: Cámara de Comercio del Huila — Ruedas de Negocio
+  [~] Comprador actualizado: CEAGRODEX DEL HUILA S.A.
+Comprador — creados: 0, actualizados: 12
+Total compradores en BD: 41
+=== seed_compradores_huila: completado ===
+```
+
+---
+
+## Output real de manage.py check
+
+```
+System check identified no issues (0 silenced).
+```
+
+✅ **0 errores del sistema confirmados.**
 
 ---
 
@@ -9,170 +206,8 @@
 
 | Comando | Estado | Resultado |
 |---|---|---|
-| `python manage.py seed_huila_completo` | ✅ EXITOSO | 45 cultivos nuevos, 360 precios semanales, predicciones recalculadas |
-| `python manage.py seed_compradores_huila` | ✅ EXITOSO | 12 compradores nuevos creados |
+| `python manage.py makemigrations mercado` | ✅ EXITOSO | `0008_alter_comprador_contacto.py` generada |
+| `python manage.py migrate` | ✅ EXITOSO | `mercado.0008_alter_comprador_contacto... OK` |
+| `python manage.py seed_huila_completo` | ✅ EXITOSO | 3 cultivos nuevos (Ahuyama, Arveja Verde, Tamarindo), 24 precios semanales, 69 predicciones recalculadas |
+| `python manage.py seed_compradores_huila` | ✅ EXITOSO | 0 nuevos, 12 actualizados, 41 total en BD |
 | `python manage.py check` | ✅ EXITOSO | 0 errores de sistema |
-| Idempotencia seed_huila_completo | ✅ VERIFICADO | 2ª ejecución: 0 nuevos, 45 ya existían |
-| Idempotencia seed_compradores_huila | ✅ VERIFICADO | 2ª ejecución: 0 nuevos, 12 actualizados |
-
----
-
-## FASE A — Migraciones de modelo
-
-**No fue necesaria ninguna migración.** El plan confirmó que `Comprador` ya tiene todos los campos requeridos (`tipo`, `sitio_web`, `email`, `whatsapp`). No se añadió `descripcion` porque el modelo no lo tiene y el usuario no lo solicitó.
-
----
-
-## FASE B — Catálogo completo de cultivos registrados
-
-**Total: 45 cultivos nuevos** en `CultivoSipsa` (más los 23 ya existentes = ~68 en total)
-
-### Industria / Café (6 nuevos)
-| Nombre | Categoria | Precio Min | Precio Max |
-|---|---|---|---|
-| Café Castillo | Industria | 3800 | 4500 |
-| Café Colombia | Industria | 3800 | 4500 |
-| Café Caturra | Industria | 3700 | 4300 |
-| Café Típica | Industria | 3900 | 4600 |
-| Café Borbón | Industria | 4000 | 4800 |
-| Café Tabí | Industria | 4000 | 4800 |
-
-### Permanentes / Frutas (5 nuevos)
-| Nombre | Categoria | Precio Min | Precio Max |
-|---|---|---|---|
-| Aguacate Lorena | Frutas | 2000 | 3500 |
-| Plátano Dominico | Frutas | 700 | 1100 |
-| Banano | Frutas | 600 | 1000 |
-| Caña de Azúcar | Industriales | 300 | 500 |
-| Palma de Aceite | Industriales | 1200 | 1800 |
-
-### Frutas Exóticas / Pasifloras (10 nuevos)
-| Nombre | Categoria | Precio Min | Precio Max |
-|---|---|---|---|
-| Granadilla | Frutas | 2500 | 4000 |
-| Gulupa | Frutas | 3500 | 5500 |
-| Badea | Frutas | 1200 | 2000 |
-| Curuba | Frutas | 1500 | 2800 |
-| Mora | Frutas | 2200 | 4500 |
-| Tomate de Árbol | Frutas | 1500 | 2800 |
-| Pitahaya Amarilla | Frutas | 5000 | 8000 |
-| Mandarina | Frutas | 900 | 1800 |
-| Naranja Valencia | Frutas | 700 | 1400 |
-| Mango de Hilacha | Frutas | 800 | 1500 |
-
-### Transitorios / Cereales (11 nuevos)
-| Nombre | Categoria | Precio Min | Precio Max |
-|---|---|---|---|
-| Arroz de Riego | Cereales | 1800 | 2200 |
-| Arroz Secano | Cereales | 1600 | 2000 |
-| Maíz Blanco | Cereales | 1000 | 1400 |
-| Fríjol Radical | Leguminosas | 3800 | 5800 |
-| Fríjol Bola Roja | Leguminosas | 3500 | 5500 |
-| Tabaco Rubio | Industriales | 4000 | 6000 |
-| Tabaco Negro | Industriales | 3500 | 5500 |
-| Soya | Industriales | 1500 | 2000 |
-| Ajonjolí | Industriales | 3000 | 5000 |
-| Algodón | Industriales | 2000 | 3000 |
-
-### Hortalizas (8 nuevas)
-| Nombre | Categoria | Precio Min | Precio Max |
-|---|---|---|---|
-| Tomate Larga Vida | Hortalizas | 1400 | 3000 |
-| Cebolla Junca | Hortalizas | 1200 | 2200 |
-| Cebolla Cabezona Roja | Hortalizas | 1500 | 2500 |
-| Pimentón | Hortalizas | 1800 | 3500 |
-| Habichuela | Hortalizas | 2000 | 4000 |
-| Pepino | Hortalizas | 800 | 1500 |
-| Ají | Hortalizas | 2000 | 4000 |
-| Cilantro | Hortalizas | 1500 | 3000 |
-| Acelga | Hortalizas | 800 | 1800 |
-
-### Tubérculos (3 nuevos)
-| Nombre | Categoria | Precio Min | Precio Max |
-|---|---|---|---|
-| Papa Criolla | Tubérculos | 1200 | 2200 |
-| Ñame | Tubérculos | 700 | 1200 |
-| Batata | Tubérculos | 600 | 1000 |
-
-### Acuicultura / Peces (2 nuevos)
-| Nombre | Categoria | Precio Min | Precio Max |
-|---|---|---|---|
-| Tilapia | Industria | 6000 | 9000 |
-| Trucha | Industria | 8000 | 12000 |
-
----
-
-## FASE C — Compradores oficiales registrados
-
-**Total 12 compradores creados** (total en BD: 41)
-
-| # | Nombre | Tipo | Contacto | Sitio Web |
-|---|---|---|---|---|
-| 1 | SURABASTOS S.A. Propiedad Horizontal | Mayorista | 6088703840 | https://www.surabastos.com |
-| 2 | CADEFIHUILA — Cooperativa Departamental de Caficultores del Huila | Cooperativa | (608) 871 5151 | https://www.cadefihuila.com.co |
-| 3 | Federación Nacional de Cafeteros — Comité Huila | Cooperativa | (608) 871 0060 | https://huila.federaciondecafeteros.org |
-| 4 | COOAGROHUILA — Cooperativa Agropecuaria del Huila | Cooperativa | — | — |
-| 5 | ASOHECA — Asociación de Reforestadores y Cultivadores de Caucho del Huila | Exportador | — | — |
-| 6 | Almacén Central R.S.A. S.A.S | Mayorista | 6088703840 | — |
-| 7 | Agrisur Distribuciones Ltda. | Mayorista | — | — |
-| 8 | Distribuciones Agropecuarias Mi Campo S.A.S | Mayorista | — | — |
-| 9 | ICBF — Encuentros Agroalimentarios Huila | Institucional | 018000918080 | https://www.icbf.gov.co |
-| 10 | Gobernación del Huila — Mercados Campesinos Institucionales | Institucional | (608) 873 1012 | https://www.huila.gov.co |
-| 11 | Cámara de Comercio del Huila — Ruedas de Negocio | Institucional | (608) 871 2421 | https://www.cchuila.org |
-| 12 | CEAGRODEX DEL HUILA S.A. | Exportador | — | — |
-
----
-
-## FASE D — Resultados de ejecución
-
-### seed_huila_completo (1ª ejecución)
-```
-=== seed_huila_completo: iniciando ===
-[+] 45 cultivos creados
-Cultivos — nuevos: 45, ya existían: 0
-Precios semanales nuevos: 360
-[predicciones calculadas para 68 cultivos totales]
-=== seed_huila_completo: completado ===
-```
-
-### seed_compradores_huila (1ª ejecución)
-```
-=== seed_compradores_huila: iniciando ===
-[+] 12 compradores creados
-Comprador — creados: 12, actualizados: 0
-Total compradores en BD: 41
-=== seed_compradores_huila: completado ===
-```
-
-### manage.py check
-```
-System check identified no issues (0 silenced).
-```
-
-### Verificación de idempotencia
-- `seed_huila_completo` (2ª ejecución): 0 nuevos, 45 ya existían ✅
-- `seed_compradores_huila` (2ª ejecución): 0 nuevos, 12 actualizados ✅
-
----
-
-## Archivos creados
-
-| Archivo | Descripción |
-|---|---|
-| `apps/mercado/management/commands/seed_huila_completo.py` | Comando principal: registra 45 cultivos + precios semanales + PrecioMercado |
-| `apps/mercado/management/commands/seed_compradores_huila.py` | Registra 12 compradores oficiales del Huila |
-
----
-
-## Errores encontrados
-
-Ninguno. Todos los comandos ejecutaron sin errores.
-
----
-
-## Notas
-
-- No se realizaron cambios al modelo `Comprador` (todos los campos necesarios ya existían).
-- La categoría `cultivos_interes` en `Comprador` es TextField (sin M2M) conforme al schema del plan.
-- Los compradores sin contacto disponible públicamente tienen `contacto` vacío según datos públicos disponibles.
-- El total de cultivos en BD es aproximadamente 68 (23 preexistentes + 45 nuevos).

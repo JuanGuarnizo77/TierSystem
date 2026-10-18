@@ -23,6 +23,13 @@ class PrecioMercado(models.Model):
     ]
 
     cultivo_nombre = models.CharField(max_length=100)
+    cultivo = models.ForeignKey(
+        'sipsa.CultivoSipsa',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='precios_mercado',
+        help_text="Enlace al catálogo canónico de cultivos",
+    )
     region = models.CharField(max_length=100, default='Huila')
     precio_promedio = models.DecimalField(max_digits=12, decimal_places=2)
     precio_local = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
@@ -30,7 +37,6 @@ class PrecioMercado(models.Model):
     tendencia = models.CharField(max_length=20, choices=TENDENCIA_CHOICES, default='Estable')
     variacion_porcentaje = models.FloatField(default=0.0)
     fuente = models.CharField(max_length=200, default='SIPSA / DANE')
-    fecha_actualizacion = models.DateTimeField(auto_now=True)
     # Campos añadidos FEAT-001
     semana_sipsa = models.CharField(max_length=100, blank=True, default='')
     fuente_url = models.CharField(max_length=500, blank=True, default='')
@@ -43,7 +49,7 @@ class Comprador(models.Model):
     nombre = models.CharField(max_length=150)
     tipo = models.CharField(max_length=50, help_text="Cooperativa, Plaza de Mercado, Intermediario, Exportador")
     municipio = models.CharField(max_length=100, default='Neiva, Huila')
-    contacto = models.CharField(max_length=100)
+    contacto = models.CharField(max_length=100, blank=True, default='')
     cultivos_interes = models.TextField(help_text="Cultivos de interés separados por comas")
     precio_referencia = models.CharField(max_length=100, null=True, blank=True)
     activo = models.BooleanField(default=True)

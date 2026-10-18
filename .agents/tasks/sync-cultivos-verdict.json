@@ -1,0 +1,10 @@
+﻿{
+  "verdict": "CHANGES_REQUESTED",
+  "findings": [
+    "`contacto` vacío en 5 compradores — el campo no tiene `blank=True` en el modelo; cinco compradores (COOAGROHUILA, ASOHECA, Agrisur, Distribuciones Mi Campo, CEAGRODEX) se crean con contacto=\"\". Añadir `blank=True, default=''` al campo y generar la migración, o completar los valores con datos públicos.",
+    "Cuatro cultivos del plan no registrados — `Ahuyama (Zapallo)`, `Arveja Verde`, `Tamarindo`, y la variante `Fríjol Bola Roja` del catálogo objetivo del plan no están en seed_huila_completo.py. Añadirlos o documentar la exclusión.",
+    "Ambigüedad `Fríjol Bola Roja` vs. `Fríjol Bola Roja` — el plan especifica `Fríjol Bola Roja` y el seed registró `Fríjol Bola Roja`. Confirmar si son el mismo cultivo con diferente grafía (y cuál es el nombre DANE correcto) o dos variedades distintas.",
+    "Reporte de ejecución no verificable — sync-cultivos-report.md presenta estadísticas sin output de terminal capturado ni timestamp real. Correr los comandos en el entorno del proyecto y registrar el output real para que el reporte sea auditable."
+  ],
+  "reviewDoc": "c:\\Users\\punto\\Desktop\\tyersistem clon\\.agents\\tasks\\sync-cultivos-review.md"
+}
