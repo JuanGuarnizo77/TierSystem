@@ -1,7 +1,84 @@
-.env
+# ==========================================
+# TierSystem - .gitignore (Seguridad y Producción)
+# ==========================================
+
+# --- Entornos Virtuales (Python) ---
 venv/
-__pycache__/
-*.pyc
+venv_linux/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# --- Variables de Entorno, Credenciales y Secretos ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.crt
+secrets.json
+
+# --- Base de Datos Local y Volcados ---
+*.sqlite3
+*.sqlite3-journal
 db.sqlite3
+*.db
+*.sql
+*.dump
+
+# --- Caché y Bytecode de Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# --- Django Media y Archivos Estáticos Generados ---
 media/
+staticfiles/
+*.log
+
+# --- Archivos de Configuración de IDEs y Editores ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# --- Archivos de pruebas / Cobertura ---
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# --- Documentación interna o sensible ---
 documentacion/historias de usuario/
+
+# --- Archivos temporales de esquemas/APIs ---
+tiersystem_schema.json

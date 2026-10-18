@@ -13,11 +13,24 @@ TierSystem/
 ├── tiersystem/                        # Configuración global del proyecto
 │   ├── __init__.py
 │   ├── settings.py                    # Configuración general, apps, auth y email backend
-│   ├── urls.py                        # Enrutamiento raíz con include() hacia cada app
+│   ├── urls.py                        # Enrutamiento raíz con include() hacia cada app y api
 │   ├── asgi.py
 │   └── wsgi.py
 │
-├── apps/                              # Aplicaciones modulares por dominio funcional
+├── api/                               # Capa REST API para la aplicación móvil (Flutter)
+│   ├── permissions.py                 # Permisos basados en roles (IsAgricultor, IsLaboratorista, IsAdmin)
+│   ├── urls.py                        # Enrutador principal de la API (/api/v1/)
+│   ├── auth/                          # Autenticación JWT (login, registro, perfil /me/, logout)
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   └── urls.py
+│   └── agricultor/                    # Endpoints para fincas (terrenos) y solicitudes de análisis
+│       ├── serializers.py
+│       ├── views_terrenos.py
+│       ├── views_solicitudes.py
+│       └── urls.py
+│
+├── apps/                              # Aplicaciones modulares por dominio funcional (Web)
 │   ├── __init__.py
 │   ├── usuarios/                      # Login, registro, auth views, perfiles (Admin, Lab, Agri)
 │   ├── terrenos/                      # CRUD de predios y hectáreas del agricultor
@@ -80,6 +93,7 @@ TierSystem/
     ├── TierSystem_Funciones_del_Sistema.md # Resumen funcional, arquitectura y backlog
     ├── funcionalidadesactores.md      # Matriz de trazabilidad US-0001 a US-0049 y detalle por rol
     ├── estructura_de_carpetas.md      # Mapa de directorios y componentes
+    ├── api_movil.md                   # Especificación técnica de la API REST para Flutter y JWT
     ├── conexion.md                    # Código C++ para ESP32, pines RS485 y Modbus RTU
     ├── ajustes_entorno_local.md       # Guía de configuración y arranque en Linux
     └── historias de usuario/          # Archivo de especificación oficial en Excel / CSV

@@ -15,6 +15,11 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
+
+    # Si se ejecuta 'runserver' sin especificar dirección ni puerto, enlazar a 0.0.0.0:8000 por defecto
+    if len(sys.argv) == 2 and sys.argv[1] == 'runserver':
+        sys.argv.append('0.0.0.0:8000')
+
     execute_from_command_line(sys.argv)
 
 

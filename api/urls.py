@@ -1,13 +1,17 @@
-from django.urls import path
-from rest_framework_simplejwt.views import TokenRefreshView
-
-from .views_auth import LoginView, me_view, registro_view, logout_view
+from django.urls import path, include
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
-    # Auth
-    path('auth/login/',    LoginView.as_view(),  name='api_login'),
-    path('auth/refresh/',  TokenRefreshView.as_view(), name='api_token_refresh'),
-    path('auth/me/',       me_view,              name='api_me'),
-    path('auth/registro/', registro_view,        name='api_registro'),
-    path('auth/logout/',   logout_view,          name='api_logout'),
+    # Schema y documentación interactiva Swagger
+    path('schema/', SpectacularAPIView.as_view(), name='api_schema'),
+    path('docs/', SpectacularSwaggerView.as_view(url_name='api_schema'), name='api_docs'),
+
+    # Módulo de Autenticación JWT (login, refresh, me, registro, logout)
+    path('auth/', include('api.auth.urls')),
+
+    # Módulo de Agricultor (fincas, solicitudes y perfil)
+    path('agricultor/', include('api.agricultor.urls')),
+
+    # Alias directo para compatibilidad con llamadas existentes (/api/v1/terrenos/, /api/v1/solicitudes/)
+    path('', include('api.agricultor.urls')),
 ]

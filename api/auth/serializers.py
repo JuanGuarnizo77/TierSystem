@@ -5,10 +5,6 @@ from rest_framework import serializers
 from apps.usuarios.models import Perfil
 
 
-# ---------------------------------------------------------------------------
-# Auth Serializers
-# ---------------------------------------------------------------------------
-
 class PerfilSerializer(serializers.ModelSerializer):
     class Meta:
         model = Perfil
