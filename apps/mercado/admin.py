@@ -11,8 +11,8 @@ class ProductoMercadoAdmin(admin.ModelAdmin):
 
 @admin.register(PrecioMercado)
 class PrecioMercadoAdmin(admin.ModelAdmin):
-    list_display = ('cultivo_nombre', 'region', 'precio_promedio', 'precio_local', 'unidad', 'tendencia', 'variacion_porcentaje', 'fuente', 'fecha_actualizacion')
-    list_filter = ('tendencia', 'fecha_actualizacion', 'region', 'cultivo_nombre')
+    list_display = ('cultivo_nombre', 'region', 'precio_promedio', 'precio_local', 'unidad', 'tendencia', 'variacion_porcentaje', 'fuente', 'ultima_actualizacion')
+    list_filter = ('tendencia', 'ultima_actualizacion', 'region', 'cultivo_nombre')
     search_fields = ('cultivo_nombre', 'fuente', 'region')
 
 
