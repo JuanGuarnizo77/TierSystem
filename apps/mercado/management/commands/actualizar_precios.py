@@ -15,20 +15,36 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from apps.mercado.models import PrecioMercado
+from apps.sipsa.models import CultivoSipsa
 
 # ---------------------------------------------------------------------------
 # Static fallback prices (Oct-2026 reference, COP/kg)
 # ---------------------------------------------------------------------------
 PRECIOS_ACTUALIZADOS_OCT_2026 = {
-    "Maíz":         {"precio": 1680, "unidad": "kg",              "tendencia": "Alza",    "variacion": 5.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
-    "Café":         {"precio": 16440, "unidad": "kg pergamino",   "tendencia": "Alza",    "variacion": 8.0,  "fuente": "Referencia FNC Oct-2026"},
-    "Cacao":        {"precio": 14826, "unidad": "kg grano seco",  "tendencia": "Alza",    "variacion": 4.0,  "fuente": "Referencia Fedecacao Oct-2026"},
-    "Plátano":      {"precio": 1750,  "unidad": "kg",             "tendencia": "Estable", "variacion": 1.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
-    "Frijol":       {"precio": 12800, "unidad": "kg cargamanto",  "tendencia": "Alza",    "variacion": 6.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
-    "Aguacate Hass":{"precio": 7200,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 9.0,  "fuente": "Referencia Asohofrucol Oct-2026"},
-    "Papa":         {"precio": 1900,  "unidad": "kg",             "tendencia": "Baja",    "variacion": -5.0, "fuente": "Referencia Fedepapa Oct-2026"},
-    "Tomate":       {"precio": 3000,  "unidad": "kg chonto",      "tendencia": "Estable", "variacion": 2.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
-    "Arroz":        {"precio": 2200,  "unidad": "kg paddy verde",  "tendencia": "Estable", "variacion": 0.0,  "fuente": "Referencia Fedearroz Oct-2026"},
+    "Maíz Amarillo":    {"precio": 1680, "unidad": "kg",              "tendencia": "Alza",    "variacion": 5.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Café":             {"precio": 16440, "unidad": "kg pergamino",   "tendencia": "Alza",    "variacion": 8.0,  "fuente": "Referencia FNC Oct-2026"},
+    "Cacao":            {"precio": 14826, "unidad": "kg grano seco",  "tendencia": "Alza",    "variacion": 4.0,  "fuente": "Referencia Fedecacao Oct-2026"},
+    "Plátano Hartón":   {"precio": 1750,  "unidad": "kg",             "tendencia": "Estable", "variacion": 1.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Fríjol Cargamanto":{"precio": 12800, "unidad": "kg cargamanto",  "tendencia": "Alza",    "variacion": 6.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Aguacate Hass":    {"precio": 7200,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 9.0,  "fuente": "Referencia Asohofrucol Oct-2026"},
+    "Papa Pastusa":     {"precio": 1900,  "unidad": "kg",             "tendencia": "Baja",    "variacion": -5.0, "fuente": "Referencia Fedepapa Oct-2026"},
+    "Tomate Chonto":    {"precio": 3000,  "unidad": "kg chonto",      "tendencia": "Estable", "variacion": 2.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Arroz Blanco":     {"precio": 2200,  "unidad": "kg paddy verde", "tendencia": "Estable", "variacion": 0.0,  "fuente": "Referencia Fedearroz Oct-2026"},
+    # ── Cultivos canónicos ampliados ─────────────────────────────────────
+    "Yuca":             {"precio": 995,   "unidad": "kg",             "tendencia": "Estable", "variacion": 2.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Aguacate Común":   {"precio": 3200,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 4.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Caña Panelera":    {"precio": 4200,  "unidad": "kg panela",      "tendencia": "Estable", "variacion": 1.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Maracuyá":         {"precio": 2800,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 7.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Lulo":             {"precio": 3500,  "unidad": "kg",             "tendencia": "Estable", "variacion": 3.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Cholupa":          {"precio": 4500,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 10.0, "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Sorgo":            {"precio": 1100,  "unidad": "kg",             "tendencia": "Estable", "variacion": 0.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Limón Tahití":     {"precio": 1800,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 6.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Guanábana":        {"precio": 3800,  "unidad": "kg",             "tendencia": "Estable", "variacion": 2.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Papaya":           {"precio": 1500,  "unidad": "kg",             "tendencia": "Baja",    "variacion": -3.0, "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Mango Tommy":      {"precio": 2200,  "unidad": "kg",             "tendencia": "Estable", "variacion": 1.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Piña Cayena":      {"precio": 1600,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 4.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Cebolla Cabezona": {"precio": 3120,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 3.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Zanahoria":        {"precio": 1280,  "unidad": "kg",             "tendencia": "Baja",    "variacion": -3.0, "fuente": "Referencia SIPSA/DANE Oct-2026"},
 }
 
 # ---------------------------------------------------------------------------
@@ -55,7 +71,7 @@ class Command(BaseCommand):
     # ------------------------------------------------------------------
 
     def _guardar_precio(self, cultivo, precio_kg, unidad, tendencia, variacion, fuente, fuente_url=""):
-        """Persiste o actualiza un registro PrecioMercado."""
+        """Persiste o actualiza un registro PrecioMercado y enlaza FK a CultivoSipsa."""
         obj, created = PrecioMercado.objects.update_or_create(
             cultivo_nombre=cultivo,
             defaults={
@@ -70,6 +86,12 @@ class Command(BaseCommand):
                 "fuente_url": fuente_url,
             },
         )
+        # Link FK to canonical CultivoSipsa catalogue
+        if obj.cultivo_id is None:
+            cultivo_obj = CultivoSipsa.objects.filter(nombre=cultivo).first()
+            if cultivo_obj:
+                obj.cultivo = cultivo_obj
+                obj.save(update_fields=['cultivo'])
         action = "creado" if created else "actualizado"
         self.stdout.write(
             self.style.SUCCESS(
@@ -150,13 +172,27 @@ class Command(BaseCommand):
 
     # Map of crop names that may appear in the DANE datasets
     CULTIVOS_DANE = {
-        "Maíz":          ["maiz", "maíz", "maize"],
-        "Plátano":        ["platano", "plátano", "banano"],
-        "Frijol":         ["frijol", "fríjol", "frejol"],
-        "Aguacate Hass":  ["aguacate", "hass"],
-        "Papa":           ["papa"],
-        "Tomate":         ["tomate"],
-        "Arroz":          ["arroz"],
+        "Maíz Amarillo":    ["maiz", "maíz", "maize", "maiz amarillo"],
+        "Plátano Hartón":   ["platano harton", "plátano hartón", "platano", "plátano", "banano"],
+        "Fríjol Cargamanto":["frijol cargamanto", "fríjol cargamanto", "frijol", "fríjol", "frejol"],
+        "Aguacate Hass":    ["aguacate hass", "aguacate", "hass"],
+        "Papa Pastusa":     ["papa pastusa", "papa"],
+        "Tomate Chonto":    ["tomate chonto", "tomate"],
+        "Arroz Blanco":     ["arroz blanco", "arroz"],
+        "Yuca":             ["yuca"],
+        "Cebolla Cabezona": ["cebolla cabezona", "cebolla"],
+        "Zanahoria":        ["zanahoria"],
+        "Aguacate Común":   ["aguacate comun", "aguacate común"],
+        "Caña Panelera":    ["cana panelera", "caña panelera", "panela"],
+        "Maracuyá":         ["maracuya", "maracuyá"],
+        "Lulo":             ["lulo"],
+        "Cholupa":          ["cholupa"],
+        "Sorgo":            ["sorgo"],
+        "Limón Tahití":     ["limon tahiti", "limón tahití"],
+        "Guanábana":        ["guanabana", "guanábana"],
+        "Papaya":           ["papaya"],
+        "Mango Tommy":      ["mango tommy", "mango"],
+        "Piña Cayena":      ["pina cayena", "piña cayena"],
     }
 
     def actualizar_via_socrata(self, actualizados):

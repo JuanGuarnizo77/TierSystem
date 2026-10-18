@@ -1,7 +1,8 @@
 """
 Management command: seed_mercado
 Populates PrecioMercado and Comprador tables from the static DATOS_MERCADO_HUILA dict.
-Idempotent — uses get_or_create, safe to run multiple times.
+Idempotent — uses update_or_create, safe to run multiple times.
+Also links the FK PrecioMercado.cultivo → CultivoSipsa for each canonical crop name.
 
 Usage:
     python manage.py seed_mercado
@@ -10,6 +11,7 @@ from django.core.management.base import BaseCommand
 
 from apps.mercado.models import PrecioMercado, Comprador
 from apps.mercado.views import DATOS_MERCADO_HUILA
+from apps.sipsa.models import CultivoSipsa
 
 
 class Command(BaseCommand):
@@ -19,7 +21,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.MIGRATE_HEADING('=== seed_mercado: iniciando siembra de datos ==='))
 
         precios_creados = 0
-        precios_existentes = 0
+        precios_actualizados = 0
 
         for cultivo_nombre, datos in DATOS_MERCADO_HUILA.items():
             # Parse variation string like "+8%" or "-5%" into float
@@ -29,7 +31,7 @@ class Command(BaseCommand):
             except ValueError:
                 variacion_float = 0.0
 
-            pm, created = PrecioMercado.objects.get_or_create(
+            pm, created = PrecioMercado.objects.update_or_create(
                 cultivo_nombre=cultivo_nombre,
                 defaults={
                     'region': 'Huila',
@@ -41,16 +43,23 @@ class Command(BaseCommand):
                     'fuente': datos.get('fuente', 'SIPSA / DANE'),
                 }
             )
+
+            # Link FK to canonical CultivoSipsa catalogue
+            cultivo_obj = CultivoSipsa.objects.filter(nombre=cultivo_nombre).first()
+            if cultivo_obj and pm.cultivo_id != cultivo_obj.pk:
+                pm.cultivo = cultivo_obj
+                pm.save(update_fields=['cultivo'])
+
             if created:
                 precios_creados += 1
                 self.stdout.write(f'  [+] PrecioMercado creado: {cultivo_nombre}')
             else:
-                precios_existentes += 1
-                self.stdout.write(f'  [=] PrecioMercado ya existe: {cultivo_nombre}')
+                precios_actualizados += 1
+                self.stdout.write(f'  [~] PrecioMercado actualizado: {cultivo_nombre}')
 
         self.stdout.write(
             self.style.SUCCESS(
-                f'\nPrecioMercado — creados: {precios_creados}, ya existían: {precios_existentes}'
+                f'\nPrecioMercado — creados: {precios_creados}, actualizados: {precios_actualizados}'
             )
         )
 
