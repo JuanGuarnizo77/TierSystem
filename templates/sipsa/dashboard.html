@@ -44,6 +44,18 @@
         </h3>
         <span class="text-xs text-gray-500 dark:text-gray-400">Haz clic en un cultivo para ver historial completo</span>
     </div>
+    {# ── Barra de búsqueda SIPSA ─── #}
+    <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900">
+        <div class="relative max-w-sm">
+            <i class="fa-solid fa-search absolute left-4 top-3 text-gray-400 dark:text-gray-500 text-sm"></i>
+            <input type="text" id="buscarCultivoSipsa"
+                   placeholder="Buscar cultivo por nombre o categoría..."
+                   class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+                          rounded-xl pl-11 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary
+                          text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm">
+        </div>
+    </div>
+
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse text-sm">
             <thead>
@@ -61,7 +73,9 @@
             </thead>
             <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
                 {% for fila in tabla %}
-                <tr class="hover:bg-emerald-50/40 dark:hover:bg-primary/10 transition-colors">
+                <tr class="hover:bg-emerald-50/40 dark:hover:bg-primary/10 transition-colors"
+                    data-nombre="{{ fila.cultivo.nombre|lower }}"
+                    data-categoria="{{ fila.cultivo.categoria|lower }}">
                     <td class="p-4">
                         <span class="font-bold text-gray-900 dark:text-white">{{ fila.cultivo.nombre }}</span>
                     </td>
@@ -139,6 +153,12 @@
                     </td>
                 </tr>
                 {% endfor %}
+                <tr id="sinResultadosSipsa" style="display:none;">
+                    <td colspan="9" class="p-8 text-center text-gray-400 dark:text-gray-500 text-sm italic">
+                        <i class="fa-solid fa-magnifying-glass-minus text-2xl mb-2 block"></i>
+                        No se encontraron cultivos que coincidan con la búsqueda.
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -158,6 +178,30 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+// Búsqueda client-side para tabla SIPSA
+(function() {
+    var input = document.getElementById('buscarCultivoSipsa');
+    if (!input) return;
+    input.addEventListener('input', function() {
+        var term = this.value.toLowerCase().trim();
+        var rows = document.querySelectorAll('tbody tr[data-nombre]');
+        var visibles = 0;
+        rows.forEach(function(row) {
+            var nombre = row.dataset.nombre || '';
+            var categoria = row.dataset.categoria || '';
+            if (nombre.includes(term) || categoria.includes(term) || term === '') {
+                row.style.display = '';
+                visibles++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        var sinRes = document.getElementById('sinResultadosSipsa');
+        if (sinRes) sinRes.style.display = (visibles === 0 && term !== '') ? '' : 'none';
+    });
+})();
+</script>
 {% if request.user.is_superuser %}
 <script>
 function getCookie(name) {

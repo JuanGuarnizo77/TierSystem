@@ -25,6 +25,18 @@
     </div>
 </div>
 
+{# ── Barra de búsqueda historial laboratorista ─── #}
+<div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-4">
+    <div class="relative">
+        <i class="fa-solid fa-search absolute left-4 top-3.5 text-gray-400 dark:text-gray-500 text-sm"></i>
+        <input type="text" id="buscarHistorialLab"
+               placeholder="Buscar por terreno, cultivo o agricultor..."
+               class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600
+                      rounded-xl pl-11 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary
+                      text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm">
+    </div>
+</div>
+
 <div class="bento-card overflow-hidden p-0">
     <div class="p-0">
         {% if analisis %}
@@ -45,7 +57,8 @@
                 </thead>
                 <tbody class="text-sm">
                     {% for a in analisis %}
-                    <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group" id="row-analisis-{{ a.id }}">
+                    <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group" id="row-analisis-{{ a.id }}"
+                        data-search="{{ a.solicitud.terreno.nombre|lower }} {{ a.solicitud.cultivo_deseado|lower }} {{ a.solicitud.agricultor.get_full_name|lower|default:a.solicitud.agricultor.username|lower }}">
                         <td class="p-4 text-center">
                             <input type="checkbox" 
                                    class="analisis-checkbox w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
@@ -91,6 +104,12 @@
                         </td>
                     </tr>
                     {% endfor %}
+                    <tr id="sinResultadosLab" style="display:none;">
+                        <td colspan="7" class="p-8 text-center text-gray-400 dark:text-gray-500 text-sm italic">
+                            <i class="fa-solid fa-magnifying-glass-minus text-2xl mb-2 block"></i>
+                            No se encontraron registros que coincidan con la búsqueda.
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -319,6 +338,28 @@
 
 {% block extra_js %}
 <script>
+    // Búsqueda client-side para historial laboratorista
+    (function() {
+        var input = document.getElementById('buscarHistorialLab');
+        if (!input) return;
+        input.addEventListener('input', function() {
+            var term = this.value.toLowerCase().trim();
+            var rows = document.querySelectorAll('tbody tr[data-search]');
+            var visibles = 0;
+            rows.forEach(function(row) {
+                var texto = row.dataset.search || '';
+                if (texto.includes(term) || term === '') {
+                    row.style.display = '';
+                    visibles++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            var sinRes = document.getElementById('sinResultadosLab');
+            if (sinRes) sinRes.style.display = (visibles === 0 && term !== '') ? '' : 'none';
+        });
+    })();
+
     let seleccionados = [];
 
     function actualizarSeleccionComparar(checkbox) {

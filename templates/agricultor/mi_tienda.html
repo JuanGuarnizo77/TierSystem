@@ -21,9 +21,21 @@
 
 <div class="bento-card overflow-hidden p-6">
     {% if productos %}
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+    {# ── Barra de búsqueda mis productos ─── #}
+    <div class="mb-5">
+        <div class="relative max-w-sm">
+            <i class="fa-solid fa-search absolute left-4 top-3 text-gray-400 dark:text-gray-500 text-sm"></i>
+            <input type="text" id="buscarMiTienda"
+                   placeholder="Buscar producto..."
+                   class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+                          rounded-xl pl-11 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary
+                          text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm">
+        </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" id="gridMiTienda">
         {% for p in productos %}
-        <div class="border border-gray-100 dark:border-gray-700 rounded-xl overflow-hidden hover:shadow-lg hover:border-primary dark:hover:border-primary transition-all group relative bg-gray-50 dark:bg-gray-800/50 flex flex-col">
+        <div class="border border-gray-100 dark:border-gray-700 rounded-xl overflow-hidden hover:shadow-lg hover:border-primary dark:hover:border-primary transition-all group relative bg-gray-50 dark:bg-gray-800/50 flex flex-col"
+             data-nombre="{{ p.nombre|lower }}">
             <!-- Menú opciones -->
             <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                 <button onclick="eliminarProducto('{{ p.id }}', '{{ p.nombre }}')" class="w-8 h-8 bg-white dark:bg-gray-700 text-red-500 rounded-full flex items-center justify-center shadow hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
@@ -54,6 +66,10 @@
         </div>
         {% endfor %}
     </div>
+    <div id="sinResultadosMiTienda" style="display:none;" class="py-8 text-center text-gray-400 dark:text-gray-500 text-sm italic">
+        <i class="fa-solid fa-magnifying-glass-minus text-2xl mb-2 block"></i>
+        No se encontraron productos que coincidan con la búsqueda.
+    </div>
     {% else %}
     <div class="text-center py-16">
         <div class="w-24 h-24 bg-green-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 text-primary text-4xl border border-green-100 dark:border-gray-700 shadow-sm">
@@ -71,6 +87,28 @@
 
 {% block extra_js %}
 <script>
+    // Búsqueda client-side para mis productos
+    (function() {
+        var input = document.getElementById('buscarMiTienda');
+        if (!input) return;
+        input.addEventListener('input', function() {
+            var term = this.value.toLowerCase().trim();
+            var cards = document.querySelectorAll('#gridMiTienda [data-nombre]');
+            var visibles = 0;
+            cards.forEach(function(card) {
+                var nombre = card.dataset.nombre || '';
+                if (nombre.includes(term) || term === '') {
+                    card.style.display = '';
+                    visibles++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            var sinRes = document.getElementById('sinResultadosMiTienda');
+            if (sinRes) sinRes.style.display = (visibles === 0 && term !== '') ? '' : 'none';
+        });
+    })();
+
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {

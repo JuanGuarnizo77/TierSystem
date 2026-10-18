@@ -68,6 +68,18 @@
         <span class="text-xs text-gray-500 dark:text-gray-400">Haz clic en una fila para ver detalle</span>
     </div>
 
+    {# ── Barra de búsqueda de precios ─── #}
+    <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900">
+        <div class="relative max-w-sm">
+            <i class="fa-solid fa-search absolute left-4 top-3 text-gray-400 dark:text-gray-500 text-sm"></i>
+            <input type="text" id="buscarPrecioSipsa"
+                   placeholder="Buscar cultivo en la tabla..."
+                   class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+                          rounded-xl pl-11 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary
+                          text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm">
+        </div>
+    </div>
+
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse text-sm">
             <thead>
@@ -89,7 +101,8 @@
                 {# ── Fila principal ── #}
                 <tr class="hover:bg-emerald-50/40 dark:hover:bg-primary/10 transition-colors cursor-pointer select-none"
                     onclick="toggleDetalle('{{ item.cultivo|slugify }}')"
-                    title="Ver detalle de {{ item.cultivo }}">
+                    title="Ver detalle de {{ item.cultivo }}"
+                    data-cultivo="{{ item.cultivo|lower }}">
 
                     {# Cultivo #}
                     <td class="p-4">
@@ -284,6 +297,12 @@
                     </td>
                 </tr>
                 {% endfor %}
+                <tr id="sinResultadosPrecio" style="display:none;">
+                    <td colspan="8" class="p-8 text-center text-gray-400 dark:text-gray-500 text-sm italic">
+                        <i class="fa-solid fa-magnifying-glass-minus text-2xl mb-2 block"></i>
+                        No se encontraron cultivos que coincidan con la búsqueda.
+                    </td>
+                </tr>
 
             </tbody>
         </table>
@@ -305,6 +324,40 @@
 
 {# ── SCRIPTS ───────────────────────────────────────────────────── #}
 <script>
+    // Búsqueda client-side para tabla de precios SIPSA
+    (function() {
+        var input = document.getElementById('buscarPrecioSipsa');
+        if (!input) return;
+        input.addEventListener('input', function() {
+            var term = this.value.toLowerCase().trim();
+            var mainRows = document.querySelectorAll('tbody tr[data-cultivo]');
+            var visibles = 0;
+            mainRows.forEach(function(row) {
+                var cultivo = row.dataset.cultivo || '';
+                var slug = row.getAttribute('onclick')
+                    ? row.getAttribute('onclick').replace("toggleDetalle('", '').replace("')", '')
+                    : '';
+                var detalleRow = slug ? document.getElementById('detalle-' + slug) : null;
+
+                if (cultivo.includes(term) || term === '') {
+                    row.style.display = '';
+                    visibles++;
+                    // No tocar el estado del detalle (expanded/collapsed) al mostrar
+                } else {
+                    row.style.display = 'none';
+                    // Ocultar también la fila de detalle expandible si estaba abierta
+                    if (detalleRow && !detalleRow.classList.contains('hidden')) {
+                        detalleRow.classList.add('hidden');
+                        var chevron = document.getElementById('chevron-' + slug);
+                        if (chevron) chevron.classList.remove('rotate-90');
+                    }
+                }
+            });
+            var sinRes = document.getElementById('sinResultadosPrecio');
+            if (sinRes) sinRes.style.display = (visibles === 0 && term !== '') ? '' : 'none';
+        });
+    })();
+
     // Expandir / colapsar fila de detalle
     function toggleDetalle(slug) {
         const row = document.getElementById('detalle-' + slug);
