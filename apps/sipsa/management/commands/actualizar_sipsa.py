@@ -26,19 +26,41 @@ APIS_DANE = [
     "https://www.datos.gov.co/resource/2hfu-fu5g.json",   # SIPSA abastecimiento
 ]
 
-# Precios de referencia fallback (COP/kg) — actualizados con series recientes
+# Precios de referencia fallback (COP/kg) — actualizados oct-2026 (DANE/SIPSA/FNC)
 FALLBACK_PRECIOS = {
-    "Papa Pastusa":       {"precio": 2260},
-    "Tomate Chonto":      {"precio": 3300},
-    "Cebolla Cabezona":   {"precio": 3120},
-    "Fríjol Cargamanto":  {"precio": 11750},
-    "Zanahoria":          {"precio": 1280},
-    "Plátano Hartón":     {"precio": 1850},
-    "Arroz Blanco":       {"precio": 2130},
-    "Maíz Amarillo":      {"precio": 1530},
-    "Aguacate Hass":      {"precio": 7500},
-    "Yuca":               {"precio": 995},
+    "Papa Pastusa":       {"precio": 1900},
+    "Tomate Chonto":      {"precio": 3000},
+    "Cebolla Cabezona":   {"precio": 1200},
+    "Fríjol Cargamanto":  {"precio": 8400},
+    "Zanahoria":          {"precio": 1290},
+    "Plátano Hartón":     {"precio": 980},
+    "Arroz Blanco":       {"precio": 3000},
+    "Maíz Amarillo":      {"precio": 1400},
+    "Aguacate Hass":      {"precio": 8197},
+    "Yuca":               {"precio": 1000},
+    # ── Cultivos canónicos ampliados ──────────────────────────────────────
+    "Café":               {"precio": 16440},
+    "Cacao":              {"precio": 14805},
+    "Aguacate Común":     {"precio": 3200},
+    "Caña Panelera":      {"precio": 4200},
+    "Maracuyá":           {"precio": 2000},
+    "Lulo":               {"precio": 2800},
+    "Cholupa":            {"precio": 4500},
+    "Sorgo":              {"precio": 1100},
+    "Limón Tahití":       {"precio": 1800},
+    "Guanábana":          {"precio": 3800},
+    "Papaya":             {"precio": 1500},
+    "Mango Tommy":        {"precio": 2200},
+    "Piña Cayena":        {"precio": 1600},
+    "Fríjol Bola Roja":   {"precio": 6500},
+    "Granadilla":         {"precio": 3500},
+    "Pitahaya":           {"precio": 7500},
+    "Gulupa":             {"precio": 5000},
+    "Mora":               {"precio": 4500},
 }
+
+MESES_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun',
+            'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
 
 
 def _semana_actual():
@@ -48,8 +70,11 @@ def _semana_actual():
 
 
 def _label(d: date) -> str:
-    iso = d.isocalendar()
-    return f"Sem {iso[1]}-{iso[0]}"
+    """Devuelve etiqueta legible: '18 ago – 24 ago 2026'."""
+    fin = d + timedelta(days=6)
+    mes_ini = MESES_ES[d.month - 1]
+    mes_fin = MESES_ES[fin.month - 1]
+    return f"{d.day} {mes_ini} – {fin.day} {mes_fin} {fin.year}"
 
 
 class Command(BaseCommand):

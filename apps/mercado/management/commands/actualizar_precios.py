@@ -9,7 +9,7 @@ Usage:
 """
 import re
 import requests
-from datetime import datetime
+from datetime import date, timedelta
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -18,33 +18,59 @@ from apps.mercado.models import PrecioMercado
 from apps.sipsa.models import CultivoSipsa
 
 # ---------------------------------------------------------------------------
+# Helpers para etiqueta de semana legible
+# ---------------------------------------------------------------------------
+MESES_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun',
+            'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+
+
+def _label(d: date) -> str:
+    """Devuelve etiqueta legible: '18 ago – 24 ago 2026'."""
+    fin = d + timedelta(days=6)
+    mes_ini = MESES_ES[d.month - 1]
+    mes_fin = MESES_ES[fin.month - 1]
+    return f"{d.day} {mes_ini} – {fin.day} {mes_fin} {fin.year}"
+
+
+def _semana_label_actual() -> str:
+    hoy = date.today()
+    lunes = hoy - timedelta(days=hoy.weekday())
+    return _label(lunes)
+
+
+# ---------------------------------------------------------------------------
 # Static fallback prices (Oct-2026 reference, COP/kg)
 # ---------------------------------------------------------------------------
 PRECIOS_ACTUALIZADOS_OCT_2026 = {
-    "Maíz Amarillo":    {"precio": 1680, "unidad": "kg",              "tendencia": "Alza",    "variacion": 5.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
-    "Café":             {"precio": 16440, "unidad": "kg pergamino",   "tendencia": "Alza",    "variacion": 8.0,  "fuente": "Referencia FNC Oct-2026"},
-    "Cacao":            {"precio": 14826, "unidad": "kg grano seco",  "tendencia": "Alza",    "variacion": 4.0,  "fuente": "Referencia Fedecacao Oct-2026"},
-    "Plátano Hartón":   {"precio": 1750,  "unidad": "kg",             "tendencia": "Estable", "variacion": 1.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
-    "Fríjol Cargamanto":{"precio": 12800, "unidad": "kg cargamanto",  "tendencia": "Alza",    "variacion": 6.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
-    "Aguacate Hass":    {"precio": 7200,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 9.0,  "fuente": "Referencia Asohofrucol Oct-2026"},
+    "Maíz Amarillo":    {"precio": 1400,  "unidad": "kg",              "tendencia": "Alza",    "variacion": 5.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Café":             {"precio": 16440, "unidad": "kg pergamino",    "tendencia": "Baja",    "variacion": -1.5, "fuente": "Referencia FNC Oct-2026"},
+    "Cacao":            {"precio": 14805, "unidad": "kg grano seco",   "tendencia": "Baja",    "variacion": -0.5, "fuente": "Referencia Fedecacao Oct-2026"},
+    "Plátano Hartón":   {"precio": 980,   "unidad": "kg",             "tendencia": "Alza",    "variacion": 1.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Fríjol Cargamanto":{"precio": 8400,  "unidad": "kg cargamanto",  "tendencia": "Alza",    "variacion": 6.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Aguacate Hass":    {"precio": 8197,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 9.0,  "fuente": "Referencia Asohofrucol Oct-2026"},
     "Papa Pastusa":     {"precio": 1900,  "unidad": "kg",             "tendencia": "Baja",    "variacion": -5.0, "fuente": "Referencia Fedepapa Oct-2026"},
-    "Tomate Chonto":    {"precio": 3000,  "unidad": "kg chonto",      "tendencia": "Estable", "variacion": 2.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
-    "Arroz Blanco":     {"precio": 2200,  "unidad": "kg paddy verde", "tendencia": "Estable", "variacion": 0.0,  "fuente": "Referencia Fedearroz Oct-2026"},
+    "Tomate Chonto":    {"precio": 3000,  "unidad": "kg chonto",      "tendencia": "Baja",    "variacion": -2.0, "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Arroz Blanco":     {"precio": 3000,  "unidad": "kg paddy verde", "tendencia": "Estable", "variacion": 0.0,  "fuente": "Referencia Fedearroz Oct-2026"},
     # ── Cultivos canónicos ampliados ─────────────────────────────────────
-    "Yuca":             {"precio": 995,   "unidad": "kg",             "tendencia": "Estable", "variacion": 2.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Yuca":             {"precio": 1000,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 2.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
     "Aguacate Común":   {"precio": 3200,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 4.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
-    "Caña Panelera":    {"precio": 4200,  "unidad": "kg panela",      "tendencia": "Estable", "variacion": 1.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
-    "Maracuyá":         {"precio": 2800,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 7.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
-    "Lulo":             {"precio": 3500,  "unidad": "kg",             "tendencia": "Estable", "variacion": 3.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Caña Panelera":    {"precio": 4200,  "unidad": "kg panela",      "tendencia": "Alza",    "variacion": 1.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Maracuyá":         {"precio": 2000,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 7.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Lulo":             {"precio": 2800,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 3.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
     "Cholupa":          {"precio": 4500,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 10.0, "fuente": "Referencia SIPSA/DANE Oct-2026"},
     "Sorgo":            {"precio": 1100,  "unidad": "kg",             "tendencia": "Estable", "variacion": 0.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
     "Limón Tahití":     {"precio": 1800,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 6.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
-    "Guanábana":        {"precio": 3800,  "unidad": "kg",             "tendencia": "Estable", "variacion": 2.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Guanábana":        {"precio": 3800,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 2.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
     "Papaya":           {"precio": 1500,  "unidad": "kg",             "tendencia": "Baja",    "variacion": -3.0, "fuente": "Referencia SIPSA/DANE Oct-2026"},
-    "Mango Tommy":      {"precio": 2200,  "unidad": "kg",             "tendencia": "Estable", "variacion": 1.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Mango Tommy":      {"precio": 2200,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 1.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
     "Piña Cayena":      {"precio": 1600,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 4.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
-    "Cebolla Cabezona": {"precio": 3120,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 3.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
-    "Zanahoria":        {"precio": 1280,  "unidad": "kg",             "tendencia": "Baja",    "variacion": -3.0, "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Cebolla Cabezona": {"precio": 1200,  "unidad": "kg",             "tendencia": "Baja",    "variacion": -3.0, "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Zanahoria":        {"precio": 1290,  "unidad": "kg",             "tendencia": "Baja",    "variacion": -3.0, "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Fríjol Bola Roja": {"precio": 6500,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 4.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Granadilla":       {"precio": 3500,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 5.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Pitahaya":         {"precio": 7500,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 8.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Gulupa":           {"precio": 5000,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 6.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
+    "Mora":             {"precio": 4500,  "unidad": "kg",             "tendencia": "Alza",    "variacion": 7.0,  "fuente": "Referencia SIPSA/DANE Oct-2026"},
 }
 
 # ---------------------------------------------------------------------------
@@ -58,9 +84,6 @@ APIS_SOCRATA = [
 
 # Timeout for external HTTP requests (seconds)
 HTTP_TIMEOUT = 10
-
-# Semana label for records saved today
-SEMANA_LABEL = f"Sem {datetime.now().isocalendar()[1]}-{datetime.now().year}"
 
 
 class Command(BaseCommand):
@@ -82,7 +105,7 @@ class Command(BaseCommand):
                 "tendencia": tendencia,
                 "variacion_porcentaje": variacion,
                 "fuente": fuente,
-                "semana_sipsa": SEMANA_LABEL,
+                "semana_sipsa": _semana_label_actual(),
                 "fuente_url": fuente_url,
             },
         )

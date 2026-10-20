@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
 from django.shortcuts import redirect
+from django.conf import settings
+from django.conf.urls.static import static
 
 def api_root(request):
     return JsonResponse({
@@ -33,3 +35,7 @@ urlpatterns = [
     # Vista principal (PWA)
     path('', include('core.urls')),
 ]
+
+# Servir archivos estáticos y media en desarrollo
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

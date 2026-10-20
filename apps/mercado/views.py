@@ -12,7 +12,7 @@ from .models import PrecioMercado, Comprador, ProductoMercado
 
 # Catálogo base de precios de referencia regional Huila (SIPSA/DANE)
 DATOS_MERCADO_HUILA = {
-    "Maíz": {
+    "Maíz Amarillo": {
         "precio_promedio": 1450,
         "precio_local": 1380,
         "unidad": "kg",
@@ -75,27 +75,7 @@ DATOS_MERCADO_HUILA = {
             {"nombre": "Surabastos Cacao Neiva", "tipo": "Plaza Mayorista", "municipio": "Neiva, Huila", "contacto": "316 887 4455", "precio": "$20.800 / kg"}
         ]
     },
-    "Plátano": {
-        "precio_promedio": 1600,
-        "precio_local": 1500,
-        "unidad": "kg",
-        "tendencia": "Estable",
-        "variacion": "+1%",
-        "fuente": "SIPSA — Plaza Minorista Garzón / Neiva",
-        "historial": [
-            {"mes": "Ene", "precio": 1550},
-            {"mes": "Feb", "precio": 1580},
-            {"mes": "Mar", "precio": 1600},
-            {"mes": "Abr", "precio": 1590},
-            {"mes": "May", "precio": 1610},
-            {"mes": "Jun", "precio": 1600},
-        ],
-        "compradores": [
-            {"nombre": "Distribuidora Plátano Verde Huila", "tipo": "Mayorista", "municipio": "Garzón, Huila", "contacto": "313 776 5544", "precio": "$1.620 / kg"},
-            {"nombre": "Surabastos Pabellón Frutas", "tipo": "Plaza Mayorista", "municipio": "Neiva, Huila", "contacto": "318 443 2211", "precio": "$1.580 / kg"}
-        ]
-    },
-    "Frijol": {
+    "Fríjol Cargamanto": {
         "precio_promedio": 11500,
         "precio_local": 11000,
         "unidad": "kg cargamanto",
@@ -135,7 +115,7 @@ DATOS_MERCADO_HUILA = {
             {"nombre": "Frutas del Huila", "tipo": "Intermediario", "municipio": "Neiva, Huila", "contacto": "315 221 4433", "precio": "$6.600 / kg"}
         ]
     },
-    "Papa": {
+    "Papa Pastusa": {
         "precio_promedio": 2300,
         "precio_local": 2150,
         "unidad": "kg",
@@ -154,7 +134,7 @@ DATOS_MERCADO_HUILA = {
             {"nombre": "Tubérculos del Surabastos", "tipo": "Plaza Mayorista", "municipio": "Neiva, Huila", "contacto": "310 998 4433", "precio": "$2.350 / kg"}
         ]
     },
-    "Tomate": {
+    "Tomate Chonto": {
         "precio_promedio": 3200,
         "precio_local": 3000,
         "unidad": "kg chonto",
@@ -173,7 +153,7 @@ DATOS_MERCADO_HUILA = {
             {"nombre": "Surabastos Hortalizas", "tipo": "Plaza Mayorista", "municipio": "Neiva, Huila", "contacto": "316 445 6677", "precio": "$3.250 / kg"}
         ]
     },
-    "Arroz": {
+    "Arroz Blanco": {
         "precio_promedio": 2100,
         "precio_local": 2050,
         "unidad": "kg paddy verde",
@@ -418,31 +398,6 @@ DATOS_MERCADO_HUILA = {
             {"nombre": "Cooperativa Productores Huila", "tipo": "Cooperativa", "municipio": "Rivera, Huila", "contacto": "317 456 7890", "precio": "$1.780 / kg"},
         ]
     },
-    "Cacao (pasta)": {
-        "precio_promedio": 25000,
-        "precio_local": 24000,
-        "unidad": "kg pasta",
-        "tendencia": "Alza",
-        "variacion": "+18%",
-        "fuente": "SIPSA — Mercado Regional Huila",
-        "historial": [
-            {"mes": "Ene", "precio": 20000},
-            {"mes": "Feb", "precio": 20800},
-            {"mes": "Mar", "precio": 21600},
-            {"mes": "Abr", "precio": 22400},
-            {"mes": "May", "precio": 23000},
-            {"mes": "Jun", "precio": 23500},
-            {"mes": "Jul", "precio": 24000},
-            {"mes": "Ago", "precio": 24300},
-            {"mes": "Sep", "precio": 24650},
-            {"mes": "Oct", "precio": 25000},
-        ],
-        "compradores": [
-            {"nombre": "Chocolatería y Derivados del Huila", "tipo": "Transformador", "municipio": "Gigante, Huila", "contacto": "314 332 1100", "precio": "$25.500 / kg"},
-            {"nombre": "CADEFIHUILA", "tipo": "Cooperativa", "municipio": "Neiva / Garzón", "contacto": "310 555 4321", "precio": "$25.000 / kg"},
-            {"nombre": "Industrias Cacao Sur S.A.S.", "tipo": "Agroindustria", "municipio": "Pitalito, Huila", "contacto": "319 887 4455", "precio": "$25.200 / kg"},
-        ]
-    },
     "Guanábana": {
         "precio_promedio": 3800,
         "precio_local": 3500,
@@ -542,32 +497,6 @@ DATOS_MERCADO_HUILA = {
             {"nombre": "Cooperativa Productores Huila", "tipo": "Cooperativa", "municipio": "Garzón, Huila", "contacto": "317 456 7890", "precio": "$1.580 / kg"},
         ]
     },
-    "Aguacate Hass (exportación)": {
-        "precio_promedio": 8500,
-        "precio_local": 8000,
-        "unidad": "kg exportación",
-        "tendencia": "Alza",
-        "variacion": "+15%",
-        "fuente": "SIPSA — Mercado Regional Huila",
-        "historial": [
-            {"mes": "Ene", "precio": 6800},
-            {"mes": "Feb", "precio": 7050},
-            {"mes": "Mar", "precio": 7300},
-            {"mes": "Abr", "precio": 7550},
-            {"mes": "May", "precio": 7750},
-            {"mes": "Jun", "precio": 7950},
-            {"mes": "Jul", "precio": 8100},
-            {"mes": "Ago", "precio": 8200},
-            {"mes": "Sep", "precio": 8350},
-            {"mes": "Oct", "precio": 8500},
-        ],
-        "compradores": [
-            {"nombre": "Hass Colombia Export S.A.", "tipo": "Exportador", "municipio": "Pitalito, Huila", "contacto": "319 887 1122", "precio": "$8.800 / kg"},
-            {"nombre": "CADEFIHUILA", "tipo": "Cooperativa", "municipio": "Neiva / Garzón", "contacto": "310 555 4321", "precio": "$8.500 / kg"},
-            {"nombre": "Asohofrucol Huila", "tipo": "Asociación", "municipio": "Neiva, Huila", "contacto": "311 667 8899", "precio": "$8.300 / kg"},
-            {"nombre": "Exportaciones Frutas Huila S.A.S.", "tipo": "Exportador", "municipio": "Pitalito, Huila", "contacto": "316 778 9900", "precio": "$8.700 / kg"},
-        ]
-    },
 }
 
 
@@ -628,9 +557,9 @@ def _normalizar_texto(s):
 
 
 def _resolver_cultivo_key(nombre):
-    solicitado_raw = (nombre or 'Maíz').strip() or 'Maíz'
+    solicitado_raw = (nombre or 'Maíz Amarillo').strip() or 'Maíz Amarillo'
     solicitado = _normalizar_texto(solicitado_raw)
-    cultivo_key = "Maíz"
+    cultivo_key = "Maíz Amarillo"
     for k in DATOS_MERCADO_HUILA.keys():
         k_norm = _normalizar_texto(k)
         if k_norm in solicitado or solicitado in k_norm:
@@ -646,7 +575,7 @@ def _datos_cultivo(cultivo_key):
             pm = PrecioMercado.objects.filter(cultivo_nombre__icontains=cultivo_key).first()
         if pm is not None:
             return _build_datos_cultivo_from_db(pm)
-    return DATOS_MERCADO_HUILA.get(cultivo_key, DATOS_MERCADO_HUILA["Maíz"])
+    return DATOS_MERCADO_HUILA.get(cultivo_key, DATOS_MERCADO_HUILA["Maíz Amarillo"])
 
 
 def _listado_precios_tabla():
@@ -675,7 +604,7 @@ def precios_sipsa(request):
     if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
         return redirect('home')
 
-    cultivo_key = _resolver_cultivo_key(request.GET.get('cultivo', 'Maíz'))
+    cultivo_key = _resolver_cultivo_key(request.GET.get('cultivo', 'Maíz Amarillo'))
     datos_cultivo = dict(_datos_cultivo(cultivo_key))
     datos_cultivo["compradores"] = _get_compradores_for_cultivo(cultivo_key)
     datos_cultivo["tendencia"] = _normalizar_tendencia(datos_cultivo.get("tendencia"))
