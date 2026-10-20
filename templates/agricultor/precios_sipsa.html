@@ -145,7 +145,7 @@
 
                     {# Confianza predicción #}
                     <td class="p-4">
-                        {% if item.confianza != None %}
+                        {% if item.confianza is not None %}
                             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
                                 <i class="fa-solid fa-brain text-[10px]"></i> {{item.confianza|floatformat:0}}%
                             </span>

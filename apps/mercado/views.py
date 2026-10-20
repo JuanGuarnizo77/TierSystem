@@ -652,9 +652,7 @@ def precios_sipsa(request):
     datos_cultivo["compradores"] = _get_compradores_for_cultivo(cultivo_key)
     datos_cultivo["tendencia"] = _normalizar_tendencia(datos_cultivo.get("tendencia"))
 
-    # cultivos_disponibles from CultivoSipsa catalogue (unified with Reportes SIPSA/DANE)
-    cultivos_disponibles = list(CultivoSipsa.objects.filter(activo=True).values_list('nombre', flat=True))
-
+    # cultivos_disponibles from CultivoSipsa catalogue — not passed to template
     hace_24h = timezone.now() - timedelta(hours=24)
     hace_72h = timezone.now() - timedelta(hours=72)
 
@@ -714,11 +712,8 @@ def precios_sipsa(request):
             ultima_act = '—'
             dias_desde = None
         else:
-            precio_promedio = 0
-            precio_local = 0
-            fuente = 'SIPSA / DANE'
-            ultima_act = '—'
-            dias_desde = None
+            # No data source available — skip to avoid rendering a misleading $0 / kg row
+            continue
 
         # Get real prediction from PrediccionPrecio
         pred = None
@@ -800,7 +795,7 @@ def precios_sipsa(request):
         'datos': datos_cultivo,
         'precios': _listado_precios_tabla(),
         'precios_tabla': precios_tabla,
-        'cultivos_disponibles': cultivos_disponibles,
+
         'historial_grafica': historial_con_porcentajes,
         'pct_local': pct_loc,
         'pct_regional': pct_reg,
