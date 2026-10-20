@@ -2,13 +2,14 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.utils import timezone
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from io import StringIO
 import unicodedata
 
 from django.core.management import call_command
 
 from .models import PrecioMercado, Comprador, ProductoMercado
+from apps.sipsa.models import CultivoSipsa, PrecioSemanal, PrediccionPrecio
 
 # Catálogo base de precios de referencia regional Huila (SIPSA/DANE)
 DATOS_MERCADO_HUILA = {
@@ -599,6 +600,48 @@ def _listado_precios_tabla():
     return precios
 
 
+TENDENCIA_MAP = {
+    'SUBE': 'Alza', 'BAJA': 'Baja', 'ESTABLE': 'Estable',
+    'Alza': 'Alza', 'Baja': 'Baja', 'Estable': 'Estable',
+}
+
+
+def _construir_historial_sipsa(cultivo):
+    """Builds price history from PrecioSemanal records using readable date ranges."""
+    import datetime as _dt
+    precios = PrecioSemanal.objects.filter(cultivo=cultivo).order_by('fecha_semana')[:8]
+    return [
+        {
+            'mes': (
+                f"{p.fecha_semana.strftime('%d %b').lstrip('0')} – "
+                f"{(p.fecha_semana + _dt.timedelta(days=6)).strftime('%d %b').lstrip('0')}"
+            ),
+            'precio': float(p.precio_kg),
+        }
+        for p in precios
+    ]
+
+
+def _obtener_compradores_sipsa(cultivo):
+    """Returns buyers for a CultivoSipsa object, preferring DB over static dict."""
+    qs = Comprador.objects.filter(activo=True, cultivos_interes__icontains=cultivo.nombre)
+    if qs.exists():
+        return [
+            {
+                'nombre': c.nombre,
+                'tipo': c.tipo,
+                'municipio': c.municipio,
+                'contacto': c.contacto,
+                'precio': c.precio_referencia or '',
+                'email': c.email,
+                'whatsapp': c.whatsapp,
+                'sitio_web': c.sitio_web,
+            }
+            for c in qs
+        ]
+    return DATOS_MERCADO_HUILA.get(cultivo.nombre, {}).get('compradores', [])
+
+
 @login_required(login_url='login')
 def precios_sipsa(request):
     if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
@@ -609,13 +652,9 @@ def precios_sipsa(request):
     datos_cultivo["compradores"] = _get_compradores_for_cultivo(cultivo_key)
     datos_cultivo["tendencia"] = _normalizar_tendencia(datos_cultivo.get("tendencia"))
 
-    if PrecioMercado.objects.exists():
-        cultivos_db = list(PrecioMercado.objects.values_list('cultivo_nombre', flat=True).distinct())
-        cultivos_disponibles = list(dict.fromkeys(cultivos_db + list(DATOS_MERCADO_HUILA.keys())))
-    else:
-        cultivos_disponibles = list(DATOS_MERCADO_HUILA.keys())
+    # cultivos_disponibles from CultivoSipsa catalogue (unified with Reportes SIPSA/DANE)
+    cultivos_disponibles = list(CultivoSipsa.objects.filter(activo=True).values_list('nombre', flat=True))
 
-    # --- Three-state connection indicator based on ultima_actualizacion (72h window) ---
     hace_24h = timezone.now() - timedelta(hours=24)
     hace_72h = timezone.now() - timedelta(hours=72)
 
@@ -640,52 +679,103 @@ def precios_sipsa(request):
         estado_conexion = 'desactualizado'
         mensaje_conexion = "Sin datos recientes. Mostrando precios de referencia regional almacenados."
 
-    # --- Build enriched precios_tabla ---
+    # --- Build precios_tabla from CultivoSipsa catalogue (unified with Reportes SIPSA/DANE) ---
     precios_tabla = []
-    todos_cultivos = list(dict.fromkeys(
-        list(DATOS_MERCADO_HUILA.keys()) +
-        list(PrecioMercado.objects.values_list('cultivo_nombre', flat=True).distinct())
-    ))
+    cultivos_sipsa = CultivoSipsa.objects.filter(activo=True).order_by('nombre')
 
-    for nombre_cultivo in todos_cultivos:
-        # Try DB first
-        pm = PrecioMercado.objects.filter(cultivo_nombre=nombre_cultivo).first()
-        if pm:
-            dias = (timezone.now() - pm.ultima_actualizacion).days if pm.ultima_actualizacion else None
-            precios_tabla.append({
-                "cultivo": pm.cultivo_nombre,
-                "precio_promedio": float(pm.precio_promedio),
-                "precio_local": float(pm.precio_local) if pm.precio_local else float(pm.precio_promedio),
-                "unidad": pm.unidad,
-                "tendencia": _normalizar_tendencia(pm.tendencia),
-                "variacion_porcentaje": pm.variacion_porcentaje,
-                "fuente": pm.fuente,
-                "ultima_actualizacion": timezone.localtime(pm.ultima_actualizacion).strftime("%d/%m/%Y") if pm.ultima_actualizacion else "—",
-                "dias_desde_actualizacion": dias,
-                "compradores": _get_compradores_for_cultivo(pm.cultivo_nombre),
-                "historial": DATOS_MERCADO_HUILA.get(pm.cultivo_nombre, {}).get(
-                    "historial", [{"mes": "Jun", "precio": float(pm.precio_promedio)}]
-                ),
-            })
+    for cultivo in cultivos_sipsa:
+        # Prefer live PrecioSemanal data
+        precio_semanal = PrecioSemanal.objects.filter(cultivo=cultivo).order_by('-fecha_semana').first()
+        # Also check PrecioMercado via FK
+        pm_fk = PrecioMercado.objects.filter(cultivo=cultivo).order_by('-ultima_actualizacion').first()
+        # Fall back to PrecioMercado by name if FK not populated yet
+        if pm_fk is None:
+            pm_fk = PrecioMercado.objects.filter(cultivo_nombre=cultivo.nombre).first()
+        # Static fallback dict
+        datos_est = DATOS_MERCADO_HUILA.get(cultivo.nombre, {})
+
+        # Determine best price source
+        if precio_semanal:
+            precio_promedio = float(precio_semanal.precio_kg)
+            precio_local = float(precio_semanal.precio_local) if precio_semanal.precio_local else round(precio_promedio * 0.97, 0)
+            fuente = precio_semanal.fuente or 'SIPSA / DANE'
+            ultima_act = timezone.localtime(precio_semanal.fecha_registro).strftime('%d/%m/%Y') if precio_semanal.fecha_registro else '—'
+            dias_desde = (timezone.now().date() - precio_semanal.fecha_semana).days
+        elif pm_fk:
+            precio_promedio = float(pm_fk.precio_promedio)
+            precio_local = float(pm_fk.precio_local) if pm_fk.precio_local else precio_promedio
+            fuente = pm_fk.fuente or 'SIPSA / DANE'
+            ultima_act = timezone.localtime(pm_fk.ultima_actualizacion).strftime('%d/%m/%Y') if pm_fk.ultima_actualizacion else '—'
+            dias_desde = (timezone.now() - pm_fk.ultima_actualizacion).days if pm_fk.ultima_actualizacion else None
+        elif datos_est:
+            precio_promedio = datos_est.get('precio_promedio', 0)
+            precio_local = datos_est.get('precio_local', precio_promedio)
+            fuente = datos_est.get('fuente', 'SIPSA / DANE')
+            ultima_act = '—'
+            dias_desde = None
         else:
-            # Fall back to static dict
-            datos_est = DATOS_MERCADO_HUILA.get(nombre_cultivo, {})
-            if datos_est:
-                precios_tabla.append({
-                    "cultivo": nombre_cultivo,
-                    "precio_promedio": datos_est.get("precio_promedio", 0),
-                    "precio_local": datos_est.get("precio_local", datos_est.get("precio_promedio", 0)),
-                    "unidad": datos_est.get("unidad", "kg"),
-                    "tendencia": _normalizar_tendencia(datos_est.get("tendencia", "Estable")),
-                    "variacion_porcentaje": float(
-                        str(datos_est.get("variacion", "0%")).replace('%', '').replace('+', '')
-                    ),
-                    "fuente": datos_est.get("fuente", "SIPSA / DANE"),
-                    "ultima_actualizacion": "—",
-                    "dias_desde_actualizacion": None,
-                    "compradores": _get_compradores_for_cultivo(nombre_cultivo),
-                    "historial": datos_est.get("historial", []),
-                })
+            precio_promedio = 0
+            precio_local = 0
+            fuente = 'SIPSA / DANE'
+            ultima_act = '—'
+            dias_desde = None
+
+        # Get real prediction from PrediccionPrecio
+        pred = None
+        try:
+            pred = cultivo.prediccion  # OneToOne reverse accessor
+        except Exception:
+            pass
+
+        if pred:
+            tendencia = TENDENCIA_MAP.get(pred.tendencia_predicha, pred.tendencia_predicha)
+            variacion_pct = round(pred.variacion_estimada_pct, 1)
+            confianza = round(pred.confianza_pct, 0)
+            detalle_pred = (
+                f"Confianza: {confianza:.0f}% | Precio estimado: ${float(pred.precio_estimado):,.0f} / {cultivo.unidad}"
+                if pred.precio_estimado
+                else f"Confianza: {confianza:.0f}%"
+            )
+        elif pm_fk:
+            tendencia = _normalizar_tendencia(pm_fk.tendencia)
+            variacion_pct = pm_fk.variacion_porcentaje
+            confianza = None
+            detalle_pred = ''
+        elif datos_est:
+            tendencia = _normalizar_tendencia(datos_est.get('tendencia', 'Estable'))
+            raw_var = str(datos_est.get('variacion', '0%')).replace('%', '').replace('+', '')
+            try:
+                variacion_pct = float(raw_var)
+            except ValueError:
+                variacion_pct = 0.0
+            confianza = None
+            detalle_pred = ''
+        else:
+            tendencia = 'Estable'
+            variacion_pct = 0.0
+            confianza = None
+            detalle_pred = ''
+
+        # Build price history preferring PrecioSemanal
+        historial = _construir_historial_sipsa(cultivo)
+        if not historial:
+            historial = datos_est.get('historial', [{'mes': 'Ref.', 'precio': precio_promedio}])
+
+        precios_tabla.append({
+            'cultivo': cultivo.nombre,
+            'precio_promedio': precio_promedio,
+            'precio_local': precio_local,
+            'unidad': cultivo.unidad or 'kg',
+            'tendencia': tendencia,
+            'variacion_porcentaje': variacion_pct,
+            'confianza': confianza,
+            'detalle_prediccion': detalle_pred,
+            'fuente': fuente,
+            'ultima_actualizacion': ultima_act,
+            'dias_desde_actualizacion': dias_desde,
+            'compradores': _obtener_compradores_sipsa(cultivo),
+            'historial': historial,
+        })
 
     precios_historial = [item["precio"] for item in datos_cultivo.get("historial", [])]
     max_precio = max(precios_historial) if precios_historial else 1
