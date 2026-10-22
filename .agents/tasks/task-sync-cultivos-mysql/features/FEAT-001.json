@@ -1,0 +1,23 @@
+{
+  "id": "FEAT-001",
+  "type": "chore",
+  "description": "Add mysqlclient driver to requirements.txt and create .env.example with all MySQL/Django variables. No app logic changes — purely infrastructure. Independent of FEAT-002 and FEAT-003 (they don't touch requirements.txt or .env).",
+  "status": "completed",
+  "steps": [
+    "1. Open 'requirements.txt' at 'c:\\Users\\punto\\Desktop\\tyersistem clon\\requirements.txt'. Add 'mysqlclient>=2.2.4,<3.0' on a new line after the existing dependencies. Also add 'PyMySQL>=1.1.0,<2.0' as an alternative fallback comment (commented out). Remove the duplicate 'requests>=2.31.0' line (requests is already listed as >=2.20.0 on line 6).",
+    "2. Create '.env.example' at 'c:\\Users\\punto\\Desktop\\tyersistem clon\\.env.example' with all environment variables the system reads from settings.py: SECRET_KEY, DEBUG, ALLOWED_HOSTS, DB_ENGINE, DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, SENSOR_API_KEY. Use placeholder values (e.g., DB_ENGINE=mysql, DB_NAME=tiersystem_db, DB_USER=root, DB_PASSWORD=your_password_here, DB_HOST=127.0.0.1, DB_PORT=3306). Add a comment block at the top explaining: 'Copy to .env and fill in real values. For SQLite (default dev): set DB_ENGINE=sqlite or omit it.'",
+    "3. Verify with 'python manage.py check' → 0 issues (SQLite mode, no MySQL server needed)."
+  ],
+  "acceptance_criteria": [
+    "'mysqlclient>=2.2.4,<3.0' appears in requirements.txt",
+    "No duplicate 'requests' line in requirements.txt",
+    "'.env.example' exists at project root with all required env var keys",
+    "'python manage.py check' reports 0 issues"
+  ],
+  "verification": [
+    "cd 'c:\\Users\\punto\\Desktop\\tyersistem clon' && .\\venv\\Scripts\\activate && python manage.py check",
+    "python -m py_compile tiersystem/settings.py"
+  ],
+  "blocked_reason": null,
+  "findings": "1. mysqlclient 2.2.8 was already installed in the venv (newer than the >=2.2.4 requirement). 2. Three packages listed in requirements.txt were missing from the venv (djangorestframework-simplejwt, drf-spectacular, openpyxl) — installed them as part of verification so manage.py check reaches 0 issues. These are pre-existing gaps unrelated to this FEAT. 3. google-api-core and google-generativeai emit FutureWarnings (pre-existing, not errors). 4. .env.example created with all 12 required env vars; DB_ENGINE defaults to sqlite per project convention."
+}

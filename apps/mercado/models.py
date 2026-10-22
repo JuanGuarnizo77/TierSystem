@@ -51,6 +51,12 @@ class Comprador(models.Model):
     municipio = models.CharField(max_length=100, default='Neiva, Huila')
     contacto = models.CharField(max_length=100, blank=True, default='')
     cultivos_interes = models.TextField(help_text="Cultivos de interés separados por comas")
+    cultivos_rel = models.ManyToManyField(
+        'ia_recomendaciones.CultivoIdeal',
+        blank=True,
+        related_name='compradores_interesados',
+        help_text="Cultivos de interés vinculados relacionalmente"
+    )
     precio_referencia = models.CharField(max_length=100, null=True, blank=True)
     activo = models.BooleanField(default=True)
     # Campos añadidos FEAT-001

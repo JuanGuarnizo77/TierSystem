@@ -10,7 +10,20 @@ class CultivoIdeal(models.Model):
     )
     descripcion = models.TextField(blank=True, null=True)
     
-    # Rangos óptimos
+    # Clasificación y presentación
+    categoria = models.CharField(max_length=80, default='Frutal', blank=True, help_text="Frutal, Cereal, Tubérculo, Leguminosa, Hortaliza, Industrial, etc.")
+    clima = models.CharField(max_length=80, default='Templado', blank=True, help_text="Cálido, Templado, Frío, Tropical, etc.")
+    icono = models.CharField(max_length=60, default='fa-seedling', help_text="Clase FontAwesome, ej. fa-mug-hot, fa-lemon")
+    
+    # Altitud agronómica óptima (msnm)
+    altitud_min = models.DecimalField(max_digits=7, decimal_places=2, default=0, help_text="Altitud mínima óptima en msnm")
+    altitud_max = models.DecimalField(max_digits=7, decimal_places=2, default=3000, help_text="Altitud máxima óptima en msnm")
+    
+    # Enlace canónico y estado
+    nombre_dane = models.CharField(max_length=120, blank=True, default='', help_text="Nombre correspondiente en SIPSA/DANE")
+    activo = models.BooleanField(default=True)
+    
+    # Rangos óptimos edafológicos
     humedad_min = models.FloatField()
     humedad_max = models.FloatField()
     
@@ -32,12 +45,21 @@ class CultivoIdeal(models.Model):
     potasio_min = models.FloatField()
     potasio_max = models.FloatField()
 
+    class Meta:
+        ordering = ['nombre']
+        verbose_name = 'Cultivo Ideal'
+        verbose_name_plural = 'Cultivos Ideales'
+
     def __str__(self):
         return self.nombre
 
     def to_dict(self):
         return {
+            "id": self.id,
             "nombre": self.nombre,
+            "categoria": self.categoria,
+            "clima": self.clima,
+            "icono": self.icono,
             "descripcion": self.descripcion,
             "rangos": {
                 "humedad": [self.humedad_min, self.humedad_max],
@@ -46,8 +68,27 @@ class CultivoIdeal(models.Model):
                 "ph": [self.ph_min, self.ph_max],
                 "nitrogeno": [self.nitrogeno_min, self.nitrogeno_max],
                 "fosforo": [self.fosforo_min, self.fosforo_max],
-                "potasio": [self.potasio_min, self.potasio_max]
+                "potasio": [self.potasio_min, self.potasio_max],
+                "altitud": [float(self.altitud_min or 0), float(self.altitud_max or 3000)],
             }
+        }
+
+    def to_catalogo_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "categoria": self.categoria or "Frutal",
+            "clima": self.clima or "Templado",
+            "ph": f"{self.ph_min:.1f} - {self.ph_max:.1f}",
+            "humedad": f"{int(self.humedad_min)}% - {int(self.humedad_max)}%",
+            "img": self.icono or "fa-seedling",
+            "descripcion": self.descripcion or "",
+            "altitud_min": float(self.altitud_min or 0),
+            "altitud_max": float(self.altitud_max or 3000),
+            "altitud": f"{int(self.altitud_min or 0)} - {int(self.altitud_max or 3000)} msnm",
+            "nitrogeno": f"{int(self.nitrogeno_min)} - {int(self.nitrogeno_max)} mg/kg",
+            "fosforo": f"{int(self.fosforo_min)} - {int(self.fosforo_max)} mg/kg",
+            "potasio": f"{int(self.potasio_min)} - {int(self.potasio_max)} mg/kg",
         }
 
 class ConfiguracionGlobal(models.Model):

@@ -34,20 +34,29 @@
         <div>
             <div class="flex justify-between items-start mb-4">
                 <div class="w-12 h-12 bg-green-100/80 dark:bg-green-900/40 text-green-600 dark:text-green-400 rounded-xl flex items-center justify-center text-2xl shadow-sm border border-green-200 dark:border-green-800 group-hover:scale-110 transition-transform">
-                    <i class="fa-solid fa-seedling"></i>
+                    <i class="fa-solid {{ c.icono|default:'fa-seedling' }}"></i>
                 </div>
                 <div class="flex gap-1">
-                    <button onclick="abrirModalCultivo('{{ c.id }}', '{{ c.nombre }}', '{{ c.descripcion }}', '{{ c.ph_min }}', '{{ c.ph_max }}', '{{ c.nitrogeno_min }}', '{{ c.nitrogeno_max }}', '{{ c.fosforo_min }}', '{{ c.fosforo_max }}', '{{ c.potasio_min }}', '{{ c.potasio_max }}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-blue-500 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors" title="Editar">
+                    <button onclick="abrirModalCultivo('{{ c.id }}', '{{ c.nombre }}', '{{ c.descripcion|escapejs }}', '{{ c.ph_min }}', '{{ c.ph_max }}', '{{ c.nitrogeno_min }}', '{{ c.nitrogeno_max }}', '{{ c.fosforo_min }}', '{{ c.fosforo_max }}', '{{ c.potasio_min }}', '{{ c.potasio_max }}', '{{ c.categoria|default:'Frutal' }}', '{{ c.clima|default:'Templado' }}', '{{ c.altitud_min|default:0 }}', '{{ c.altitud_max|default:3000 }}', '{{ c.icono|default:'fa-seedling' }}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-blue-500 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors" title="Editar">
                         <i class="fa-solid fa-pen"></i>
                     </button>
-                    <button onclick="eliminarCultivo('{{ c.id }}', '{{ c.nombre }}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" title="Eliminar">
+                    <button onclick="eliminarCultivo('{{ c.id }}', '{{ c.nombre|escapejs }}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors" title="Eliminar">
                         <i class="fa-solid fa-trash-can"></i>
                     </button>
                 </div>
             </div>
             
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-1">{{ c.nombre }}</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4">{{ c.descripcion|default:"Sin descripción" }}</p>
+            <div class="flex items-center gap-2 mb-2 flex-wrap">
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white">{{ c.nombre }}</h3>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">{{ c.categoria|default:'Agrícola' }}</span>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"><i class="fa-solid fa-cloud-sun mr-1"></i>{{ c.clima|default:'Templado' }}</span>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">{{ c.descripcion|default:"Sin descripción" }}</p>
+            
+            <div class="mb-3 p-2 bg-emerald-50/60 dark:bg-emerald-950/20 rounded-lg border border-emerald-200/50 dark:border-emerald-800/40 flex items-center justify-between text-xs">
+                <span class="text-emerald-700 dark:text-emerald-400 font-bold"><i class="fa-solid fa-mountain mr-1"></i> Altitud Óptima</span>
+                <span class="font-bold text-gray-800 dark:text-gray-200">{{ c.altitud_min|floatformat:0 }} - {{ c.altitud_max|floatformat:0 }} msnm</span>
+            </div>
             
             <div class="grid grid-cols-2 gap-2 text-xs">
                 <div class="bg-gray-50/50 dark:bg-gray-800/50 p-2 rounded-lg border border-gray-200/50 dark:border-gray-700/50">
@@ -96,15 +105,68 @@
             <form id="formCultivo" class="space-y-6">
                 <input type="hidden" id="cultivo_id">
                 
-                <div class="grid grid-cols-1 gap-6">
-                    <div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="md:col-span-3">
                         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Nombre del Cultivo *</label>
                         <input type="text" id="nombre" required class="glass-input w-full px-4 py-3 rounded-xl">
                     </div>
                     
-                    <div>
+                    <div class="md:col-span-3">
                         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Descripción (Opcional)</label>
                         <textarea id="descripcion" rows="2" class="glass-input w-full px-4 py-3 rounded-xl"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Categoría Agrícola</label>
+                        <select id="categoria" class="glass-input w-full px-4 py-3 rounded-xl bg-white dark:bg-gray-800 dark:text-white">
+                            <option value="Frutal">Frutal</option>
+                            <option value="Hortaliza">Hortaliza</option>
+                            <option value="Tubérculo">Tubérculo</option>
+                            <option value="Cereal">Cereal</option>
+                            <option value="Industrial">Industrial</option>
+                            <option value="Leguminosa">Leguminosa</option>
+                            <option value="Aromática">Aromática</option>
+                            <option value="Medicinal">Medicinal</option>
+                            <option value="Forrajera">Forrajera</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Piso Térmico / Clima</label>
+                        <select id="clima" class="glass-input w-full px-4 py-3 rounded-xl bg-white dark:bg-gray-800 dark:text-white">
+                            <option value="Cálido">Cálido</option>
+                            <option value="Templado">Templado</option>
+                            <option value="Frío">Frío</option>
+                            <option value="Tropical">Tropical</option>
+                            <option value="Cálido/Seco">Cálido / Seco</option>
+                            <option value="Templado/Frío">Templado / Frío</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Icono FontAwesome</label>
+                        <select id="icono" class="glass-input w-full px-4 py-3 rounded-xl bg-white dark:bg-gray-800 dark:text-white">
+                            <option value="fa-seedling">Semilla (fa-seedling)</option>
+                            <option value="fa-mug-hot">Café / Taza (fa-mug-hot)</option>
+                            <option value="fa-lemon">Cítrico / Limón (fa-lemon)</option>
+                            <option value="fa-apple-whole">Fruta (fa-apple-whole)</option>
+                            <option value="fa-tree">Árbol (fa-tree)</option>
+                            <option value="fa-wheat-awn">Cereal / Espiga (fa-wheat-awn)</option>
+                            <option value="fa-carrot">Tubérculo / Raíz (fa-carrot)</option>
+                            <option value="fa-sun">Sol / Secano (fa-sun)</option>
+                            <option value="fa-pepper-hot">Ají / Pimentón (fa-pepper-hot)</option>
+                            <option value="fa-leaf">Hoja (fa-leaf)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Altitud Mínima (msnm)</label>
+                        <input type="number" id="altitud_min" placeholder="0" class="glass-input w-full px-4 py-3 rounded-xl">
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Altitud Máxima (msnm)</label>
+                        <input type="number" id="altitud_max" placeholder="3000" class="glass-input w-full px-4 py-3 rounded-xl">
                     </div>
                 </div>
                 
@@ -191,13 +253,19 @@
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const modal = document.getElementById('modalCultivo');
     
-    function abrirModalCultivo(id = null, nombre = '', desc = '', ph_min = '', ph_max = '', n_min = '', n_max = '', p_min = '', p_max = '', k_min = '', k_max = '') {
+    function abrirModalCultivo(id = null, nombre = '', desc = '', ph_min = '', ph_max = '', n_min = '', n_max = '', p_min = '', p_max = '', k_min = '', k_max = '', categoria = 'Frutal', clima = 'Templado', alt_min = '0', alt_max = '3000', icono = 'fa-seedling') {
         document.getElementById('modalTitle').innerText = id ? 'Editar Cultivo' : 'Añadir Cultivo';
         
         document.getElementById('cultivo_id').value = id || '';
         document.getElementById('nombre').value = nombre;
         document.getElementById('descripcion').value = desc;
         
+        document.getElementById('categoria').value = categoria || 'Frutal';
+        document.getElementById('clima').value = clima || 'Templado';
+        document.getElementById('icono').value = icono || 'fa-seedling';
+        document.getElementById('altitud_min').value = alt_min || '0';
+        document.getElementById('altitud_max').value = alt_max || '3000';
+
         document.getElementById('ph_min').value = ph_min;
         document.getElementById('ph_max').value = ph_max;
         document.getElementById('n_min').value = n_min;
@@ -226,6 +294,11 @@
             id: document.getElementById('cultivo_id').value,
             nombre: document.getElementById('nombre').value,
             descripcion: document.getElementById('descripcion').value,
+            categoria: document.getElementById('categoria').value,
+            clima: document.getElementById('clima').value,
+            icono: document.getElementById('icono').value,
+            altitud_min: document.getElementById('altitud_min').value,
+            altitud_max: document.getElementById('altitud_max').value,
             ph_min: document.getElementById('ph_min').value,
             ph_max: document.getElementById('ph_max').value,
             nitrogeno_min: document.getElementById('n_min').value,

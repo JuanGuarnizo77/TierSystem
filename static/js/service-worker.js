@@ -1,8 +1,9 @@
-const CACHE_NAME = 'tiersystem-cache-v2';
+const CACHE_NAME = 'tiersystem-cache-v3';
 const urlsToCache = [
   '/',
   '/static/manifest.json',
   '/static/js/tailwindcss.js',
+  '/static/js/sweetalert2.all.min.js',
   '/static/css/styles.css',
   '/static/fontawesome/css/all.min.css',
   '/static/js/db.js',

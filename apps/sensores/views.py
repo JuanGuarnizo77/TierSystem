@@ -110,6 +110,7 @@ def captura_estable(request):
 def guardar_punto(request, punto_id):
     if request.method == "POST":
         from apps.analisis.models import PuntoMuestreo
+        from django.utils import timezone
         try:
             datos = json.loads(request.body)
             # Verificar que el punto pertenece a una solicitud asignada a este laboratorista
@@ -124,9 +125,19 @@ def guardar_punto(request, punto_id):
             punto.nitrogeno = datos.get("nitrogeno")
             punto.fosforo = datos.get("fosforo")
             punto.potasio = datos.get("potasio")
+            
+            # Nuevos campos de georreferenciación 3D
+            if datos.get("latitud") is not None:
+                punto.latitud = datos.get("latitud")
+            if datos.get("longitud") is not None:
+                punto.longitud = datos.get("longitud")
+            if datos.get("altitud") is not None:
+                punto.altitud = datos.get("altitud")
+                
+            punto.fecha_toma = timezone.now()
             punto.estado = 'TOMADO'
             punto.save()
-            return JsonResponse({"estado": "ok", "mensaje": "Punto guardado exitosamente"})
+            return JsonResponse({"estado": "ok", "mensaje": "Punto guardado exitosamente en base de datos"})
         except Exception as e:
             return JsonResponse({"estado": "error", "mensaje": str(e)}, status=500)
     return JsonResponse({"estado": "error"}, status=400)

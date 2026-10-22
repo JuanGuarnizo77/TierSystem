@@ -187,13 +187,13 @@
             <script id="terrenoPoligonoData" type="application/json">{% if solicitud_activa.terreno.coordenadas_poligono %}{{ solicitud_activa.terreno.coordenadas_poligono|safe }}{% else %}null{% endif %}</script>
             <script id="puntosDataJson" type="application/json">[
                 {% for p in puntos_muestreo %}
-                {"id": {{ p.id }}, "numero": {{ p.numero }}, "estado": "{{ p.estado }}"}{% if not forloop.last %},{% endif %}
+                {"id": {{ p.id }}, "numero": {{ p.numero }}, "estado": "{{ p.estado }}", "latitud": {{ p.latitud|default:'null' }}, "longitud": {{ p.longitud|default:'null' }}, "altitud": {{ p.altitud|default:'null' }}}{% if not forloop.last %},{% endif %}
                 {% endfor %}
             ]</script>
             <input type="hidden" id="terrenoPoligono" value="{{ solicitud_activa.terreno.coordenadas_poligono|default:'' }}">
             <input type="hidden" id="puntosData" value='[
                 {% for p in puntos_muestreo %}
-                {"id": {{ p.id }}, "numero": {{ p.numero }}, "estado": "{{ p.estado }}"}{% if not forloop.last %},{% endif %}
+                {"id": {{ p.id }}, "numero": {{ p.numero }}, "estado": "{{ p.estado }}", "latitud": {{ p.latitud|default:"null" }}, "longitud": {{ p.longitud|default:"null" }}, "altitud": {{ p.altitud|default:"null" }}}{% if not forloop.last %},{% endif %}
                 {% endfor %}
             ]'>
             
@@ -376,19 +376,38 @@
     }
     
     function marcarPuntoComoTomado(puntoId, datos) {
-        // En una implementación real haríamos fetch a un endpoint para actualizar
-        // Fetch a la BD... por ahora solo recargaremos la página para simular que está todo bien o mostraremos la UI
-        // Pero idealmente el usuario le dará a "Generar Diagnóstico" general 
+        // Enriquecer con georreferenciación 3D (GPS y Altitud en msnm) si el dispositivo lo permite
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    datos.latitud = pos.coords.latitude;
+                    datos.longitud = pos.coords.longitude;
+                    if (pos.coords.altitude !== null && !isNaN(pos.coords.altitude)) {
+                        datos.altitud = Math.round(pos.coords.altitude * 10) / 10;
+                    }
+                    _enviarPuntoABaseDatos(puntoId, datos);
+                },
+                err => {
+                    console.log('GPS no disponible o denegado, guardando sin coordenadas:', err.message);
+                    _enviarPuntoABaseDatos(puntoId, datos);
+                },
+                { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
+            );
+        } else {
+            _enviarPuntoABaseDatos(puntoId, datos);
+        }
+    }
+
+    function _enviarPuntoABaseDatos(puntoId, datos) {
         fetch(`/api/punto/${puntoId}/guardar/`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
             body: JSON.stringify(datos)
         }).then(res => res.json()).then(res => {
              if(res.estado === 'ok') {
-                 // recargar para ver el cambio de color
-                 setTimeout(() => window.location.reload(), 1500);
+                 setTimeout(() => window.location.reload(), 1200);
              }
-        }).catch(e => console.log('Error simulando guardado de punto', e));
+        }).catch(e => console.log('Error guardando punto en BD', e));
     }
     
     // Función helper para csrf
