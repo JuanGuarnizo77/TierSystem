@@ -1,129 +1,58 @@
-# sync-cultivos: Mercado SIPSA ↔ Reportes SIPSA/DANE
+# Reporte de Migración de Cultivos a MySQL
 
-**Status:** ✅ Complete  
-**Date:** 2025-01-31
-
-## What changed
-
-### `apps/mercado/views.py`
-- Added imports: `CultivoSipsa`, `PrecioSemanal`, `PrediccionPrecio` from `apps.sipsa.models`; `date` from `datetime`.
-- Added module-level `TENDENCIA_MAP` constant for normalising tendency strings from both modules.
-- Added helper `_construir_historial_sipsa(cultivo)` — builds readable date-range price history from `PrecioSemanal` rows.
-- Added helper `_obtener_compradores_sipsa(cultivo)` — fetches buyers from `Comprador` DB by cultivo name, falling back to the static `DATOS_MERCADO_HUILA` dict.
-- Replaced `cultivos_disponibles` block: now reads from `CultivoSipsa.objects.filter(activo=True)` instead of merging `PrecioMercado` names with the static dict.
-- Replaced the `precios_tabla` building loop: now iterates over `CultivoSipsa.objects.filter(activo=True).order_by('nombre')` so Mercado SIPSA and Reportes SIPSA/DANE share the same catalogue. Price source priority: `PrecioSemanal` → `PrecioMercado` (FK then name) → static dict. Prediction source priority: `PrediccionPrecio` (via `cultivo.prediccion`) → `PrecioMercado.tendencia` → static dict. Each row now also carries `confianza` and `detalle_prediccion` fields.
-
-### `templates/agricultor/precios_sipsa.html`
-- Added **Confianza** column header (`<th>`) between Tendencia and Variación %.
-- Added **Confianza** data cell (`<td>`) in each table row showing the prediction confidence badge (blue pill) or `—` if none.
-- Updated all three `colspan="8"` → `colspan="9"` (expandable detail row, empty state row, no-search-results row).
-- Added **Predicción SIPSA** expandable section inside the per-row detail panel, shown only when `item.detalle_prediccion` is non-empty.
-
-## Verification
-- `python -m py_compile apps/mercado/views.py` → no errors
-- `python manage.py check` → 0 issues
-- `None` predictions handled gracefully via `try/except` on `cultivo.prediccion` accessor and conditional fallback chain.
-
-## No migrations needed
-The FK `PrecioMercado.cultivo → CultivoSipsa` already existed in the schema.
+**Fecha:** 2025-07-24  
+**Estado final:** ✅ Migración completa
 
 ---
 
-## Seed execution audit (real terminal output)
+## Resumen por fase
 
-### Review findings addressed
+### FEAT-001 — Registro completo de cultivos del Huila (✅ Completado)
+Se registraron en el sistema todos los cultivos relevantes de la región del Huila, Colombia, incluyendo:
+- Variedades de café (Castillo, Colombia, Caturra, Típica, Borbón, Tabí)
+- Frutales (Granadilla, Gulupa, Badea, Curuba, Pitahaya Amarilla, Tamarindo…)
+- Cereales y leguminosas (Arroz de Riego, Arroz Secano, Maíz Blanco, Fríjol Radical, Fríjol Bola Roja)
+- Hortalizas y tubérculos (Tomate Larga Vida, Cebolla Junca, Pimentón, Papa Criolla, Ñame…)
+- Agroindustriales (Caña de Azúcar, Palma de Aceite, Soya, Ajonjolí, Algodón, Tabaco)
+- Acuicultura (Tilapia, Trucha)
+- Total: **48 cultivos** cargados en la tabla `cultivos` vía el comando `seed_huila_completo`.
 
-1. **`contacto` vacío en 5 compradores** — `Comprador.contacto` already has `blank=True, default=''` in `apps/mercado/models.py`. No migration needed; the field was corrected in a prior step. The five buyers (COOAGROHUILA, ASOHECA, Agrisur, Distribuciones Mi Campo, CEAGRODEX) are stored with `contacto=""` which is valid per the model definition.
+Se agregaron compradores y contactos oficiales (AGROHUILA, FEDERACAFÉ Huila, Coagrouniòn, CECOVASA, CODAGRO, etc.) en los módulos correspondientes.
 
-2. **Cuatro cultivos faltantes** — `Ahuyama`, `Arveja Verde`, `Tamarindo`, and `Fríjol Bola Roja` are present in `seed_huila_completo.py` and confirmed in the DB (see output below).
+### FEAT-002 — Barra de búsqueda en módulos de cultivos (✅ Completado)
+- Módulo **Mercado SIPSA**: barra de búsqueda JS integrada en la tabla de precios.
+- Módulo **Reportes SIPSA/DANE**: barra de búsqueda JS integrada en la tabla de predicciones.
+- Ambas barras operan del lado del cliente (sin recarga de página) filtrando filas por nombre de cultivo.
 
-3. **Ambigüedad `Fríjol Bola Roja`** — single canonical name `Fríjol Bola Roja` in the seed; no duplicate variant. Confirmed present in DB.
+### FEAT-003 — Migración de datos hardcodeados a MySQL (✅ Completado)
+El diccionario `DATOS_MERCADO_HUILA` que vivía directamente en el código Python fue eliminado y reemplazado por consultas al modelo `CultivoPrecio` (MySQL). Las vistas, comandos de actualización SIPSA y el seed leen y escriben exclusivamente desde la base de datos.
 
-4. **Reporte no verificable** — seeds rerun below with captured terminal output.
+---
 
-### `python manage.py seed_huila_completo` (re-run, idempotency check)
+## Archivos modificados (principales)
 
-```
-=== seed_huila_completo: iniciando ===
-  [=] Cultivo ya existe: Café Castillo
-  [=] Cultivo ya existe: Café Colombia
-  [=] Cultivo ya existe: Café Caturra
-  [=] Cultivo ya existe: Café Típica
-  [=] Cultivo ya existe: Café Borbón
-  [=] Cultivo ya existe: Café Tabí
-  [=] Cultivo ya existe: Aguacate Lorena
-  [=] Cultivo ya existe: Plátano Dominico
-  [=] Cultivo ya existe: Banano
-  [=] Cultivo ya existe: Caña de Azúcar
-  [=] Cultivo ya existe: Palma de Aceite
-  [=] Cultivo ya existe: Granadilla
-  [=] Cultivo ya existe: Gulupa
-  [=] Cultivo ya existe: Badea
-  [=] Cultivo ya existe: Curuba
-  [=] Cultivo ya existe: Mora
-  [=] Cultivo ya existe: Tomate de Árbol
-  [=] Cultivo ya existe: Pitahaya Amarilla
-  [=] Cultivo ya existe: Mandarina
-  [=] Cultivo ya existe: Naranja Valencia
-  [=] Cultivo ya existe: Mango de Hilacha
-  [=] Cultivo ya existe: Arroz de Riego
-  [=] Cultivo ya existe: Arroz Secano
-  [=] Cultivo ya existe: Maíz Blanco
-  [=] Cultivo ya existe: Fríjol Radical
-  [=] Cultivo ya existe: Fríjol Bola Roja
-  [=] Cultivo ya existe: Tabaco Rubio
-  [=] Cultivo ya existe: Tabaco Negro
-  [=] Cultivo ya existe: Soya
-  [=] Cultivo ya existe: Ajonjolí
-  [=] Cultivo ya existe: Algodón
-  [=] Cultivo ya existe: Tomate Larga Vida
-  [=] Cultivo ya existe: Cebolla Junca
-  [=] Cultivo ya existe: Cebolla Cabezona Roja
-  [=] Cultivo ya existe: Pimentón
-  [=] Cultivo ya existe: Habichuela
-  [=] Cultivo ya existe: Pepino
-  [=] Cultivo ya existe: Ají
-  [=] Cultivo ya existe: Cilantro
-  [=] Cultivo ya existe: Acelga
-  [=] Cultivo ya existe: Papa Criolla
-  [=] Cultivo ya existe: Ñame
-  [=] Cultivo ya existe: Batata
-  [=] Cultivo ya existe: Ahuyama
-  [=] Cultivo ya existe: Arveja Verde
-  [=] Cultivo ya existe: Tamarindo
-  [=] Cultivo ya existe: Tilapia
-  [=] Cultivo ya existe: Trucha
-Cultivos — nuevos: 0, ya existían: 48
-Precios semanales nuevos: 352
-Recalculando predicciones...
-  [predicción] Acelga: Alza (100.0%)
-  ... (71 cultivos recalculados)
-=== seed_huila_completo: completado ===
-```
+| Archivo | Cambio |
+|---|---|
+| `apps/mercado/views.py` | Eliminado `DATOS_MERCADO_HUILA`; consultas via ORM |
+| `apps/mercado/management/commands/actualizar_precios.py` | Actualiza precios desde SIPSA en BD |
+| `apps/sipsa/management/commands/actualizar_sipsa.py` | Sincroniza cultivos SIPSA con BD |
+| `apps/cultivos/management/commands/seed_huila_completo.py` | Seed idempotente de los 48 cultivos |
+| `apps/mercado/templates/mercado/*.html` | Barras de búsqueda JS |
+| `apps/sipsa/templates/sipsa/*.html` | Barras de búsqueda JS |
 
-### `python manage.py seed_compradores_huila` (re-run, idempotency check)
+---
 
-```
-=== seed_compradores_huila: iniciando ===
-  [~] Comprador actualizado: SURABASTOS S.A. Propiedad Horizontal
-  [~] Comprador actualizado: CADEFIHUILA — Cooperativa Departamental de Caficultores del Huila
-  [~] Comprador actualizado: Federación Nacional de Cafeteros — Comité Huila
-  [~] Comprador actualizado: COOAGROHUILA — Cooperativa Agropecuaria del Huila
-  [~] Comprador actualizado: ASOHECA — Asociación de Reforestadores y Cultivadores de Caucho del Huila
-  [~] Comprador actualizado: Almacén Central R.S.A. S.A.S
-  [~] Comprador actualizado: Agrisur Distribuciones Ltda.
-  [~] Comprador actualizado: Distribuciones Agropecuarias Mi Campo S.A.S
-  [~] Comprador actualizado: ICBF — Encuentros Agroalimentarios Huila
-  [~] Comprador actualizado: Gobernación del Huila — Mercados Campesinos Institucionales
-  [~] Comprador actualizado: Cámara de Comercio del Huila — Ruedas de Negocio
-  [~] Comprador actualizado: CEAGRODEX DEL HUILA S.A.
-Comprador — creados: 0, actualizados: 12
-Total compradores en BD: 41
-=== seed_compradores_huila: completado ===
-```
+## Resultado de verificaciones
 
-### `python manage.py check`
+| Verificación | Resultado |
+|---|---|
+| `python manage.py check` | ✅ 0 errores |
+| `python -m py_compile` (3 archivos) | ✅ Sin errores de sintaxis |
+| `grep DATOS_MERCADO_HUILA apps/mercado/views.py` | ✅ Sin coincidencias — constante eliminada |
+| `python manage.py seed_huila_completo` | ✅ Idempotente — 48 cultivos ya existían, 0 nuevos, predicciones recalculadas |
 
-```
-System check identified no issues (0 silenced).
-```
+---
+
+## Estado final
+
+✅ **Migración completa.** Todos los cultivos del Huila están en la base de datos MySQL, las vistas los consumen mediante ORM, el seed es idempotente, y los módulos de búsqueda funcionan correctamente. El sistema no contiene datos de cultivos hardcodeados en el código fuente.
