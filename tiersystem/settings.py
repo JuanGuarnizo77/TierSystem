@@ -1,28 +1,23 @@
 import os
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
 try:
     from dotenv import load_dotenv
-    load_dotenv(dotenv_path=BASE_DIR / '.env')
+    load_dotenv()
 except ImportError:
     pass
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True').lower() in ('true', '1', 't')
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
-if not SECRET_KEY:
-    if DEBUG:
-        SECRET_KEY = 'django-insecure-dummy-key-for-dev'
-    else:
-        from django.core.exceptions import ImproperlyConfigured
-        raise ImproperlyConfigured("SECRET_KEY environment variable is required in production.")
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dummy-key-for-dev')
 
-ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()]
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
+
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,tiersystem.pythonanywhere.com').split(',')
+CSRF_TRUSTED_ORIGINS = ['https://tiersystem.pythonanywhere.com']
 
 # Application definition
 INSTALLED_APPS = [
@@ -119,9 +114,9 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -159,23 +154,19 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
 }
 
-# Configuración de Correo (SMTP Gmail)
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-# REEMPLAZA ESTAS VARIABLES CON TUS CREDENCIALES REALES
+# Configuración de Correo
 _email_user = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_USER = _email_user
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 
-if _email_user and EMAIL_HOST_PASSWORD:
+if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
 else:
+    # Fallback para desarrollo: Imprime los correos (links y tokens) en la terminal de ejecución
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 DEFAULT_FROM_EMAIL = f'TierSystem Notificaciones <{_email_user}>' if _email_user else 'TierSystem Notificaciones <noreply@tiersystem.co>'
-
-SENSOR_API_KEY = os.getenv('SENSOR_API_KEY', 'tiersystem-sensor-key-dev' if DEBUG else '')
-if not SENSOR_API_KEY and not DEBUG:
-    from django.core.exceptions import ImproperlyConfigured
-    raise ImproperlyConfigured("SENSOR_API_KEY must be configured in production.")
+SENSOR_API_KEY = os.getenv('SENSOR_API_KEY', 'tiersystem-sensor-key-dev')
