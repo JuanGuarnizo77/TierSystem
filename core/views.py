@@ -32,11 +32,17 @@ def dashboard_agricultor(request):
 def catalogo_cultivos(request):
     if hasattr(request.user, 'perfil') and request.user.perfil.rol == 'AGRICULTOR':
         import json
-        from .cultivos_data import CULTIVOS_HUILA
+        from apps.ia_recomendaciones.models import CultivoIdeal
         
-        # Enviamos la lista entera en formato JSON para que JS la ponga en tarjetas
-        cultivos_json = json.dumps(CULTIVOS_HUILA)
-        return render(request, 'agricultor/cultivos.html', {'cultivos_json': cultivos_json})
+        # Consulta directa a la base de datos MySQL
+        cultivos_qs = CultivoIdeal.objects.filter(activo=True).order_by('nombre')
+        cultivos_data = [c.to_catalogo_dict() for c in cultivos_qs]
+        cultivos_json = json.dumps(cultivos_data)
+        return render(request, 'agricultor/cultivos.html', {
+            'cultivos': cultivos_qs,
+            'cultivos_json': cultivos_json,
+            'total_cultivos': len(cultivos_data)
+        })
     return redirect('home')
 
 @login_required(login_url='login')
@@ -458,23 +464,29 @@ def guardar_cultivo_admin(request):
                 
             cultivo.nombre = data.get('nombre')
             cultivo.descripcion = data.get('descripcion', '')
-            cultivo.humedad_min = float(data.get('humedad_min', 0))
-            cultivo.humedad_max = float(data.get('humedad_max', 0))
-            cultivo.temperatura_min = float(data.get('temperatura_min', 0))
-            cultivo.temperatura_max = float(data.get('temperatura_max', 0))
-            cultivo.conductividad_min = float(data.get('conductividad_min', 0))
-            cultivo.conductividad_max = float(data.get('conductividad_max', 0))
-            cultivo.ph_min = float(data.get('ph_min', 0))
-            cultivo.ph_max = float(data.get('ph_max', 0))
-            cultivo.nitrogeno_min = float(data.get('nitrogeno_min', 0))
-            cultivo.nitrogeno_max = float(data.get('nitrogeno_max', 0))
-            cultivo.fosforo_min = float(data.get('fosforo_min', 0))
-            cultivo.fosforo_max = float(data.get('fosforo_max', 0))
-            cultivo.potasio_min = float(data.get('potasio_min', 0))
-            cultivo.potasio_max = float(data.get('potasio_max', 0))
+            cultivo.categoria = data.get('categoria', cultivo.categoria or 'Frutal')
+            cultivo.clima = data.get('clima', cultivo.clima or 'Templado')
+            cultivo.icono = data.get('icono', cultivo.icono or 'fa-seedling')
+            cultivo.altitud_min = float(data.get('altitud_min', cultivo.altitud_min or 0))
+            cultivo.altitud_max = float(data.get('altitud_max', cultivo.altitud_max or 3000))
+            cultivo.humedad_min = float(data.get('humedad_min', cultivo.humedad_min or 0))
+            cultivo.humedad_max = float(data.get('humedad_max', cultivo.humedad_max or 0))
+            cultivo.temperatura_min = float(data.get('temperatura_min', cultivo.temperatura_min or 0))
+            cultivo.temperatura_max = float(data.get('temperatura_max', cultivo.temperatura_max or 0))
+            cultivo.conductividad_min = float(data.get('conductividad_min', cultivo.conductividad_min or 0))
+            cultivo.conductividad_max = float(data.get('conductividad_max', cultivo.conductividad_max or 0))
+            cultivo.ph_min = float(data.get('ph_min', cultivo.ph_min or 0))
+            cultivo.ph_max = float(data.get('ph_max', cultivo.ph_max or 0))
+            cultivo.nitrogeno_min = float(data.get('nitrogeno_min', cultivo.nitrogeno_min or 0))
+            cultivo.nitrogeno_max = float(data.get('nitrogeno_max', cultivo.nitrogeno_max or 0))
+            cultivo.fosforo_min = float(data.get('fosforo_min', cultivo.fosforo_min or 0))
+            cultivo.fosforo_max = float(data.get('fosforo_max', cultivo.fosforo_max or 0))
+            cultivo.potasio_min = float(data.get('potasio_min', cultivo.potasio_min or 0))
+            cultivo.potasio_max = float(data.get('potasio_max', cultivo.potasio_max or 0))
             
+            # Guardado definitivo en la tabla MySQL 'ia_recomendaciones_cultivoideal'
             cultivo.save()
-            return JsonResponse({'mensaje': 'Cultivo guardado correctamente'})
+            return JsonResponse({'mensaje': 'Cultivo guardado correctamente en la Base de Datos MySQL'})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
             

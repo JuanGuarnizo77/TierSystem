@@ -77,11 +77,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'tiersystem.wsgi.application'
 
 # Database
-# For development, use SQLite to avoid external DB dependency.
+# Conexión a MySQL (Laragon en puerto 3320 por defecto) o configurable vía .env
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.getenv('DB_NAME', 'tiersystem_db'),
+        'USER': os.getenv('DB_USER', 'root'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+        'PORT': os.getenv('DB_PORT', '3320'),
     }
 }
 

@@ -31,8 +31,14 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- SweetAlert2 (Local para soporte 100% Offline) -->
+    <script src="/static/js/sweetalert2.all.min.js"></script>
+    <script>
+        // Evitar que SweetAlert2 modifique la altura del body
+        if (typeof Swal !== 'undefined') {
+            window.Swal = Swal.mixin({ heightAuto: false });
+        }
+    </script>
     
     <!-- Script Dark Mode Prevención de Flash -->
     <script>
@@ -206,15 +212,38 @@
     <script>
         function confirmarLogout(e) {
             e.preventDefault();
+            if (typeof Swal === 'undefined') {
+                if (confirm('¿Cerrar sesión actual?')) {
+                    document.getElementById('logout-form').submit();
+                }
+                return;
+            }
+
+            const isDark = document.documentElement.classList.contains('dark');
+
             Swal.fire({
-                title: '\u00bfCerrar sesi\u00f3n?',
-                text: 'Se cerrar\u00e1 tu sesi\u00f3n actual.',
-                icon: 'question',
+                html: `
+                    <div class="flex flex-col items-center text-center pt-2">
+                        <div class="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-950/50 border border-red-100 dark:border-red-900/50 flex items-center justify-center text-red-500 mb-4 shadow-sm">
+                            <i class="fa-solid fa-right-from-bracket text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white font-heading">¿Cerrar sesión?</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-xs">Tu sesión actual finalizará y volverás a la pantalla de inicio.</p>
+                    </div>
+                `,
                 showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: 'S\u00ed, salir',
+                confirmButtonText: '<i class="fa-solid fa-arrow-right-from-bracket mr-1.5"></i> Sí, cerrar sesión',
                 cancelButtonText: 'Cancelar',
+                buttonsStyling: false,
+                customClass: {
+                    popup: 'rounded-3xl border border-gray-100 dark:border-gray-800 shadow-2xl p-6 bg-white dark:bg-gray-900',
+                    confirmButton: 'px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-red-600 hover:bg-red-700 shadow-md shadow-red-600/30 transition-all cursor-pointer',
+                    cancelButton: 'px-5 py-2.5 rounded-xl font-semibold text-sm text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all cursor-pointer mr-3',
+                    actions: 'flex items-center justify-center gap-3 mt-6 w-full'
+                },
+                background: isDark ? '#1e293b' : '#ffffff',
+                color: isDark ? '#f1f5f9' : '#0f172a',
+                backdrop: 'rgba(15, 23, 42, 0.7)'
             }).then((result) => {
                 if (result.isConfirmed) {
                     document.getElementById('logout-form').submit();

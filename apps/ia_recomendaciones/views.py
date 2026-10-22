@@ -11,17 +11,48 @@ try:
 except ImportError:
     genai = None
 
-def _guardar_diagnostico_solicitud(solicitud_id, diagnostico, h, t, c, ph, n, p, k):
-    """Helper que centraliza el guardado de RegistroAnalisis y cambio de estado."""
-    if not solicitud_id:
+def _guardar_recomendaciones_relacionales(registro, diagnostico):
+    """Guarda cada recomendación en la tabla relacional RecomendacionAnalisis en MySQL."""
+    if not diagnostico or not isinstance(diagnostico, dict):
         return
+    from apps.analisis.models import RecomendacionAnalisis
+    from apps.ia_recomendaciones.models import CultivoIdeal
+    
+    # Limpiar recomendaciones anteriores del mismo registro para evitar duplicados
+    registro.recomendaciones.all().delete()
+    
+    recs = diagnostico.get("recomendaciones", [])
+    for rec in recs:
+        nombre = rec.get("cultivo", "Cultivo")
+        nombre_limpio = nombre.split('(')[0].strip()
+        compat = float(rec.get("compatibilidad", 0.0))
+        desc = rec.get("descripcion", "")
+        plan = rec.get("plan_fertilizacion", "")
+        viabilidad = "Alta" if compat >= 80 else ("Media" if compat >= 60 else "Baja")
+        
+        cultivo_obj = CultivoIdeal.objects.filter(nombre__icontains=nombre_limpio).first()
+        RecomendacionAnalisis.objects.create(
+            analisis=registro,
+            cultivo=cultivo_obj,
+            nombre_cultivo=nombre,
+            porcentaje_compatibilidad=compat,
+            viabilidad=viabilidad,
+            descripcion=desc,
+            plan_fertilizacion=plan
+        )
+
+def _guardar_diagnostico_solicitud(solicitud_id, diagnostico, h, t, c, ph, n, p, k):
+    """Helper que centraliza el guardado de RegistroAnalisis y sus recomendaciones relacionales."""
+    if not solicitud_id:
+        return None
     from apps.solicitudes.models import SolicitudAnalisis
     from apps.analisis.models import RegistroAnalisis
     try:
         sol = SolicitudAnalisis.objects.get(id=solicitud_id)
     except SolicitudAnalisis.DoesNotExist:
-        return
-    RegistroAnalisis.objects.update_or_create(
+        return None
+        
+    registro, _ = RegistroAnalisis.objects.update_or_create(
         solicitud=sol,
         defaults={
             'humedad': h,
@@ -31,11 +62,15 @@ def _guardar_diagnostico_solicitud(solicitud_id, diagnostico, h, t, c, ph, n, p,
             'nitrogeno': n,
             'fosforo': p,
             'potasio': k,
-            'diagnostico_ia': json.dumps(diagnostico),
+            'diagnostico_ia': json.dumps(diagnostico) if isinstance(diagnostico, dict) else str(diagnostico),
         }
     )
     sol.estado = 'COMPLETADA'
     sol.save()
+    
+    # Guardado relacional en base de datos
+    _guardar_recomendaciones_relacionales(registro, diagnostico)
+    return registro
 
 
 def obtener_modelo_gemini():
@@ -120,27 +155,7 @@ def api_diagnosticar_ia(request):
             # Guardar historial si viene de una solicitud en modo mock
             solicitud_id = data.get("solicitud_id")
             if solicitud_id:
-                from apps.solicitudes.models import SolicitudAnalisis
-                from apps.analisis.models import RegistroAnalisis
-                try:
-                    sol = SolicitudAnalisis.objects.get(id=solicitud_id)
-                    RegistroAnalisis.objects.update_or_create(
-                        solicitud=sol,
-                        defaults={
-                            'humedad': h,
-                            'temperatura': t,
-                            'conductividad': c,
-                            'ph': ph,
-                            'nitrogeno': n,
-                            'fosforo': p,
-                            'potasio': k,
-                            'diagnostico_ia': json.dumps(mock_response)
-                        }
-                    )
-                    sol.estado = 'COMPLETADA'
-                    sol.save()
-                except SolicitudAnalisis.DoesNotExist:
-                    pass
+                _guardar_diagnostico_solicitud(solicitud_id, mock_response, h, t, c, ph, n, p, k)
 
             return JsonResponse({"estado": "ok", "diagnostico": mock_response})
             
@@ -187,30 +202,10 @@ Reglas estrictas de respuesta:
         
         resultado_json = json.loads(text.strip())
         
-        # Guardar historial si viene de una solicitud
+        # Guardar historial y recomendaciones relacionales en BD si viene de una solicitud
         solicitud_id = data.get("solicitud_id")
         if solicitud_id:
-            from apps.solicitudes.models import SolicitudAnalisis
-            from apps.analisis.models import RegistroAnalisis
-            try:
-                sol = SolicitudAnalisis.objects.get(id=solicitud_id)
-                RegistroAnalisis.objects.update_or_create(
-                    solicitud=sol,
-                    defaults={
-                        'humedad': h,
-                        'temperatura': t,
-                        'conductividad': c,
-                        'ph': ph,
-                        'nitrogeno': n,
-                        'fosforo': p,
-                        'potasio': k,
-                        'diagnostico_ia': json.dumps(resultado_json)
-                    }
-                )
-                sol.estado = 'COMPLETADA'
-                sol.save()
-            except SolicitudAnalisis.DoesNotExist:
-                pass
+            _guardar_diagnostico_solicitud(solicitud_id, resultado_json, h, t, c, ph, n, p, k)
         
         return JsonResponse({"estado": "ok", "diagnostico": resultado_json})
 
@@ -316,22 +311,17 @@ def api_compartir_resultado(request):
         datos = data.get("datos", {})
         diagnostico = data.get("diagnostico", {})
         
-        registro, created = RegistroAnalisis.objects.update_or_create(
-            solicitud=sol,
-            defaults={
-                'humedad': datos.get('humedad', 0),
-                'temperatura': datos.get('temperatura', 0),
-                'conductividad': datos.get('conductividad', 0),
-                'ph': datos.get('ph', 0),
-                'nitrogeno': datos.get('nitrogeno', 0),
-                'fosforo': datos.get('fosforo', 0),
-                'potasio': datos.get('potasio', 0),
-                'diagnostico_ia': json.dumps(diagnostico) if isinstance(diagnostico, dict) else str(diagnostico)
-            }
+        _guardar_diagnostico_solicitud(
+            solicitud_id,
+            diagnostico,
+            datos.get('humedad', 0),
+            datos.get('temperatura', 0),
+            datos.get('conductividad', 0),
+            datos.get('ph', 0),
+            datos.get('nitrogeno', 0),
+            datos.get('fosforo', 0),
+            datos.get('potasio', 0),
         )
-        
-        sol.estado = 'COMPLETADA'
-        sol.save()
         
         nombre_agri = sol.agricultor.get_full_name() or sol.agricultor.username
         return JsonResponse({
@@ -345,7 +335,7 @@ def api_compartir_resultado(request):
 @csrf_exempt
 def api_sincronizar_offline(request):
     """
-    HU-0032: Sincronización automática de análisis tomados en modo offline.
+    HU-0032: Sincronización automática de análisis tomados en modo offline a MySQL.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Solo POST permitido"}, status=405)
@@ -357,13 +347,14 @@ def api_sincronizar_offline(request):
             return JsonResponse({"estado": "ok", "sincronizados": 0, "mensaje": "No hay elementos para sincronizar"})
             
         from apps.solicitudes.models import SolicitudAnalisis
-        from apps.analisis.models import RegistroAnalisis
+        from apps.analisis.models import PuntoMuestreo
         
         sincronizados = 0
         for item in items:
             sol_id = item.get("solicitud_id")
             datos = item.get("datos", {})
             diagnostico = item.get("diagnostico", {})
+            puntos = item.get("puntos", [])
             
             if sol_id:
                 try:
@@ -371,21 +362,40 @@ def api_sincronizar_offline(request):
                     # Solo completar solicitudes en estado válido para evitar modificaciones indebidas
                     if sol.estado not in ('ASIGNADA', 'EN_PROCESO', 'COMPLETADA'):
                         continue
-                    RegistroAnalisis.objects.update_or_create(
-                        solicitud=sol,
-                        defaults={
-                            'humedad': datos.get('humedad', 0),
-                            'temperatura': datos.get('temperatura', 0),
-                            'conductividad': datos.get('conductividad', 0),
-                            'ph': datos.get('ph', 0),
-                            'nitrogeno': datos.get('nitrogeno', 0),
-                            'fosforo': datos.get('fosforo', 0),
-                            'potasio': datos.get('potasio', 0),
-                            'diagnostico_ia': json.dumps(diagnostico) if isinstance(diagnostico, dict) else str(diagnostico)
-                        }
+                        
+                    _guardar_diagnostico_solicitud(
+                        sol_id,
+                        diagnostico,
+                        datos.get('humedad', 0),
+                        datos.get('temperatura', 0),
+                        datos.get('conductividad', 0),
+                        datos.get('ph', 0),
+                        datos.get('nitrogeno', 0),
+                        datos.get('fosforo', 0),
+                        datos.get('potasio', 0),
                     )
-                    sol.estado = 'COMPLETADA'
-                    sol.save()
+                    
+                    # Sincronizar también puntos individuales en la tabla PuntoMuestreo si vienen
+                    for p_data in puntos:
+                        p_num = p_data.get("numero")
+                        if p_num:
+                            punto, _ = PuntoMuestreo.objects.get_or_create(solicitud=sol, numero=p_num)
+                            punto.humedad = p_data.get("humedad")
+                            punto.temperatura = p_data.get("temperatura")
+                            punto.conductividad = p_data.get("conductividad")
+                            punto.ph = p_data.get("ph")
+                            punto.nitrogeno = p_data.get("nitrogeno")
+                            punto.fosforo = p_data.get("fosforo")
+                            punto.potasio = p_data.get("potasio")
+                            if p_data.get("latitud") is not None:
+                                punto.latitud = p_data.get("latitud")
+                            if p_data.get("longitud") is not None:
+                                punto.longitud = p_data.get("longitud")
+                            if p_data.get("altitud") is not None:
+                                punto.altitud = p_data.get("altitud")
+                            punto.estado = 'TOMADO'
+                            punto.save()
+
                     sincronizados += 1
                 except SolicitudAnalisis.DoesNotExist:
                     continue
