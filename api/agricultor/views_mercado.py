@@ -9,7 +9,6 @@ from rest_framework.response import Response
 from api.permissions import IsAgricultor
 from apps.mercado.models import PrecioMercado
 from apps.mercado.views import (
-    DATOS_MERCADO_HUILA,
     _normalizar_tendencia,
     _get_compradores_for_cultivo,
 )
@@ -41,51 +40,24 @@ def precios_sipsa_view(request):
         estado = 'desactualizado'
         mensaje = "Sin datos recientes. Mostrando precios de referencia regional almacenados."
 
-    # Tabla de precios (BD primero, diccionario estático como respaldo)
-    nombres = list(dict.fromkeys(
-        list(DATOS_MERCADO_HUILA.keys()) +
-        list(PrecioMercado.objects.values_list('cultivo_nombre', flat=True).distinct())
-    ))
-
+    # Tabla de precios — sólo desde BD
     tabla = []
-    for nombre in nombres:
-        pm = PrecioMercado.objects.filter(cultivo_nombre=nombre).first()
-        if pm:
-            dias = (ahora - pm.ultima_actualizacion).days if pm.ultima_actualizacion else None
-            tabla.append({
-                'cultivo': pm.cultivo_nombre,
-                'precio_promedio': float(pm.precio_promedio),
-                'precio_local': float(pm.precio_local) if pm.precio_local else float(pm.precio_promedio),
-                'unidad': pm.unidad,
-                'tendencia': _normalizar_tendencia(pm.tendencia),
-                'variacion_porcentaje': pm.variacion_porcentaje,
-                'fuente': pm.fuente,
-                'ultima_actualizacion': timezone.localtime(pm.ultima_actualizacion).strftime("%d/%m/%Y")
-                if pm.ultima_actualizacion else '—',
-                'dias_desde_actualizacion': dias,
-                'compradores': _get_compradores_for_cultivo(pm.cultivo_nombre),
-                'historial': DATOS_MERCADO_HUILA.get(pm.cultivo_nombre, {}).get(
-                    'historial', [{'mes': 'Jun', 'precio': float(pm.precio_promedio)}]
-                ),
-            })
-        else:
-            d = DATOS_MERCADO_HUILA.get(nombre, {})
-            if d:
-                tabla.append({
-                    'cultivo': nombre,
-                    'precio_promedio': d.get('precio_promedio', 0),
-                    'precio_local': d.get('precio_local', d.get('precio_promedio', 0)),
-                    'unidad': d.get('unidad', 'kg'),
-                    'tendencia': _normalizar_tendencia(d.get('tendencia', 'Estable')),
-                    'variacion_porcentaje': float(
-                        str(d.get('variacion', '0%')).replace('%', '').replace('+', '')
-                    ),
-                    'fuente': d.get('fuente', 'SIPSA / DANE'),
-                    'ultima_actualizacion': '—',
-                    'dias_desde_actualizacion': None,
-                    'compradores': _get_compradores_for_cultivo(nombre),
-                    'historial': d.get('historial', []),
-                })
+    for pm in PrecioMercado.objects.order_by('cultivo_nombre'):
+        dias_desde = (ahora - pm.ultima_actualizacion).days if pm.ultima_actualizacion else None
+        tabla.append({
+            'cultivo': pm.cultivo_nombre,
+            'precio_promedio': float(pm.precio_promedio),
+            'precio_local': float(pm.precio_local) if pm.precio_local else float(pm.precio_promedio),
+            'unidad': pm.unidad,
+            'tendencia': _normalizar_tendencia(pm.tendencia),
+            'variacion_porcentaje': pm.variacion_porcentaje,
+            'fuente': pm.fuente,
+            'ultima_actualizacion': timezone.localtime(pm.ultima_actualizacion).strftime("%d/%m/%Y")
+            if pm.ultima_actualizacion else '—',
+            'dias_desde_actualizacion': dias_desde,
+            'compradores': _get_compradores_for_cultivo(pm.cultivo_nombre),
+            'historial': [{'mes': 'Ref.', 'precio': float(pm.precio_promedio)}],
+        })
 
     return Response({
         'estado_conexion': estado,
@@ -94,6 +66,20 @@ def precios_sipsa_view(request):
         'fecha_hoy': timezone.localtime(ahora).strftime("%d/%m/%Y"),
         'precios': tabla,
     })
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAgricultor])
+def actualizar_precios_view(request):
+    """POST /api/v1/agricultor/mercado/actualizar/ -> ejecuta el comando actualizar_precios."""
+    out = StringIO()
+    try:
+        call_command('actualizar_precios', stdout=out)
+        return Response({'status': 'ok', 'output': out.getvalue()})
+    except Exception as exc:
+        return Response({'status': 'error', 'error': str(exc)}, status=500)
+
 
 
 
