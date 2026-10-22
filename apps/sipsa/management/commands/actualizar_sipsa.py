@@ -26,8 +26,10 @@ APIS_DANE = [
     "https://www.datos.gov.co/resource/2hfu-fu5g.json",   # SIPSA abastecimiento
 ]
 
-# Precios de referencia fallback (COP/kg) — actualizados oct-2026 (DANE/SIPSA/FNC)
-FALLBACK_PRECIOS = {
+# Bootstrap fallback prices (COP/kg) — used ONLY when the DB is empty and no
+# PrecioMercado records exist yet (first-run / cold-start scenario).
+# Do NOT add business logic here; use _get_fallback_precio() instead.
+FALLBACK_PRECIOS_BOOTSTRAP = {
     "Papa Pastusa":       {"precio": 1900},
     "Tomate Chonto":      {"precio": 3000},
     "Cebolla Cabezona":   {"precio": 1200},
@@ -57,7 +59,77 @@ FALLBACK_PRECIOS = {
     "Pitahaya":           {"precio": 7500},
     "Gulupa":             {"precio": 5000},
     "Mora":               {"precio": 4500},
+    # ── Cultivos extendidos (catálogo completo ~71 cultivos) ──────────────
+    "Café Castillo":      {"precio": 16440},
+    "Café Colombia":      {"precio": 16440},
+    "Café Caturra":       {"precio": 16440},
+    "Banano":             {"precio": 800},
+    "Badea":              {"precio": 2800},
+    "Curuba":             {"precio": 2200},
+    "Tomate de Árbol":    {"precio": 2500},
+    "Tabaco Rubio":       {"precio": 4500},
+    "Tabaco Negro":       {"precio": 4200},
+    "Soya":               {"precio": 1800},
+    "Ajonjolí":           {"precio": 3500},
+    "Algodón":            {"precio": 2200},
+    "Pepino":             {"precio": 1200},
+    "Ají":                {"precio": 2500},
+    "Cilantro":           {"precio": 3000},
+    "Acelga":             {"precio": 1800},
+    "Ñame":               {"precio": 1200},
+    "Batata":             {"precio": 900},
+    "Tilapia":            {"precio": 8500},
+    "Trucha":             {"precio": 12000},
+    "Naranja Valencia":   {"precio": 1200},
+    "Mandarina":          {"precio": 1400},
+    "Pitahaya Amarilla":  {"precio": 7500},
 }
+
+
+# Precio por grupo — usado como segundo nivel de fallback cuando no hay
+# registro histórico en PrecioMercado para el cultivo.
+_PRECIOS_GRUPO = {
+    'frutas':     3000,
+    'hortalizas': 2000,
+    'granos':     1500,
+    'tuberculos': 1200,
+    'lacteos':    2500,
+    'carnes':     8000,
+    'pescados':   9000,
+    'otros':      1800,
+}
+
+
+def _get_fallback_precio(cultivo):
+    """
+    Devuelve un precio de referencia (COP/kg) para el cultivo dado.
+
+    Prioridad:
+      1. Último PrecioMercado disponible en BD (precio histórico real).
+      2. Precio genérico por grupo del cultivo.
+      3. Bootstrap hardcodeado (FALLBACK_PRECIOS_BOOTSTRAP).
+      4. Default universal 2000 COP/kg.
+    """
+    from apps.mercado.models import PrecioMercado  # import local para evitar ciclos
+
+    # 1. Último precio histórico real
+    ultimo = PrecioMercado.objects.filter(cultivo_nombre=cultivo.nombre).order_by('-fecha_creacion').first()
+    if ultimo:
+        return float(ultimo.precio_promedio)
+
+    # 2. Precio genérico por grupo
+    grupo = (cultivo.grupo or '').lower()
+    for key, precio in _PRECIOS_GRUPO.items():
+        if key in grupo:
+            return precio
+
+    # 3. Tabla bootstrap hardcodeada
+    entry = FALLBACK_PRECIOS_BOOTSTRAP.get(cultivo.nombre)
+    if entry:
+        return float(entry['precio'])
+
+    # 4. Default universal
+    return 2000.0
 
 MESES_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun',
             'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
@@ -161,19 +233,25 @@ class Command(BaseCommand):
 
         actualizados = self._intentar_apis_dane(actualizados)
 
-        # Fallback para cultivos no actualizados por las APIs
-        pendientes = [n for n in FALLBACK_PRECIOS if n not in actualizados]
-        if pendientes:
+        # Fallback dinámico para cultivos no actualizados por las APIs
+        cultivos_pendientes = CultivoSipsa.objects.filter(activo=True).exclude(nombre__in=actualizados)
+        if cultivos_pendientes.exists():
+            nombres_pendientes = [c.nombre for c in cultivos_pendientes]
             self.stdout.write(self.style.WARNING(
-                f"  Fallback estático para: {', '.join(pendientes)}"
+                f"  Fallback dinámico para: {', '.join(nombres_pendientes)}"
             ))
-            for nombre in pendientes:
-                datos = FALLBACK_PRECIOS[nombre]
-                self._guardar_precio(
-                    nombre, datos['precio'],
-                    "Referencia SIPSA/DANE (fallback)", ""
-                )
-                actualizados.add(nombre)
+            for cultivo in cultivos_pendientes:
+                try:
+                    precio = _get_fallback_precio(cultivo)
+                    self._guardar_precio(
+                        cultivo.nombre, precio,
+                        "Referencia SIPSA/DANE (fallback dinámico)", ""
+                    )
+                    actualizados.add(cultivo.nombre)
+                except Exception as exc:
+                    self.stdout.write(self.style.WARNING(
+                        f"  [fallback] Error en {cultivo.nombre}: {exc}"
+                    ))
 
         # Recalcular predicciones
         _recalcular_predicciones(self)
