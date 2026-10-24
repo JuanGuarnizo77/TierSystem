@@ -1,20 +1,24 @@
-from django.urls import path, include
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from django.urls import path
+
+from .views_dashboard import dashboard_view
+from .views_solicitudes import (
+    pendientes_view,
+    mis_tareas_view,
+    aceptar_view,
+    rechazar_view,
+)
+from .views_historial import historial_view, resultado_view
+from .views_muestreo import muestreo_view, sensor_view, guardar_punto_view
 
 urlpatterns = [
-    # Schema y documentación interactiva Swagger
-    path('schema/', SpectacularAPIView.as_view(), name='api_schema'),
-    path('docs/', SpectacularSwaggerView.as_view(url_name='api_schema'), name='api_docs'),
-
-    # Módulo de Autenticación JWT (login, refresh, me, registro, logout)
-    path('auth/', include('api.auth.urls')),
-
-    # Módulo de Agricultor (fincas, solicitudes y perfil)
-    path('agricultor/', include('api.agricultor.urls')),
-
-    # Módulo de Laboratorista (dashboard)
-    path('laboratorista/', include('api.laboratorista.urls')),
-
-    # Alias directo para compatibilidad con llamadas existentes (/api/v1/terrenos/, /api/v1/solicitudes/)
-    path('', include('api.agricultor.urls')),
+    path('dashboard/', dashboard_view, name='laboratorista_dashboard'),
+    path('solicitudes/pendientes/', pendientes_view, name='laboratorista_pendientes'),
+    path('solicitudes/mis-tareas/', mis_tareas_view, name='laboratorista_mis_tareas'),
+    path('solicitudes/<int:solicitud_id>/aceptar/', aceptar_view, name='laboratorista_aceptar'),
+    path('solicitudes/<int:solicitud_id>/rechazar/', rechazar_view, name='laboratorista_rechazar'),
+    path('historial/', historial_view, name='laboratorista_historial'),
+    path('resultados/<int:solicitud_id>/', resultado_view, name='laboratorista_resultado'),
+    path('muestreo/sensor/', sensor_view, name='laboratorista_sensor'),
+    path('muestreo/<int:solicitud_id>/', muestreo_view, name='laboratorista_muestreo'),
+    path('muestreo/puntos/<int:punto_id>/guardar/', guardar_punto_view, name='laboratorista_guardar_punto'),
 ]
