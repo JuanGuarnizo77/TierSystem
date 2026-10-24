@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from .models import LecturaSensor
 
 @csrf_exempt
@@ -104,6 +105,7 @@ def captura_estable(request):
         "datos": datos_estables
     })
 
+@login_required(login_url='login')
 @csrf_exempt
 def guardar_punto(request, punto_id):
     if request.method == "POST":
@@ -111,7 +113,11 @@ def guardar_punto(request, punto_id):
         from django.utils import timezone
         try:
             datos = json.loads(request.body)
-            punto = PuntoMuestreo.objects.get(id=punto_id)
+            # Verificar que el punto pertenece a una solicitud asignada a este laboratorista
+            punto = PuntoMuestreo.objects.get(
+                id=punto_id,
+                solicitud__laboratorista_asignado=request.user
+            )
             punto.humedad = datos.get("humedad")
             punto.temperatura = datos.get("temperatura")
             punto.conductividad = datos.get("conductividad")

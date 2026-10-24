@@ -89,6 +89,7 @@
                     <th class="p-4 font-semibold">Precio Local</th>
                     <th class="p-4 font-semibold">Unidad</th>
                     <th class="p-4 font-semibold">Tendencia</th>
+                    <th class="p-4 font-semibold">Confianza</th>
                     <th class="p-4 font-semibold">Variación %</th>
                     <th class="p-4 font-semibold">Fuente</th>
                     <th class="p-4 font-semibold">Actualizado</th>
@@ -142,6 +143,17 @@
                         {% endif %}
                     </td>
 
+                    {# Confianza predicción #}
+                    <td class="p-4">
+                        {% if item.confianza is not None %}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                                <i class="fa-solid fa-brain text-[10px]"></i> {{item.confianza|floatformat:0}}%
+                            </span>
+                        {% else %}
+                            <span class="text-xs text-gray-300 dark:text-gray-600">—</span>
+                        {% endif %}
+                    </td>
+
                     {# Variación % #}
                     <td class="p-4 font-mono font-semibold
                         {% if item.variacion_porcentaje > 0 %}text-green-600 dark:text-green-400
@@ -183,7 +195,7 @@
 
                 {# ── Panel expandible ── #}
                 <tr id="detalle-{{ item.cultivo|slugify }}" class="hidden">
-                    <td colspan="8" class="p-0 border-b border-gray-100 dark:border-gray-700">
+                    <td colspan="9" class="p-0 border-b border-gray-100 dark:border-gray-700">
                         <div class="bg-gray-50 dark:bg-gray-800/60 px-6 py-5 grid grid-cols-1 md:grid-cols-2 gap-6">
 
                             {# Historial en barras CSS #}
@@ -285,23 +297,32 @@
                                 {% endif %}
                             </div>
 
+                            {# Predicción SIPSA #}
+                            {% if item.detalle_prediccion %}
+                            <div class="col-span-full">
+                                <h4 class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
+                                    <i class="fa-solid fa-robot text-primary mr-1"></i> Predicción SIPSA
+                                </h4>
+                                <p class="text-xs text-gray-600 dark:text-gray-300 bg-blue-50 dark:bg-blue-900/20 rounded-lg px-3 py-2 border border-blue-100 dark:border-blue-800">
+                                    {{item.detalle_prediccion}}
+                                </p>
+                            </div>
+                            {% endif %}
+
                         </div>
                     </td>
                 </tr>
 
                 {% empty %}
                 <tr>
-                    <td colspan="8" class="p-10 text-center text-gray-400 dark:text-gray-500">
+                    <td colspan="9" class="p-10 text-center text-gray-400 dark:text-gray-500">
                         <i class="fa-solid fa-circle-info text-2xl mb-2 block"></i>
                         No se encontraron datos de precios en este momento.
                     </td>
                 </tr>
                 {% endfor %}
-                {# Nota: esta fila es controlada por JS de búsqueda. Solo se activa cuando precios_tabla
-                   tiene elementos pero ninguno coincide con el término. Si se elimina el bloque empty de
-                   arriba, ambos mensajes podrían mostrarse simultáneamente — mantenerlos sincronizados. #}
                 <tr id="sinResultadosPrecio" style="display:none;">
-                    <td colspan="8" class="p-8 text-center text-gray-400 dark:text-gray-500 text-sm italic">
+                    <td colspan="9" class="p-8 text-center text-gray-400 dark:text-gray-500 text-sm italic">
                         <i class="fa-solid fa-magnifying-glass-minus text-2xl mb-2 block"></i>
                         No se encontraron cultivos que coincidan con la búsqueda.
                     </td>
