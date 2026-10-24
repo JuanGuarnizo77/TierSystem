@@ -437,17 +437,30 @@ def _evaluar_parametros_agronomicos(analisis_obj, cultivo_nombre):
 @login_required(login_url='login')
 def resultado_detalle_agricultor(request, solicitud_id):
     """
-    US-0028, US-0029, US-0030: Pantalla de resultado completo de análisis del Agricultor.
+    US-0028, US-0029, US-0030: Pantalla de resultado completo de análisis del suelo.
+    Accesible para el Agricultor dueño, Laboratoristas y Administradores.
     """
-    if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
+    if not hasattr(request.user, 'perfil'):
         return redirect('home')
         
-    solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id, agricultor=request.user)
+    rol = request.user.perfil.rol
+    if rol == 'AGRICULTOR':
+        solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id, agricultor=request.user)
+        base_template = 'agricultor/base_dashboard.html'
+    elif rol == 'LABORATORISTA':
+        solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id)
+        base_template = 'laboratorista/base_dashboard.html'
+    elif rol == 'ADMIN':
+        solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id)
+        base_template = 'admin/base_admin.html'
+    else:
+        return redirect('home')
     
     if not hasattr(solicitud, 'analisis_resultado'):
         return render(request, 'agricultor/resultado_detalle.html', {
             'solicitud': solicitud,
-            'analisis_pendiente': True
+            'analisis_pendiente': True,
+            'base_template': base_template,
         })
         
     analisis = solicitud.analisis_resultado
@@ -457,7 +470,8 @@ def resultado_detalle_agricultor(request, solicitud_id):
         'solicitud': solicitud,
         'analisis': analisis,
         'evaluacion': evaluacion,
-        'analisis_pendiente': False
+        'analisis_pendiente': False,
+        'base_template': base_template,
     }
     return render(request, 'agricultor/resultado_detalle.html', context)
 
@@ -743,13 +757,21 @@ def exportar_historial_excel(request):
 def exportar_analisis_individual_pdf(request, solicitud_id):
     """
     US-0012: Exporta la ficha técnica y certificado de un análisis individual.
+    Permitido para el agricultor dueño, laboratoristas y administradores.
     """
-    if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
+    if not hasattr(request.user, 'perfil'):
         return redirect('home')
         
-    solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id, agricultor=request.user)
+    rol = request.user.perfil.rol
+    if rol == 'AGRICULTOR':
+        solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id, agricultor=request.user)
+    elif rol in ['LABORATORISTA', 'ADMIN']:
+        solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id)
+    else:
+        return redirect('home')
+        
     if not hasattr(solicitud, 'analisis_resultado'):
-        return redirect('solicitudes_agricultor:mis_solicitudes')
+        return redirect('home')
         
     from reportlab.pdfgen import canvas
     from reportlab.lib.pagesizes import letter
@@ -777,7 +799,7 @@ def exportar_analisis_individual_pdf(request, solicitud_id):
     p.drawString(40, 690, f"Solicitud #{solicitud.id} — Cultivo Objetivo: {solicitud.cultivo_deseado}")
     
     p.setFont("Helvetica", 10)
-    p.drawString(40, 670, f"Agricultor: {request.user.get_full_name() or request.user.username} | Finca: {solicitud.terreno.nombre} ({solicitud.terreno.hectareas} ha)")
+    p.drawString(40, 670, f"Agricultor: {solicitud.agricultor.get_full_name() or solicitud.agricultor.username} | Finca: {solicitud.terreno.nombre} ({solicitud.terreno.hectareas} ha)")
     p.drawString(40, 655, f"Fecha: {solicitud.fecha_solicitud.strftime('%d/%m/%Y')} | Compatibilidad Calculada: {ev['compatibilidad']}% ({ev['nivel_compatibilidad']})")
     
     # Tabla Parámetros
@@ -825,13 +847,21 @@ def exportar_analisis_individual_pdf(request, solicitud_id):
 def exportar_analisis_individual_excel(request, solicitud_id):
     """
     US-0012: Exporta la ficha técnica de un análisis individual en formato Excel (.xlsx).
+    Permitido para el agricultor dueño, laboratoristas y administradores.
     """
-    if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
+    if not hasattr(request.user, 'perfil'):
         return redirect('home')
 
-    solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id, agricultor=request.user)
+    rol = request.user.perfil.rol
+    if rol == 'AGRICULTOR':
+        solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id, agricultor=request.user)
+    elif rol in ['LABORATORISTA', 'ADMIN']:
+        solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id)
+    else:
+        return redirect('home')
+
     if not hasattr(solicitud, 'analisis_resultado'):
-        return redirect('solicitudes_agricultor:mis_solicitudes')
+        return redirect('home')
 
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment
