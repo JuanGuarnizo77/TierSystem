@@ -221,36 +221,42 @@ def _evaluar_parametros_agronomicos(analisis_obj, cultivo_nombre):
     rangos ideales, barras porcentuales y recomendaciones específicas.
     """
     # Buscar cultivo en catálogo maestro
-    cultivo_ideal = Cultivo.objects.filter(nombre__icontains=cultivo_nombre).first()
+    if hasattr(cultivo_nombre, 'nombre'):
+        cultivo_ideal = cultivo_nombre
+    elif cultivo_nombre:
+        cultivo_ideal = Cultivo.objects.filter(nombre__icontains=str(cultivo_nombre)).first()
+    else:
+        cultivo_ideal = Cultivo.objects.first()
+
     if not cultivo_ideal:
         cultivo_ideal = Cultivo.objects.first() # Fallback
 
-    # Valores ideales por defecto si no existen
+    # Valores ideales convertidos estrictamente a float para evitar TypeError con Decimal
     c_ideal = {
-        'ph_min': getattr(cultivo_ideal, 'ph_min', 5.8),
-        'ph_max': getattr(cultivo_ideal, 'ph_max', 7.0),
-        'n_min': getattr(cultivo_ideal, 'nitrogeno_min', 30.0),
-        'n_max': getattr(cultivo_ideal, 'nitrogeno_max', 50.0),
-        'p_min': getattr(cultivo_ideal, 'fosforo_min', 20.0),
-        'p_max': getattr(cultivo_ideal, 'fosforo_max', 40.0),
-        'k_min': getattr(cultivo_ideal, 'potasio_min', 100.0),
-        'k_max': getattr(cultivo_ideal, 'potasio_max', 180.0),
-        'hum_min': getattr(cultivo_ideal, 'humedad_min', 50.0),
-        'hum_max': getattr(cultivo_ideal, 'humedad_max', 70.0),
-        'ce_min': getattr(cultivo_ideal, 'conductividad_min', 0.5),
-        'ce_max': getattr(cultivo_ideal, 'conductividad_max', 1.5),
-        'temp_min': getattr(cultivo_ideal, 'temperatura_min', 18.0),
-        'temp_max': getattr(cultivo_ideal, 'temperatura_max', 30.0),
+        'ph_min': float(getattr(cultivo_ideal, 'ph_min', 5.8) or 5.8),
+        'ph_max': float(getattr(cultivo_ideal, 'ph_max', 7.0) or 7.0),
+        'n_min': float(getattr(cultivo_ideal, 'nitrogeno_min', 30.0) or 30.0),
+        'n_max': float(getattr(cultivo_ideal, 'nitrogeno_max', 50.0) or 50.0),
+        'p_min': float(getattr(cultivo_ideal, 'fosforo_min', 20.0) or 20.0),
+        'p_max': float(getattr(cultivo_ideal, 'fosforo_max', 40.0) or 40.0),
+        'k_min': float(getattr(cultivo_ideal, 'potasio_min', 100.0) or 100.0),
+        'k_max': float(getattr(cultivo_ideal, 'potasio_max', 180.0) or 180.0),
+        'hum_min': float(getattr(cultivo_ideal, 'humedad_min', 50.0) or 50.0),
+        'hum_max': float(getattr(cultivo_ideal, 'humedad_max', 70.0) or 70.0),
+        'ce_min': float(getattr(cultivo_ideal, 'conductividad_min', 0.5) or 0.5),
+        'ce_max': float(getattr(cultivo_ideal, 'conductividad_max', 1.5) or 1.5),
+        'temp_min': float(getattr(cultivo_ideal, 'temperatura_min', 18.0) or 18.0),
+        'temp_max': float(getattr(cultivo_ideal, 'temperatura_max', 30.0) or 30.0),
     }
 
     medidos = {
-        'ph': float(analisis_obj.ph),
-        'n': float(analisis_obj.nitrogeno),
-        'p': float(analisis_obj.fosforo),
-        'k': float(analisis_obj.potasio),
-        'hum': float(analisis_obj.humedad),
-        'ce': float(analisis_obj.conductividad),
-        'temp': float(analisis_obj.temperatura),
+        'ph': float(analisis_obj.ph or 0),
+        'n': float(analisis_obj.nitrogeno or 0),
+        'p': float(analisis_obj.fosforo or 0),
+        'k': float(analisis_obj.potasio or 0),
+        'hum': float(analisis_obj.humedad or 0),
+        'ce': float(analisis_obj.conductividad or 0),
+        'temp': float(analisis_obj.temperatura or 0),
     }
 
     params = []
@@ -260,11 +266,15 @@ def _evaluar_parametros_agronomicos(analisis_obj, cultivo_nombre):
     # Evaluador por parámetro
     def procesar(nombre, med, v_min, v_max, unidad, escala_max, consejo_def, consejo_exc, ganancia_def, ganancia_exc):
         nonlocal optimos_count
+        med = float(med or 0)
+        v_min = float(v_min or 0)
+        v_max = float(v_max or 0)
+        diff_range = v_max - v_min
         if med < v_min:
             estado = 'Deficiente'
             clase_estado = 'pill-amber'
             barra_clase = 'bar-amber'
-            pct = max(10, min(100, int((med / v_max) * 80)))
+            pct = max(10, min(100, int((med / max(v_max, 1.0)) * 80)))
             recomendaciones.append({
                 'parametro': nombre,
                 'tipo': 'Deficiente',
@@ -292,8 +302,9 @@ def _evaluar_parametros_agronomicos(analisis_obj, cultivo_nombre):
             estado = 'Óptimo'
             clase_estado = 'pill-green'
             barra_clase = 'bar-green'
-            pct = max(20, min(100, int(((med - v_min) / (v_max - v_min + 0.001)) * 40 + 50)))
+            pct = max(20, min(100, int(((med - v_min) / (diff_range if diff_range > 0 else 1.0)) * 40 + 50)))
             optimos_count += 1
+
 
         params.append({
             'nombre': nombre,
