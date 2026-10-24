@@ -30,6 +30,7 @@ urlpatterns = [
     path('agricultor/solicitudes/', include('apps.solicitudes.urls_agricultor')),
     path('agricultor/sipsa/', include('apps.sipsa.urls')),
     path('mercado/', include('apps.mercado.urls')),
+    path('cultivos/', include('apps.cultivos.urls')),
     # Vista principal (PWA)
     path('', include('core.urls')),
 ]

@@ -7,7 +7,8 @@ from django.utils.html import strip_tags
 from django.conf import settings
 from .models import SolicitudAnalisis
 from apps.analisis.models import RegistroAnalisis
-from apps.ia_recomendaciones.models import CultivoIdeal, ConfiguracionGlobal
+from apps.cultivos.models import Cultivo
+from apps.ia_recomendaciones.models import ConfiguracionGlobal
 from datetime import datetime
 import json
 import io
@@ -132,7 +133,7 @@ def mis_solicitudes_agricultor(request):
     terrenos = Terreno.objects.filter(agricultor=request.user)
     
     # Lista de cultivos para el selector
-    cultivos = CultivoIdeal.objects.all().order_by('nombre')
+    cultivos = Cultivo.objects.filter(activo=True).order_by('nombre')
     
     context = {
         'solicitudes': solicitudes,
@@ -173,14 +174,15 @@ def crear_solicitud(request):
         from apps.terrenos.models import Terreno
         try:
             terreno = Terreno.objects.get(id=terreno_id, agricultor=request.user)
-            solicitud = SolicitudAnalisis.objects.create(
+            solicitud = SolicitudAnalisis(
                 agricultor=request.user,
                 terreno=terreno,
-                cultivo_deseado=cultivo_deseado,
                 modalidad=modalidad,
                 notas_agricultor=notas,
                 estado='PENDIENTE'
             )
+            solicitud.cultivo_deseado = cultivo_deseado
+            solicitud.save()
             return JsonResponse({
                 'mensaje': f'Solicitud #{solicitud.id} creada exitosamente. Tu solicitud está en estado Pendiente para atención del Laboratorista.'
             })
@@ -218,10 +220,10 @@ def _evaluar_parametros_agronomicos(analisis_obj, cultivo_nombre):
     Función utilitaria que calcula el estado de los 7 parámetros,
     rangos ideales, barras porcentuales y recomendaciones específicas.
     """
-    # Buscar cultivo ideal en BD
-    cultivo_ideal = CultivoIdeal.objects.filter(nombre__icontains=cultivo_nombre).first()
+    # Buscar cultivo en catálogo maestro
+    cultivo_ideal = Cultivo.objects.filter(nombre__icontains=cultivo_nombre).first()
     if not cultivo_ideal:
-        cultivo_ideal = CultivoIdeal.objects.first() # Fallback
+        cultivo_ideal = Cultivo.objects.first() # Fallback
 
     # Valores ideales por defecto si no existen
     c_ideal = {

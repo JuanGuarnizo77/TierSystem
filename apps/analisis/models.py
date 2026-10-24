@@ -53,7 +53,7 @@ class PuntoMuestreo(models.Model):
 
 class RecomendacionAnalisis(models.Model):
     analisis = models.ForeignKey(RegistroAnalisis, on_delete=models.CASCADE, related_name='recomendaciones')
-    cultivo = models.ForeignKey('ia_recomendaciones.CultivoIdeal', on_delete=models.SET_NULL, null=True, blank=True, related_name='recomendaciones_analisis')
+    cultivo = models.ForeignKey('cultivos.Cultivo', on_delete=models.SET_NULL, null=True, blank=True, related_name='recomendaciones_analisis')
     nombre_cultivo = models.CharField(max_length=120)
     porcentaje_compatibilidad = models.FloatField(default=0.0)
     viabilidad = models.CharField(max_length=50, default='Alta', help_text="Alta, Media, Baja")

@@ -32,10 +32,10 @@ def dashboard_agricultor(request):
 def catalogo_cultivos(request):
     if hasattr(request.user, 'perfil') and request.user.perfil.rol == 'AGRICULTOR':
         import json
-        from apps.ia_recomendaciones.models import CultivoIdeal
+        from apps.cultivos.models import Cultivo
         
-        # Consulta directa a la base de datos MySQL
-        cultivos_qs = CultivoIdeal.objects.filter(activo=True).order_by('nombre')
+        # Consulta directa a la base de datos MySQL tabla cultivos_cultivo
+        cultivos_qs = Cultivo.objects.filter(activo=True).order_by('nombre')
         cultivos_data = [c.to_catalogo_dict() for c in cultivos_qs]
         cultivos_json = json.dumps(cultivos_data)
         return render(request, 'agricultor/cultivos.html', {
@@ -293,7 +293,7 @@ def supervision_analisis(request):
         return redirect('home')
         
     from apps.analisis.models import RegistroAnalisis
-    from apps.ia_recomendaciones.models import CultivoIdeal
+    from apps.cultivos.models import Cultivo
     from django.contrib.auth.models import User
     
     analisis = RegistroAnalisis.objects.all().order_by('-fecha_analisis')
@@ -307,14 +307,14 @@ def supervision_analisis(request):
     if usuario_id:
         analisis = analisis.filter(solicitud__agricultor_id=usuario_id)
     if cultivo_nombre:
-        analisis = analisis.filter(solicitud__cultivo_deseado__icontains=cultivo_nombre)
+        analisis = analisis.filter(solicitud__cultivo_deseado_ref__nombre__icontains=cultivo_nombre)
     if fecha_inicio:
         analisis = analisis.filter(fecha_analisis__gte=fecha_inicio)
     if fecha_fin:
         analisis = analisis.filter(fecha_analisis__lte=fecha_fin)
         
     agricultores = User.objects.filter(perfil__rol='AGRICULTOR')
-    cultivos = CultivoIdeal.objects.all()
+    cultivos = Cultivo.objects.filter(activo=True).order_by('nombre')
     
     context = {
         'analisis': analisis,
@@ -436,8 +436,8 @@ def gestion_cultivos_admin(request):
     if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'ADMIN':
         return redirect('home')
         
-    from apps.ia_recomendaciones.models import CultivoIdeal
-    cultivos = CultivoIdeal.objects.all().order_by('nombre')
+    from apps.cultivos.models import Cultivo
+    cultivos = Cultivo.objects.filter(activo=True).order_by('nombre')
     
     return render(request, 'admin/cultivos.html', {'cultivos': cultivos})
 
@@ -449,7 +449,7 @@ def guardar_cultivo_admin(request):
         
     if request.method == 'POST':
         from django.http import JsonResponse
-        from apps.ia_recomendaciones.models import CultivoIdeal
+        from apps.cultivos.models import Cultivo
         import json
         
         try:
@@ -458,9 +458,9 @@ def guardar_cultivo_admin(request):
             
             # Crear o actualizar
             if cultivo_id:
-                cultivo = CultivoIdeal.objects.get(id=cultivo_id)
+                cultivo = Cultivo.objects.get(id=cultivo_id)
             else:
-                cultivo = CultivoIdeal()
+                cultivo = Cultivo()
                 
             cultivo.nombre = data.get('nombre')
             cultivo.descripcion = data.get('descripcion', '')
@@ -484,9 +484,9 @@ def guardar_cultivo_admin(request):
             cultivo.potasio_min = float(data.get('potasio_min', cultivo.potasio_min or 0))
             cultivo.potasio_max = float(data.get('potasio_max', cultivo.potasio_max or 0))
             
-            # Guardado definitivo en la tabla MySQL 'ia_recomendaciones_cultivoideal'
+            # Guardado definitivo en la tabla maestra MySQL 'cultivos_cultivo'
             cultivo.save()
-            return JsonResponse({'mensaje': 'Cultivo guardado correctamente en la Base de Datos MySQL'})
+            return JsonResponse({'mensaje': 'Cultivo guardado correctamente en la Base de Datos MySQL (cultivos_cultivo)'})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
             
@@ -501,13 +501,13 @@ def eliminar_cultivo_admin(request, cultivo_id):
         
     if request.method == 'POST':
         from django.http import JsonResponse
-        from apps.ia_recomendaciones.models import CultivoIdeal
+        from apps.cultivos.models import Cultivo
         
         try:
-            cultivo = CultivoIdeal.objects.get(id=cultivo_id)
+            cultivo = Cultivo.objects.get(id=cultivo_id)
             cultivo.delete()
             return JsonResponse({'mensaje': 'Cultivo eliminado permanentemente'})
-        except CultivoIdeal.DoesNotExist:
+        except Cultivo.DoesNotExist:
             return JsonResponse({'error': 'Cultivo no encontrado'}, status=404)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)

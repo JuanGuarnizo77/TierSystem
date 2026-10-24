@@ -35,6 +35,7 @@ INSTALLED_APPS = [
 
     # Local apps
     'api',
+    'apps.cultivos',
     'apps.usuarios',
     'apps.terrenos',
     'apps.solicitudes',

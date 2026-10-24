@@ -1,24 +1,41 @@
 import json
+from types import SimpleNamespace
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse
 from django.core.management import call_command
 from io import StringIO
 
-from .models import CultivoSipsa, PrecioSemanal, PrediccionPrecio
+from apps.cultivos.models import Cultivo
+from .models import PrecioSemanal
+from .prediccion import calcular_prediccion
+
+
+def _obtener_prediccion_cultivo(precios_hist):
+    """Calcula la predicción dinámica de tendencia a partir de la serie de precios."""
+    if not precios_hist or len(precios_hist) < 3:
+        return None
+    valores = [float(p.precio_kg) for p in precios_hist]
+    pred = calcular_prediccion(valores)
+    return SimpleNamespace(
+        tendencia_predicha=pred.get('tendencia', 'Estable'),
+        confianza_pct=pred.get('confianza_pct', 0.0),
+        precio_estimado=pred.get('precio_estimado'),
+        variacion_estimada_pct=pred.get('variacion_pct', 0.0),
+        semanas_usadas=pred.get('semanas_usadas', len(valores)),
+    )
 
 
 @login_required
 def dashboard(request):
-    """Vista principal: tabla con todos los cultivos, último precio y predicción."""
-    cultivos = CultivoSipsa.objects.filter(activo=True).prefetch_related(
-        'precios_semanales', 'prediccion'
-    )
+    """Vista principal: tabla con todos los cultivos, último precio y predicción calculada al vuelo."""
+    cultivos = Cultivo.objects.filter(activo=True).prefetch_related('precios_semanales')
 
     tabla = []
     for c in cultivos:
-        ultimo = c.precios_semanales.order_by('-fecha_semana').first()
-        pred = getattr(c, 'prediccion', None)
+        precios_hist = list(c.precios_semanales.order_by('fecha_semana'))
+        ultimo = precios_hist[-1] if precios_hist else None
+        pred = _obtener_prediccion_cultivo(precios_hist)
         tabla.append({
             'cultivo': c,
             'ultimo_precio': ultimo,
@@ -38,19 +55,18 @@ def dashboard(request):
 
 @login_required
 def detalle_cultivo(request, cultivo_id):
-    """Detalle: serie histórica completa + gráfica + predicción."""
-    cultivo = get_object_or_404(CultivoSipsa, pk=cultivo_id, activo=True)
-    precios = cultivo.precios_semanales.order_by('fecha_semana')
-    pred = getattr(cultivo, 'prediccion', None)
+    """Detalle: serie histórica completa + gráfica + predicción dinámica."""
+    cultivo = get_object_or_404(Cultivo, pk=cultivo_id, activo=True)
+    precios_qs = cultivo.precios_semanales.order_by('fecha_semana')
+    precios_list = list(precios_qs)
+    pred = _obtener_prediccion_cultivo(precios_list)
 
-    # Serializar con json.dumps para garantizar JSON válido en Chart.js
-    # (evita que Django use repr() de Python con comillas simples)
-    labels = [p.semana_label for p in precios]
-    valores = [float(p.precio_kg) for p in precios]
+    labels = [p.semana_label for p in precios_list]
+    valores = [float(p.precio_kg) for p in precios_list]
 
     return render(request, 'sipsa/detalle_cultivo.html', {
         'cultivo': cultivo,
-        'precios': precios,
+        'precios': precios_list,
         'prediccion': pred,
         'chart_labels': json.dumps(labels),
         'chart_valores': json.dumps(valores),
@@ -60,20 +76,12 @@ def detalle_cultivo(request, cultivo_id):
 @login_required
 def api_json(request, cultivo_id):
     """
-    Devuelve JSON con la serie histórica de PrecioSemanal y la PrediccionPrecio
-    del cultivo indicado. Consumido por Chart.js en detalle_cultivo.html y por
-    clientes externos que quieran los datos brutos.
-
-    GET /agricultor/sipsa/cultivo/<id>/api/
-    Respuesta:
-    {
-      "cultivo": {"id": 1, "nombre": "...", "unidad": "kg"},
-      "precios": [{"semana": "Sem 40-2026", "fecha": "2026-09-28", "precio_kg": 2650.0, "precio_local": 2570.5}, ...],
-      "prediccion": {"tendencia": "Baja", "confianza_pct": 100.0, "precio_estimado": 2230.0, "variacion_estimada_pct": -1.33, "semanas_usadas": 8} | null
-    }
+    Devuelve JSON con la serie histórica de PrecioSemanal y la predicción dinámica
+    calculada del cultivo indicado.
     """
-    cultivo = get_object_or_404(CultivoSipsa, pk=cultivo_id, activo=True)
+    cultivo = get_object_or_404(Cultivo, pk=cultivo_id, activo=True)
     precios_qs = cultivo.precios_semanales.order_by('fecha_semana')
+    precios_list = list(precios_qs)
 
     precios_data = [
         {
@@ -82,10 +90,10 @@ def api_json(request, cultivo_id):
             'precio_kg': float(p.precio_kg),
             'precio_local': float(p.precio_local) if p.precio_local is not None else None,
         }
-        for p in precios_qs
+        for p in precios_list
     ]
 
-    pred = getattr(cultivo, 'prediccion', None)
+    pred = _obtener_prediccion_cultivo(precios_list)
     prediccion_data = None
     if pred:
         prediccion_data = {
@@ -100,7 +108,7 @@ def api_json(request, cultivo_id):
         'cultivo': {
             'id': cultivo.pk,
             'nombre': cultivo.nombre,
-            'unidad': cultivo.unidad,
+            'unidad': getattr(cultivo, 'unidad', 'kg'),
         },
         'precios': precios_data,
         'prediccion': prediccion_data,

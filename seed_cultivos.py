@@ -4,7 +4,7 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tiersystem.settings")
 django.setup()
 
-from apps.ia_recomendaciones.models import CultivoIdeal
+from apps.cultivos.models import Cultivo
 
 
 def run():
@@ -1026,7 +1026,7 @@ def run():
     creados = 0
     actualizados = 0
     for data in cultivos:
-        obj, created = CultivoIdeal.objects.get_or_create(
+        obj, created = Cultivo.objects.get_or_create(
             nombre=data['nombre'],
             defaults={k: v for k, v in data.items() if k != 'nombre'}
         )

@@ -1,20 +1,17 @@
 """
 Management command: actualizar_sipsa
-Actualiza precios semanales SIPSA/DANE desde datos.gov.co (Socrata).
-Fallback: precios de referencia hard-coded.
+Actualiza precios semanales SIPSA/DANE desde datos.gov.co (Socrata) o fallback estático,
+vinculando directamente al modelo canónico Cultivo.
 
 Uso:
     python manage.py actualizar_sipsa
-
-Cron semanal (lunes 7am):
-    0 7 * * 1 /ruta/al/venv/bin/python /ruta/manage.py actualizar_sipsa >> /var/log/sipsa.log 2>&1
 """
 import requests
 from datetime import date, timedelta
 from django.core.management.base import BaseCommand
 
-from apps.sipsa.models import CultivoSipsa, PrecioSemanal
-from apps.sipsa.management.commands.seed_sipsa import _recalcular_predicciones
+from apps.cultivos.models import Cultivo
+from apps.sipsa.models import PrecioSemanal
 
 
 HTTP_TIMEOUT = 12
@@ -26,7 +23,6 @@ APIS_DANE = [
     "https://www.datos.gov.co/resource/2hfu-fu5g.json",   # SIPSA abastecimiento
 ]
 
-# Precios de referencia fallback (COP/kg) — actualizados con series recientes
 FALLBACK_PRECIOS = {
     "Papa Pastusa":       {"precio": 2260},
     "Tomate Chonto":      {"precio": 3300},
@@ -56,11 +52,9 @@ class Command(BaseCommand):
     help = "Actualiza precios semanales SIPSA desde datos.gov.co (Socrata) con fallback estático."
 
     def _guardar_precio(self, cultivo_nombre, precio, fuente, fuente_url=""):
-        try:
-            cultivo = CultivoSipsa.objects.get(nombre=cultivo_nombre)
-        except CultivoSipsa.DoesNotExist:
-            self.stdout.write(self.style.WARNING(f"  Cultivo no encontrado: {cultivo_nombre}"))
-            return False
+        cultivo = Cultivo.objects.filter(nombre__icontains=cultivo_nombre.split()[0]).first()
+        if not cultivo:
+            cultivo, _ = Cultivo.objects.get_or_create(nombre=cultivo_nombre)
 
         semana_lunes = _semana_actual()
         label = _label(semana_lunes)
@@ -76,17 +70,18 @@ class Command(BaseCommand):
                 'fuente_url': fuente_url,
             }
         )
-        self.stdout.write(self.style.SUCCESS(f"  ✓ {cultivo_nombre}: ${precio:,}/kg ({label})"))
+        self.stdout.write(self.style.SUCCESS(f"  ✓ {cultivo.nombre}: ${precio:,}/kg ({label})"))
         return True
 
     def _intentar_apis_dane(self, actualizados):
         """Intenta cada endpoint Socrata y parsea filas buscando cultivos."""
         alias_map = {}
-        for cultivo in CultivoSipsa.objects.filter(activo=True):
+        for cultivo in Cultivo.objects.filter(activo=True):
             if cultivo.nombre_dane:
                 alias_map[cultivo.nombre_dane.lower()] = cultivo.nombre
+            alias_map[cultivo.nombre.lower()] = cultivo.nombre
 
-        total_activos = CultivoSipsa.objects.filter(activo=True).count()
+        total_activos = Cultivo.objects.filter(activo=True).count()
 
         for api_url in APIS_DANE:
             if len(actualizados) >= total_activos:
@@ -150,9 +145,6 @@ class Command(BaseCommand):
                 )
                 actualizados.add(nombre)
 
-        # Recalcular predicciones
-        _recalcular_predicciones(self)
-
         self.stdout.write(self.style.SUCCESS(
-            f"\n=== actualizar_sipsa: {len(actualizados)} cultivos actualizados ==="
+            f"\n=== actualizar_sipsa: {len(actualizados)} precios actualizados exitosamente ==="
         ))

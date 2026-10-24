@@ -3,7 +3,7 @@ import os
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-from .models import CultivoIdeal
+from apps.cultivos.models import Cultivo
 
 # Intentar importar google.generativeai, manejando si aún no está instalado
 try:
@@ -16,7 +16,7 @@ def _guardar_recomendaciones_relacionales(registro, diagnostico):
     if not diagnostico or not isinstance(diagnostico, dict):
         return
     from apps.analisis.models import RecomendacionAnalisis
-    from apps.ia_recomendaciones.models import CultivoIdeal
+    from apps.cultivos.models import Cultivo
     
     # Limpiar recomendaciones anteriores del mismo registro para evitar duplicados
     registro.recomendaciones.all().delete()
@@ -30,7 +30,7 @@ def _guardar_recomendaciones_relacionales(registro, diagnostico):
         plan = rec.get("plan_fertilizacion", "")
         viabilidad = "Alta" if compat >= 80 else ("Media" if compat >= 60 else "Baja")
         
-        cultivo_obj = CultivoIdeal.objects.filter(nombre__icontains=nombre_limpio).first()
+        cultivo_obj = Cultivo.objects.filter(nombre__icontains=nombre_limpio).first()
         RecomendacionAnalisis.objects.create(
             analisis=registro,
             cultivo=cultivo_obj,
@@ -90,7 +90,7 @@ def api_obtener_cultivos(request):
     if request.method != "GET":
         return JsonResponse({"error": "Solo GET permitido"}, status=405)
     
-    cultivos = CultivoIdeal.objects.all()
+    cultivos = Cultivo.objects.filter(activo=True)
     datos = [c.to_dict() for c in cultivos]
     
     return JsonResponse({
