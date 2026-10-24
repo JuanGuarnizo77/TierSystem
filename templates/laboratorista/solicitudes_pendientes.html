@@ -383,8 +383,8 @@
 </div>
 
 <!-- MODAL MODERNO VER DETALLES -->
-<div id="modalDetalles" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-darkCard rounded-3xl shadow-2xl max-w-lg w-full border border-gray-100 dark:border-gray-800 overflow-hidden transform transition-all">
+<div id="modalDetalles" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-md flex items-center justify-center p-4 transition-all">
+    <div class="bg-white dark:bg-darkCard rounded-3xl shadow-2xl max-w-lg w-full border border-gray-100 dark:border-gray-800 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
         <!-- Header Modal -->
         <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -471,6 +471,134 @@
                 Cerrar
             </button>
             <div id="mdlAccionesContainer" class="flex items-center gap-2"></div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL ULTRA-PREMIUM ACEPTAR / PROGRAMAR FECHA -->
+<div id="modalAceptar" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-md flex items-center justify-center p-4 transition-all">
+    <div class="bg-white dark:bg-darkCard rounded-3xl shadow-2xl max-w-lg w-full border border-gray-100 dark:border-gray-800 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
+        <!-- Header con Icono y Título -->
+        <div class="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-800 flex items-start justify-between">
+            <div class="flex items-center gap-3.5">
+                <div id="modalAceptarIcon" class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-[#0a4d3c] dark:text-emerald-400 flex items-center justify-center text-xl shadow-sm border border-emerald-100 dark:border-emerald-800/40 flex-shrink-0">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <div>
+                    <h3 id="modalAceptarTitulo" class="text-lg md:text-xl font-extrabold text-gray-900 dark:text-white font-heading">
+                        Programar Recepción de Muestra
+                    </h3>
+                    <p id="modalAceptarSubtitulo" class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">
+                        Selecciona la fecha estimada en la que se recepcionará la muestra en laboratorio.
+                    </p>
+                </div>
+            </div>
+            <button type="button" onclick="cerrarModalAceptar()" class="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-xmark text-base"></i>
+            </button>
+        </div>
+
+        <!-- Cuerpo del Modal -->
+        <div class="p-6 space-y-4">
+            <!-- Tarjeta Resumen de la Solicitud -->
+            <div class="bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/80 rounded-2xl p-3.5 space-y-2">
+                <div class="flex items-center justify-between text-xs">
+                    <span id="modalAceptarSolId" class="font-extrabold text-gray-900 dark:text-white text-sm">Solicitud #</span>
+                    <span id="modalAceptarModalidadBadge" class="px-2.5 py-0.5 rounded-full font-semibold text-[11px] bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600"></span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200/60 dark:border-gray-700/60 text-xs">
+                    <div>
+                        <span class="text-[10px] text-gray-400 font-bold uppercase block">Agricultor</span>
+                        <span id="modalAceptarAgricultor" class="font-bold text-gray-800 dark:text-gray-200 truncate block"></span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-400 font-bold uppercase block">Terreno</span>
+                        <span id="modalAceptarTerreno" class="font-bold text-gray-800 dark:text-gray-200 truncate block"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Atajos Rápidos de Fecha (Chips) -->
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                        Atajos rápidos de fecha
+                    </label>
+                    <span class="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">1 clic para asignar</span>
+                </div>
+                <div class="grid grid-cols-4 gap-2" id="chipsContainer">
+                    <button type="button" onclick="seleccionarFechaAtajo(0)" class="chip-fecha py-2 px-1 text-center rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-700 dark:text-gray-200 hover:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all">
+                        Hoy
+                    </button>
+                    <button type="button" onclick="seleccionarFechaAtajo(1)" class="chip-fecha py-2 px-1 text-center rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-700 dark:text-gray-200 hover:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all">
+                        Mañana
+                    </button>
+                    <button type="button" onclick="seleccionarFechaAtajo(3)" class="chip-fecha py-2 px-1 text-center rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-700 dark:text-gray-200 hover:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all">
+                        En 3 días
+                    </button>
+                    <button type="button" onclick="seleccionarFechaAtajo(7)" class="chip-fecha py-2 px-1 text-center rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-700 dark:text-gray-200 hover:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all">
+                        En 1 sem.
+                    </button>
+                </div>
+            </div>
+
+            <!-- Selector de Fecha Manual Estilizado -->
+            <div>
+                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">
+                    Seleccionar fecha específica
+                </label>
+                <div class="relative">
+                    <input type="date" id="modalFechaInput" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 pl-11 text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0a4d3c] focus:border-transparent transition-all cursor-pointer">
+                    <i class="fa-regular fa-calendar-days absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-base pointer-events-none"></i>
+                </div>
+                
+                <!-- Previsualización en texto legible -->
+                <div id="fechaPreviewBox" class="mt-2.5 p-3 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-800/50 flex items-center gap-2.5 text-xs text-emerald-900 dark:text-emerald-200">
+                    <i class="fa-solid fa-calendar-day text-emerald-600 text-sm"></i>
+                    <span id="fechaPreviewTexto" class="font-bold">Selecciona una fecha</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer con Botones -->
+        <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/30 flex items-center justify-end gap-3">
+            <button type="button" onclick="cerrarModalAceptar()" class="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                Cancelar
+            </button>
+            <button type="button" id="btnConfirmarAceptar" onclick="ejecutarAceptarSolicitud()" class="px-6 py-2.5 rounded-xl bg-[#0a4d3c] hover:bg-[#0d624d] text-white text-xs font-bold flex items-center gap-2 shadow-md hover:shadow-lg transition-all">
+                <i class="fa-solid fa-check"></i>
+                <span id="btnConfirmarAceptarTexto">Aceptar y Asignar</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL ULTRA-PREMIUM RECHAZAR SOLICITUD -->
+<div id="modalRechazar" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-md flex items-center justify-center p-4 transition-all">
+    <div class="bg-white dark:bg-darkCard rounded-3xl shadow-2xl max-w-md w-full border border-gray-100 dark:border-gray-800 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
+        <div class="p-6 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center text-2xl mx-auto mb-4 border border-red-100 dark:border-red-800/40">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-lg font-extrabold text-gray-900 dark:text-white font-heading">
+                ¿Rechazar esta solicitud?
+            </h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1 mb-4">
+                La solicitud cambiará a estado <span class="font-bold text-red-600">Rechazada</span> y se notificará automáticamente al agricultor por correo electrónico.
+            </p>
+            <div class="p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/60 text-xs text-left mb-6 space-y-1">
+                <div class="font-extrabold text-gray-900 dark:text-white" id="modalRechazarSolId">Solicitud #</div>
+                <div class="text-gray-500 dark:text-gray-400" id="modalRechazarDetalle"></div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="cerrarModalRechazar()" class="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" id="btnConfirmarRechazar" onclick="ejecutarRechazarSolicitud()" class="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                    <span id="btnConfirmarRechazarTexto">Sí, rechazar</span>
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -578,7 +706,7 @@
             }
         });
 
-        // Ordenamiento por fecha si se seleccionó Más recientes o Más antiguas
+        // Ordenamiento por fecha
         if (selectedDate === 'recent' || selectedDate === 'oldest') {
             const sortedCards = [...cards].sort((a, b) => {
                 const timeA = parseInt(a.dataset.timestamp || '0', 10);
@@ -606,7 +734,6 @@
                 btn.classList.add('tab-pill-inactive');
             }
         });
-        // Sincronizar el select de estado
         if (statusFilter) {
             statusFilter.value = tab;
         }
@@ -765,163 +892,266 @@
     });
 
     // ==========================================
-    // ACCIONES ACEPTAR Y RECHAZAR SOLICITUD
+    // MODAL ULTRA-PREMIUM: ACEPTAR SOLICITUD
     // ==========================================
-    function aceptarSolicitud(solicitudId, modalidad) {
-        const esVisita = (modalidad === 'VISITA');
-        const titulo = esVisita ? 'Programar Fecha de Visita al Terreno' : 'Programar Fecha de Recepción de Muestra';
-        const subtitulo = esVisita 
-            ? 'Selecciona la fecha acordada para trasladarse a la finca y tomar las muestras.' 
-            : 'Selecciona la fecha estimada en la que se recepcionará la muestra en laboratorio.';
+    let solicitudActivaParaAceptar = null;
 
-        Swal.fire({
-            title: titulo,
-            html: `
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 font-medium">${subtitulo}</p>
-                <div class="text-left mb-2">
-                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">Fecha programada</label>
-                    <input type="date" id="fechaVisita" class="w-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-2.5 text-sm text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0a4d3c]" min="${new Date().toISOString().split('T')[0]}">
-                </div>
-            `,
-            showCancelButton: true,
-            background: isDarkMode() ? '#1e293b' : '#fff',
-            color: isDarkMode() ? '#fff' : '#000',
-            confirmButtonColor: '#0a4d3c',
-            cancelButtonColor: isDarkMode() ? '#475569' : '#6b7280',
-            confirmButtonText: '<i class="fa-solid fa-check mr-1.5"></i> Aceptar y Asignar',
-            cancelButtonText: 'Cancelar',
-            customClass: {
-                popup: 'rounded-3xl',
-                confirmButton: 'rounded-xl shadow-md py-2.5 px-4 font-bold text-sm',
-                cancelButton: 'rounded-xl py-2.5 px-4 font-bold text-sm'
-            },
-            preConfirm: () => {
-                const fecha = document.getElementById('fechaVisita').value;
-                if (!fecha) {
-                    Swal.showValidationMessage('Debes seleccionar una fecha obligatoriamente.');
-                }
-                return fecha;
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const fechaVisita = result.value;
-                
-                Swal.fire({
-                    title: 'Asignando...',
-                    text: 'Guardando solicitud y notificando al agricultor...',
-                    allowOutsideClick: false,
-                    background: isDarkMode() ? '#1e293b' : '#fff',
-                    color: isDarkMode() ? '#fff' : '#000',
-                    didOpen: () => Swal.showLoading()
-                });
-                
-                const formData = new FormData();
-                formData.append('fecha_visita', fechaVisita);
-                
-                fetch(`/laboratorista/solicitudes/aceptar/${solicitudId}/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.mensaje) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Solicitud Aceptada!',
-                            text: data.mensaje,
-                            timer: 2000,
-                            showConfirmButton: false,
-                            background: isDarkMode() ? '#1e293b' : '#fff',
-                            color: isDarkMode() ? '#fff' : '#000',
-                        }).then(() => {
-                            window.location.reload();
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: data.error || 'No se pudo aceptar la solicitud',
-                            background: isDarkMode() ? '#1e293b' : '#fff',
-                            color: isDarkMode() ? '#fff' : '#000',
-                        });
-                    }
-                })
-                .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error de conexión',
-                        text: 'No se pudo comunicar con el servidor.',
-                        background: isDarkMode() ? '#1e293b' : '#fff',
-                        color: isDarkMode() ? '#fff' : '#000',
-                    });
-                });
+    function formatearFechaTexto(fechaStr) {
+        if (!fechaStr) return 'Selecciona una fecha';
+        const partes = fechaStr.split('-');
+        if (partes.length !== 3) return fechaStr;
+        const d = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
+        const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const fechaFormateada = d.toLocaleDateString('es-ES', opciones);
+        return fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+    }
+
+    function actualizarPreviewFecha(fechaVal) {
+        const previewTexto = document.getElementById('fechaPreviewTexto');
+        if (fechaVal) {
+            previewTexto.textContent = `Programada para: ${formatearFechaTexto(fechaVal)}`;
+        } else {
+            previewTexto.textContent = 'Selecciona una fecha en el calendario o atajo';
+        }
+    }
+
+    function seleccionarFechaAtajo(diasExtra) {
+        const hoy = new Date();
+        hoy.setDate(hoy.getDate() + diasExtra);
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dd = String(hoy.getDate()).padStart(2, '0');
+        const fechaFormatted = `${yyyy}-${mm}-${dd}`;
+
+        const inputFecha = document.getElementById('modalFechaInput');
+        inputFecha.value = fechaFormatted;
+        actualizarPreviewFecha(fechaFormatted);
+
+        // Resaltar chip activo
+        document.querySelectorAll('.chip-fecha').forEach((chip, idx) => {
+            if ((diasExtra === 0 && idx === 0) ||
+                (diasExtra === 1 && idx === 1) ||
+                (diasExtra === 3 && idx === 2) ||
+                (diasExtra === 7 && idx === 3)) {
+                chip.classList.add('bg-[#0a4d3c]', 'text-white', 'border-[#0a4d3c]');
+                chip.classList.remove('text-gray-700', 'dark:text-gray-200');
+            } else {
+                chip.classList.remove('bg-[#0a4d3c]', 'text-white', 'border-[#0a4d3c]');
+                chip.classList.add('text-gray-700', 'dark:text-gray-200');
             }
         });
     }
 
-    function rechazarSolicitud(solicitudId) {
-        Swal.fire({
-            title: '¿Rechazar solicitud?',
-            text: 'Esta solicitud será descartada y se notificará al agricultor. ¿Deseas continuar?',
-            icon: 'warning',
-            showCancelButton: true,
-            background: isDarkMode() ? '#1e293b' : '#fff',
-            color: isDarkMode() ? '#fff' : '#000',
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: isDarkMode() ? '#475569' : '#6b7280',
-            confirmButtonText: '<i class="fa-solid fa-xmark mr-1.5"></i> Sí, rechazar',
-            cancelButtonText: 'Cancelar',
-            customClass: {
-                popup: 'rounded-3xl',
-                confirmButton: 'rounded-xl shadow-md py-2.5 px-4 font-bold text-sm',
-                cancelButton: 'rounded-xl py-2.5 px-4 font-bold text-sm'
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({ 
-                    title: 'Rechazando...', 
-                    allowOutsideClick: false, 
+    function aceptarSolicitud(solicitudId, modalidad) {
+        const sol = solicitudesMap.get(parseInt(solicitudId));
+        solicitudActivaParaAceptar = sol || { id: solicitudId, modalidad: modalidad };
+
+        const esVisita = (modalidad === 'VISITA');
+        const modalTitulo = document.getElementById('modalAceptarTitulo');
+        const modalSubtitulo = document.getElementById('modalAceptarSubtitulo');
+        const modalIcon = document.getElementById('modalAceptarIcon');
+
+        if (esVisita) {
+            modalTitulo.textContent = 'Programar Visita al Terreno';
+            modalSubtitulo.textContent = 'Selecciona la fecha acordada para trasladarse a la finca y tomar las muestras.';
+            modalIcon.innerHTML = '<i class="fa-solid fa-map-location-dot"></i>';
+        } else {
+            modalTitulo.textContent = 'Programar Recepción de Muestra';
+            modalSubtitulo.textContent = 'Selecciona la fecha estimada en la que se recepcionará la muestra en laboratorio.';
+            modalIcon.innerHTML = '<i class="fa-solid fa-flask-vial"></i>';
+        }
+
+        document.getElementById('modalAceptarSolId').textContent = `Solicitud #${solicitudId}`;
+        document.getElementById('modalAceptarModalidadBadge').textContent = esVisita ? 'Muestra por visita' : 'Muestra por entrega';
+        document.getElementById('modalAceptarAgricultor').textContent = sol ? sol.agricultor_nombre : 'Agricultor';
+        document.getElementById('modalAceptarTerreno').textContent = sol ? `${sol.terreno_nombre} (${sol.terreno_ha})` : 'Terreno';
+
+        // Configurar fecha mínima hoy
+        const hoy = new Date();
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dd = String(hoy.getDate()).padStart(2, '0');
+        const minFecha = `${yyyy}-${mm}-${dd}`;
+
+        const inputFecha = document.getElementById('modalFechaInput');
+        inputFecha.min = minFecha;
+
+        // Por defecto seleccionar mañana o hoy si es entrega
+        seleccionarFechaAtajo(esVisita ? 1 : 0);
+
+        document.getElementById('modalAceptar').classList.remove('hidden');
+    }
+
+    function cerrarModalAceptar() {
+        document.getElementById('modalAceptar').classList.add('hidden');
+        solicitudActivaParaAceptar = null;
+    }
+
+    document.getElementById('modalFechaInput').addEventListener('input', (e) => {
+        actualizarPreviewFecha(e.target.value);
+        // Quitar estado activo de chips si fue manual
+        document.querySelectorAll('.chip-fecha').forEach(chip => {
+            chip.classList.remove('bg-[#0a4d3c]', 'text-white', 'border-[#0a4d3c]');
+            chip.classList.add('text-gray-700', 'dark:text-gray-200');
+        });
+    });
+
+    document.getElementById('modalAceptar').addEventListener('click', (e) => {
+        if (e.target.id === 'modalAceptar') {
+            cerrarModalAceptar();
+        }
+    });
+
+    function ejecutarAceptarSolicitud() {
+        if (!solicitudActivaParaAceptar) return;
+        const fechaVisita = document.getElementById('modalFechaInput').value;
+
+        if (!fechaVisita) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Fecha requerida',
+                text: 'Por favor, selecciona una fecha antes de continuar.',
+                background: isDarkMode() ? '#1e293b' : '#fff',
+                color: isDarkMode() ? '#fff' : '#000',
+                confirmButtonColor: '#0a4d3c',
+            });
+            return;
+        }
+
+        const btn = document.getElementById('btnConfirmarAceptar');
+        const btnTexto = document.getElementById('btnConfirmarAceptarTexto');
+        btn.disabled = true;
+        btnTexto.textContent = 'Guardando y notificando...';
+
+        const formData = new FormData();
+        formData.append('fecha_visita', fechaVisita);
+
+        fetch(`/laboratorista/solicitudes/aceptar/${solicitudActivaParaAceptar.id}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.mensaje) {
+                cerrarModalAceptar();
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Solicitud Asignada!',
+                    text: data.mensaje,
+                    timer: 1800,
+                    showConfirmButton: false,
                     background: isDarkMode() ? '#1e293b' : '#fff',
                     color: isDarkMode() ? '#fff' : '#000',
-                    didOpen: () => Swal.showLoading() 
+                }).then(() => {
+                    window.location.reload();
                 });
-                
-                fetch(`/laboratorista/solicitudes/rechazar/${solicitudId}/`, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': getCookie('csrftoken') }
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.mensaje) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Solicitud rechazada',
-                            text: data.mensaje,
-                            timer: 1800,
-                            showConfirmButton: false,
-                            background: isDarkMode() ? '#1e293b' : '#fff',
-                            color: isDarkMode() ? '#fff' : '#000',
-                        }).then(() => window.location.reload());
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: data.error || 'No se pudo rechazar la solicitud',
-                            background: isDarkMode() ? '#1e293b' : '#fff',
-                            color: isDarkMode() ? '#fff' : '#000',
-                        });
-                    }
-                }).catch(() => Swal.fire({
+            } else {
+                btn.disabled = false;
+                btnTexto.textContent = 'Aceptar y Asignar';
+                Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Ocurrió un problema de red.',
+                    text: data.error || 'No se pudo aceptar la solicitud.',
                     background: isDarkMode() ? '#1e293b' : '#fff',
                     color: isDarkMode() ? '#fff' : '#000',
-                }));
+                });
             }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btnTexto.textContent = 'Aceptar y Asignar';
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de red',
+                text: 'No se pudo conectar con el servidor.',
+                background: isDarkMode() ? '#1e293b' : '#fff',
+                color: isDarkMode() ? '#fff' : '#000',
+            });
+        });
+    }
+
+    // ==========================================
+    // MODAL ULTRA-PREMIUM: RECHAZAR SOLICITUD
+    // ==========================================
+    let solicitudActivaParaRechazar = null;
+
+    function rechazarSolicitud(solicitudId) {
+        const sol = solicitudesMap.get(parseInt(solicitudId));
+        solicitudActivaParaRechazar = sol || { id: solicitudId };
+
+        document.getElementById('modalRechazarSolId').textContent = `Solicitud #${solicitudId}`;
+        if (sol) {
+            document.getElementById('modalRechazarDetalle').textContent = `${sol.agricultor_nombre} • Terreno: ${sol.terreno_nombre}`;
+        } else {
+            document.getElementById('modalRechazarDetalle').textContent = 'Solicitud de análisis';
+        }
+
+        document.getElementById('modalRechazar').classList.remove('hidden');
+    }
+
+    function cerrarModalRechazar() {
+        document.getElementById('modalRechazar').classList.add('hidden');
+        solicitudActivaParaRechazar = null;
+    }
+
+    document.getElementById('modalRechazar').addEventListener('click', (e) => {
+        if (e.target.id === 'modalRechazar') {
+            cerrarModalRechazar();
+        }
+    });
+
+    function ejecutarRechazarSolicitud() {
+        if (!solicitudActivaParaRechazar) return;
+
+        const btn = document.getElementById('btnConfirmarRechazar');
+        const btnTexto = document.getElementById('btnConfirmarRechazarTexto');
+        btn.disabled = true;
+        btnTexto.textContent = 'Rechazando...';
+
+        fetch(`/laboratorista/solicitudes/rechazar/${solicitudActivaParaRechazar.id}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.mensaje) {
+                cerrarModalRechazar();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Solicitud rechazada',
+                    text: data.mensaje,
+                    timer: 1600,
+                    showConfirmButton: false,
+                    background: isDarkMode() ? '#1e293b' : '#fff',
+                    color: isDarkMode() ? '#fff' : '#000',
+                }).then(() => window.location.reload());
+            } else {
+                btn.disabled = false;
+                btnTexto.textContent = 'Sí, rechazar';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.error || 'No se pudo rechazar la solicitud',
+                    background: isDarkMode() ? '#1e293b' : '#fff',
+                    color: isDarkMode() ? '#fff' : '#000',
+                });
+            }
+        })
+        .catch(() => {
+            btn.disabled = false;
+            btnTexto.textContent = 'Sí, rechazar';
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de red',
+                text: 'Ocurrió un problema de conexión.',
+                background: isDarkMode() ? '#1e293b' : '#fff',
+                color: isDarkMode() ? '#fff' : '#000',
+            });
         });
     }
 </script>
