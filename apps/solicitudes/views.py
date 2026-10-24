@@ -22,8 +22,49 @@ def solicitudes_pendientes(request):
     if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'LABORATORISTA':
         return redirect('home')
         
-    solicitudes = SolicitudAnalisis.objects.filter(estado='PENDIENTE').order_by('-fecha_solicitud')
-    return render(request, 'laboratorista/solicitudes_pendientes.html', {'solicitudes': solicitudes})
+    from django.utils import timezone
+    ahora = timezone.now()
+    
+    solicitudes = list(SolicitudAnalisis.objects.filter(
+        estado__in=['PENDIENTE', 'ASIGNADA', 'EN_PROCESO', 'COMPLETADA']
+    ).select_related('agricultor', 'terreno', 'cultivo_deseado_ref').order_by('-fecha_solicitud'))
+    
+    pendientes_count = 0
+    aceptadas_count = 0
+    en_proceso_count = 0
+    finalizadas_count = 0
+    
+    for sol in solicitudes:
+        if sol.estado == 'PENDIENTE':
+            pendientes_count += 1
+            dias = (ahora - sol.fecha_solicitud).days
+            if dias <= 0:
+                sol.dias_espera_display = "Hoy"
+            elif dias == 1:
+                sol.dias_espera_display = "1 día"
+            else:
+                sol.dias_espera_display = f"{dias} días"
+        elif sol.estado == 'ASIGNADA':
+            aceptadas_count += 1
+            sol.dias_espera_display = None
+        elif sol.estado == 'EN_PROCESO':
+            en_proceso_count += 1
+            sol.dias_espera_display = None
+        elif sol.estado == 'COMPLETADA':
+            finalizadas_count += 1
+            sol.dias_espera_display = None
+        else:
+            sol.dias_espera_display = None
+
+    context = {
+        'solicitudes': solicitudes,
+        'total_count': len(solicitudes),
+        'pendientes_count': pendientes_count,
+        'aceptadas_count': aceptadas_count,
+        'en_proceso_count': en_proceso_count,
+        'finalizadas_count': finalizadas_count,
+    }
+    return render(request, 'laboratorista/solicitudes_pendientes.html', context)
 
 @login_required(login_url='login')
 def solicitudes_asignadas(request):
