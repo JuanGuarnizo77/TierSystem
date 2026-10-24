@@ -7,6 +7,7 @@ from .views_solicitudes import (
     aceptar_view,
     rechazar_view,
 )
+from .views_historial import historial_view, resultado_view
 
 urlpatterns = [
     path('dashboard/', dashboard_view, name='laboratorista_dashboard'),
@@ -14,4 +15,6 @@ urlpatterns = [
     path('solicitudes/mis-tareas/', mis_tareas_view, name='laboratorista_mis_tareas'),
     path('solicitudes/<int:solicitud_id>/aceptar/', aceptar_view, name='laboratorista_aceptar'),
     path('solicitudes/<int:solicitud_id>/rechazar/', rechazar_view, name='laboratorista_rechazar'),
+    path('historial/', historial_view, name='laboratorista_historial'),
+    path('resultados/<int:solicitud_id>/', resultado_view, name='laboratorista_resultado'),
 ]
