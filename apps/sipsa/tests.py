@@ -7,7 +7,8 @@ from django.contrib.auth import get_user_model
 from datetime import date, timedelta
 
 from .prediccion import calcular_prediccion, MIN_SEMANAS
-from .models import CultivoSipsa, PrecioSemanal, PrediccionPrecio
+from .models import PrecioSemanal
+from apps.cultivos.models import Cultivo
 
 User = get_user_model()
 
@@ -72,8 +73,8 @@ class SipsaDashboardViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_user(username='agricultortest', password='pass1234')
-        cls.cultivo = CultivoSipsa.objects.create(
-            nombre='Papa Test', categoria='Tubérculos', unidad='kg', activo=True
+        cls.cultivo = Cultivo.objects.create(
+            nombre='Papa Test', categoria='Tubérculos', activo=True
         )
         hoy = date.today()
         lunes = hoy - timedelta(days=hoy.weekday())
@@ -86,14 +87,6 @@ class SipsaDashboardViewTest(TestCase):
                 precio_kg=1000 + i * 50,
                 precio_local=970 + i * 50,
             )
-        PrediccionPrecio.objects.create(
-            cultivo=cls.cultivo,
-            tendencia_predicha='Alza',
-            confianza_pct=100.0,
-            precio_estimado=1400,
-            variacion_estimada_pct=5.0,
-            semanas_usadas=8,
-        )
 
     def setUp(self):
         self.client = Client()
@@ -123,5 +116,4 @@ class SipsaDashboardViewTest(TestCase):
     def test_actualizar_sin_superuser_redirige(self):
         """Un agricultor normal no puede disparar la actualización."""
         response = self.client.post('/agricultor/sipsa/actualizar/')
-        # Debe redirigir (302) por user_passes_test, no devolver 200/500
         self.assertEqual(response.status_code, 302)

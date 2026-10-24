@@ -184,6 +184,7 @@
             </div>
             
             <!-- Guardamos los datos para JS de forma segura -->
+            <script id="cultivosCatalogoServer" type="application/json">{{ cultivos_catalogo_json|default:'[]'|safe }}</script>
             <script id="terrenoPoligonoData" type="application/json">{% if solicitud_activa.terreno.coordenadas_poligono %}{{ solicitud_activa.terreno.coordenadas_poligono|safe }}{% else %}null{% endif %}</script>
             <script id="puntosDataJson" type="application/json">[
                 {% for p in puntos_muestreo %}
@@ -225,7 +226,7 @@
             <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Datos capturados y estabilizados desde el ESP32</p>
         </div>
         
-        <div class="grid grid-cols-2 gap-3 mb-6">
+        <div class="grid grid-cols-2 gap-3 mb-4">
             <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Humedad</span><span id="res_humedad" class="font-bold text-lg text-gray-800 dark:text-gray-200">0%</span></div>
             <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Temperatura</span><span id="res_temperatura" class="font-bold text-lg text-gray-800 dark:text-gray-200">0°C</span></div>
             <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Conductividad</span><span id="res_conductividad" class="font-bold text-lg text-gray-800 dark:text-gray-200">0</span></div>
@@ -234,15 +235,47 @@
             <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Fósforo (P)</span><span id="res_p" class="font-bold text-lg text-gray-800 dark:text-gray-200">0</span></div>
             <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center col-span-2"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Potasio (K)</span><span id="res_k" class="font-bold text-lg text-gray-800 dark:text-gray-200">0</span></div>
         </div>
-        <div class="mt-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
+
+        <!-- Selector de Modo Dual: Online vs Offline -->
+        <div class="mb-4 bg-gray-50 dark:bg-gray-800 p-3 rounded-2xl border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-sliders text-blue-500"></i> Modo de Análisis
+                </span>
+                <span id="badgeModoActual" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">Automático</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-xs font-bold">
+                <button type="button" id="btnModoAuto" onclick="cambiarModoAnalisis('auto')" class="py-2 px-1 rounded-xl border text-center transition-all bg-blue-600 text-white border-blue-600 shadow-sm flex flex-col items-center justify-center gap-1">
+                    <i class="fa-solid fa-arrows-rotate text-sm"></i>
+                    <span>Auto</span>
+                </button>
+                <button type="button" id="btnModoOnline" onclick="cambiarModoAnalisis('online')" class="py-2 px-1 rounded-xl border text-center transition-all bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:bg-gray-100 flex flex-col items-center justify-center gap-1">
+                    <i class="fa-solid fa-brain text-purple-500 text-sm"></i>
+                    <span>Online IA</span>
+                </button>
+                <button type="button" id="btnModoOffline" onclick="cambiarModoAnalisis('offline')" class="py-2 px-1 rounded-xl border text-center transition-all bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:bg-gray-100 flex flex-col items-center justify-center gap-1">
+                    <i class="fa-solid fa-database text-amber-500 text-sm"></i>
+                    <span>Offline</span>
+                </button>
+            </div>
+            <p id="modoAnalisisDesc" class="text-[11px] text-gray-500 dark:text-gray-400 mt-2 text-center">
+                Automático: usa Gemini AI con internet; si falla o estás en campo, cambia a motor offline.
+            </p>
+        </div>
+
+        <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
             <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Cultivo de interés (Opcional)</label>
-            <input type="text" id="inputCultivo" list="listaCultivos" placeholder="Ej. Café, Maíz..." class="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 mb-4 focus:outline-none focus:ring-2 focus:ring-primary text-gray-700 dark:text-white" onchange="actualizarVariedades()" oninput="actualizarVariedades()">
+            <input type="text" id="inputCultivo" list="listaCultivos" placeholder="Ej. Café, Maíz, Cacao..." class="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 mb-4 focus:outline-none focus:ring-2 focus:ring-primary text-gray-700 dark:text-white" onchange="actualizarVariedades()" oninput="actualizarVariedades()">
             <datalist id="listaCultivos">
                 <option value="Café"></option>
+                <option value="Cacao"></option>
                 <option value="Maíz"></option>
                 <option value="Frijol"></option>
                 <option value="Tomate"></option>
-                <option value="Papa"></option>
+                <option value="Plátano"></option>
+                <option value="Cholupa"></option>
+                <option value="Granadilla"></option>
+                <option value="Aguacate Hass"></option>
             </datalist>
 
             <div id="containerVariedad" class="hidden mb-4">
@@ -253,7 +286,7 @@
             </div>
             
             <button class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2" onclick="procesarDiagnosticoAutomatico()">
-                <i class="fa-solid fa-microchip"></i> Generar Diagnóstico Automático
+                <i class="fa-solid fa-microchip"></i> Generar Diagnóstico
             </button>
             <button onclick="compartirResultadosConAgricultorDirecto()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 mt-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
                 <i class="fa-solid fa-share-nodes"></i> Guardar y Compartir con Agricultor
@@ -553,16 +586,61 @@
         }
     }
 
+    let modoAnalisisSeleccionado = 'auto';
+
+    function cambiarModoAnalisis(modo) {
+        modoAnalisisSeleccionado = modo;
+        const btnAuto = document.getElementById('btnModoAuto');
+        const btnOnline = document.getElementById('btnModoOnline');
+        const btnOffline = document.getElementById('btnModoOffline');
+        const badge = document.getElementById('badgeModoActual');
+        const desc = document.getElementById('modoAnalisisDesc');
+
+        // Reset estilos
+        [btnAuto, btnOnline, btnOffline].forEach(b => {
+            if (b) {
+                b.className = "py-2 px-1 rounded-xl border text-center transition-all bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:bg-gray-100 flex flex-col items-center justify-center gap-1";
+            }
+        });
+
+        if (modo === 'auto') {
+            if (btnAuto) btnAuto.className = "py-2 px-1 rounded-xl border text-center transition-all bg-blue-600 text-white border-blue-600 shadow-sm flex flex-col items-center justify-center gap-1";
+            if (badge) {
+                badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300";
+                badge.innerText = "Automático";
+            }
+            if (desc) desc.innerText = "Automático: usa Gemini AI con internet; si falla o estás en campo, cambia a motor offline.";
+        } else if (modo === 'online') {
+            if (btnOnline) btnOnline.className = "py-2 px-1 rounded-xl border text-center transition-all bg-purple-600 text-white border-purple-600 shadow-sm flex flex-col items-center justify-center gap-1";
+            if (badge) {
+                badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300";
+                badge.innerText = "Online (IA Gemini)";
+            }
+            if (desc) desc.innerText = "Modo forzado con Inteligencia Artificial Google Gemini. Requiere conexión a internet activa.";
+        } else if (modo === 'offline') {
+            if (btnOffline) btnOffline.className = "py-2 px-1 rounded-xl border text-center transition-all bg-amber-600 text-white border-amber-600 shadow-sm flex flex-col items-center justify-center gap-1";
+            if (badge) {
+                badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300";
+                badge.innerText = "Offline (Motor Huila)";
+            }
+            if (desc) desc.innerText = "Modo 100% offline local: evalúa rangos óptimos con el catálogo de cultivos del Huila sin internet.";
+        }
+    }
+
     function procesarDiagnosticoAutomatico() {
         if (!datosSensorActual) return;
         
-        // Comprobar internet nativo del navegador
-        if (navigator.onLine) {
-            // Si hay internet, mandamos a la IA directamente
+        if (modoAnalisisSeleccionado === 'offline') {
+            solicitarDiagnosticoOffline();
+        } else if (modoAnalisisSeleccionado === 'online') {
             solicitarDiagnosticoIA();
         } else {
-            // Si no hay internet, mandamos al proceso Offline local
-            solicitarDiagnosticoOffline();
+            // Modo Automático: intenta con IA, si no hay internet o falla, usa Offline
+            if (navigator.onLine) {
+                solicitarDiagnosticoIA();
+            } else {
+                solicitarDiagnosticoOffline();
+            }
         }
     }
 
@@ -582,7 +660,8 @@
         try {
             const payload = {
                 ...datosSensorActual,
-                preferencia: preferencia
+                preferencia: preferencia,
+                modo: modoAnalisisSeleccionado
             };
             
             const solId = document.getElementById('solicitudIdActiva');
@@ -593,7 +672,8 @@
             const response = await fetch('/api/ia/diagnosticar/', {
                 method: 'POST',
                 headers: { 
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
                 },
                 body: JSON.stringify(payload)
             });
@@ -603,78 +683,167 @@
             
             if (result.estado === 'ok') {
                 diagnosticoActual = result.diagnostico;
-                mostrarDiagnosticoUI(result.diagnostico, 'ia');
+                mostrarDiagnosticoUI(result.diagnostico, result.modo || 'ia');
             } else {
-                Swal.fire('Error IA', result.mensaje || 'Error al conectar con Gemini API', 'error');
+                // Fallback automático al motor offline
+                console.warn("Fallo IA en backend, cambiando a modo offline...", result.mensaje);
+                solicitarDiagnosticoOffline(result.mensaje);
             }
         } catch (e) {
-            Swal.fire('Error de red', 'No se pudo contactar al servidor, cambiando a modo offline...', 'info').then(() => {
-                solicitarDiagnosticoOffline();
-            });
+            console.warn("Error de red hacia endpoint IA, cambiando a modo offline...", e);
+            solicitarDiagnosticoOffline("No se detectó acceso a Google Cloud. Se activó el Motor Offline.");
         }
     }
 
-    async function solicitarDiagnosticoOffline() {
+    async function solicitarDiagnosticoOffline(avisoPrevio = '') {
         if (!datosSensorActual) return;
         const preferencia = obtenerPreferenciaUnificada().toLowerCase();
         cerrarModalResultados();
+        
         Swal.fire({
             title: 'Calculando en Modo Offline...',
-            text: 'Procesando nutrientes con la base de datos local del navegador...',
+            text: avisoPrevio ? avisoPrevio : 'Procesando nutrientes con la base de datos de cultivos del Huila...',
             allowOutsideClick: false,
+            timer: 1000,
+            timerProgressBar: true,
             didOpen: () => { Swal.showLoading(); }
         });
 
         let cultivos = [];
-        try {
-            // 1. Intentar fetch rápido si hay red local
-            const response = await fetch('/api/ia/cultivos/');
-            const result = await response.json();
-            if (result.estado === 'ok') {
-                cultivos = result.cultivos;
-                localStorage.setItem('tier_cultivos_catalogo', JSON.stringify(cultivos));
-            }
-        } catch (e) {
-            // 2. Si falló la red, leer de caché localStorage
+        // 1. Intentar leer del bloque incrustado desde el servidor
+        const serverScript = document.getElementById('cultivosCatalogoServer');
+        if (serverScript && serverScript.textContent.trim()) {
+            try {
+                const parsed = JSON.parse(serverScript.textContent.trim());
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    cultivos = parsed;
+                    localStorage.setItem('tier_cultivos_catalogo', JSON.stringify(cultivos));
+                }
+            } catch (err) {}
+        }
+
+        // 2. Si no hay en serverScript, leer de caché local
+        if (!cultivos || cultivos.length === 0) {
             try {
                 const cached = localStorage.getItem('tier_cultivos_catalogo');
                 if (cached) cultivos = JSON.parse(cached);
             } catch (err) {}
         }
 
+        // 3. Fallback agronómico garantizado para el Huila si el navegador nunca antes cargó catálogo
         if (!cultivos || cultivos.length === 0) {
-            // Fallback estándar si nunca se ha sincronizado
             cultivos = [
-                { nombre: "Café (Castillo)", descripcion: "Variedad de alto rendimiento en Huila.", rangos: { humedad: [50, 80], temperatura: [18, 25], ph: [5.0, 6.0], nitrogeno: [140, 260], fosforo: [30, 65], potasio: [150, 310] } },
-                { nombre: "Maíz Amarillo", descripcion: "Cereal de rápida rotación.", rangos: { humedad: [40, 75], temperatura: [20, 30], ph: [5.5, 7.2], nitrogeno: [180, 320], fosforo: [40, 90], potasio: [120, 260] } },
-                { nombre: "Frijol Cargamanto", descripcion: "Excelente fijador de nitrógeno.", rangos: { humedad: [45, 70], temperatura: [17, 26], ph: [5.8, 7.0], nitrogeno: [70, 160], fosforo: [50, 100], potasio: [90, 200] } }
+                { nombre: "Café Castillo", categoria: "Café", clima: "Templado", descripcion: "Variedad de porte bajo resistente a la roya, ideal para la zona cafetera del Huila.", rangos: { humedad: [50, 80], temperatura: [18, 25], ph: [5.0, 6.0], conductividad: [0.8, 2.0], nitrogeno: [140, 260], fosforo: [30, 65], potasio: [150, 310] } },
+                { nombre: "Cacao Clon CCN-51", categoria: "Industrial", clima: "Cálido", descripcion: "Cultivo agroforestal de alto rendimiento en valles cálidos del Huila.", rangos: { humedad: [60, 85], temperatura: [22, 30], ph: [6.0, 7.2], conductividad: [0.5, 1.8], nitrogeno: [120, 220], fosforo: [25, 60], potasio: [140, 280] } },
+                { nombre: "Maíz Amarillo ICA V-109", categoria: "Cereal", clima: "Cálido", descripcion: "Cereal de rápida rotación y alta demanda forrajera y alimentaria en el Huila.", rangos: { humedad: [40, 75], temperatura: [20, 30], ph: [5.5, 7.2], conductividad: [0.8, 2.2], nitrogeno: [180, 320], fosforo: [40, 90], potasio: [120, 260] } },
+                { nombre: "Plátano Dominico Hartón", categoria: "Frutal", clima: "Templado", descripcion: "Excelente sombrío transitorio para café y cultivo de gran valor comercial.", rangos: { humedad: [60, 85], temperatura: [19, 28], ph: [5.5, 6.8], conductividad: [1.0, 2.5], nitrogeno: [150, 280], fosforo: [30, 70], potasio: [200, 400] } },
+                { nombre: "Frijol Cargamanto", categoria: "Leguminosa", clima: "Frío", descripcion: "Leguminosa fijadora de nitrógeno atmosférico para rotación en zonas altas.", rangos: { humedad: [45, 70], temperatura: [16, 24], ph: [5.8, 7.0], conductividad: [0.6, 1.6], nitrogeno: [70, 160], fosforo: [50, 100], potasio: [90, 200] } }
             ];
         }
 
+        const d = datosSensorActual;
+        const ph = parseFloat(d.ph || 0);
+        const n = parseFloat(d.nitrogeno || 0);
+        const p = parseFloat(d.fosforo || 0);
+        const k = parseFloat(d.potasio || 0);
+        const h = parseFloat(d.humedad || 0);
+        const t = parseFloat(d.temperatura || 0);
+        const c = parseFloat(d.conductividad || 0);
+
         let recomendaciones = [];
-        cultivos.forEach(c => {
-            let puntos = 0;
-            const r = c.rangos;
-            if (datosSensorActual.humedad >= r.humedad[0] && datosSensorActual.humedad <= r.humedad[1]) puntos++;
-            if (datosSensorActual.temperatura >= r.temperatura[0] && datosSensorActual.temperatura <= r.temperatura[1]) puntos++;
-            if (datosSensorActual.ph >= r.ph[0] && datosSensorActual.ph <= r.ph[1]) puntos++;
-            if (datosSensorActual.nitrogeno >= r.nitrogeno[0] && datosSensorActual.nitrogeno <= r.nitrogeno[1]) puntos++;
-            if (datosSensorActual.fosforo >= r.fosforo[0] && datosSensorActual.fosforo <= r.fosforo[1]) puntos++;
-            if (datosSensorActual.potasio >= r.potasio[0] && datosSensorActual.potasio <= r.potasio[1]) puntos++;
-            
-            const compatibilidad = Math.round((puntos / 6) * 100);
+
+        cultivos.forEach(item => {
+            const r = item.rangos || {};
+            let puntajes = [];
+
+            // pH (25%)
+            if (r.ph && ph > 0) {
+                const [minPh, maxPh] = r.ph;
+                if (ph >= minPh && ph <= maxPh) {
+                    puntajes.push(100.0 * 0.25);
+                } else if (ph < minPh) {
+                    const diff = minPh - ph;
+                    puntajes.push(Math.max(20.0, 100.0 - (diff / 1.5) * 80.0) * 0.25);
+                } else {
+                    const diff = ph - maxPh;
+                    puntajes.push(Math.max(20.0, 100.0 - (diff / 1.5) * 80.0) * 0.25);
+                }
+            } else { puntajes.push(80.0 * 0.25); }
+
+            // Nitrógeno (15%)
+            if (r.nitrogeno && n > 0) {
+                const [minN, maxN] = r.nitrogeno;
+                if (n >= minN && n <= maxN) puntajes.push(100.0 * 0.15);
+                else if (n < minN) puntajes.push(Math.max(30.0, 100.0 - ((minN - n) / minN) * 70.0) * 0.15);
+                else puntajes.push(Math.max(60.0, 100.0 - ((n - maxN) / maxN) * 40.0) * 0.15);
+            } else { puntajes.push(80.0 * 0.15); }
+
+            // Fósforo (15%)
+            if (r.fosforo && p > 0) {
+                const [minP, maxP] = r.fosforo;
+                if (p >= minP && p <= maxP) puntajes.push(100.0 * 0.15);
+                else if (p < minP) puntajes.push(Math.max(30.0, 100.0 - ((minP - p) / minP) * 70.0) * 0.15);
+                else puntajes.push(Math.max(60.0, 100.0 - ((p - maxP) / maxP) * 40.0) * 0.15);
+            } else { puntajes.push(80.0 * 0.15); }
+
+            // Potasio (15%)
+            if (r.potasio && k > 0) {
+                const [minK, maxK] = r.potasio;
+                if (k >= minK && k <= maxK) puntajes.push(100.0 * 0.15);
+                else if (k < minK) puntajes.push(Math.max(30.0, 100.0 - ((minK - k) / minK) * 70.0) * 0.15);
+                else puntajes.push(Math.max(60.0, 100.0 - ((k - maxK) / maxK) * 40.0) * 0.15);
+            } else { puntajes.push(80.0 * 0.15); }
+
+            // Humedad, Temp, CE (30%)
+            let otros = 0;
+            if (r.humedad && h > 0 && h >= r.humedad[0] && h <= r.humedad[1]) otros += 10; else otros += 7;
+            if (r.temperatura && t > 0 && t >= r.temperatura[0] && t <= r.temperatura[1]) otros += 10; else otros += 7;
+            if (r.conductividad && c > 0 && c >= r.conductividad[0] && c <= r.conductividad[1]) otros += 10; else otros += 7;
+            puntajes.push(otros);
+
+            const compat = Math.min(100, Math.round(puntajes.reduce((a, b) => a + b, 0)));
+
+            // Plan de fertilización offline
+            let planes = [];
+            if (r.ph && ph > 0 && ph < r.ph[0]) planes.push("Aplicar enmienda calcárea (Cal Dolomita) para corregir acidez.");
+            if (r.nitrogeno && n > 0 && n < r.nitrogeno[0]) planes.push("Reforzar Nitrógeno con abono orgánico o Urea fraccionada.");
+            if (r.fosforo && p > 0 && p < r.fosforo[0]) planes.push("Aplicar Fósforo localizado (DAP o Roca Fosfórica) a la siembra.");
+            if (r.potasio && k > 0 && k < r.potasio[0]) planes.push("Suplir Potasio (KCl) para favorecer llenado de fruto.");
+            if (planes.length === 0) planes.push("Parámetros balanceados. Mantener fertilización de sostenimiento.");
+
+            const esPref = preferencia && (item.nombre.toLowerCase().includes(preferencia) || preferencia.includes(item.nombre.toLowerCase()));
+
             recomendaciones.push({
-                cultivo: c.nombre,
-                compatibilidad: compatibilidad,
-                descripcion: c.descripcion + ` (Basado en ${puntos}/6 parámetros óptimos locales)`
+                cultivo: item.nombre,
+                compatibilidad: compat,
+                viabilidad: compat >= 75 ? "Alta" : (compat >= 50 ? "Media" : "Baja"),
+                descripcion: item.descripcion || `Variedad recomendada para el Huila.`,
+                plan_fertilizacion: planes.join(" "),
+                es_preferido: Boolean(esPref)
             });
         });
 
-        recomendaciones.sort((a, b) => b.compatibilidad - a.compatibilidad);
-        
+        // Ordenar dando prioridad al cultivo de interés si coincide, luego por compatibilidad
+        recomendaciones.sort((a, b) => {
+            if (a.es_preferido && !b.es_preferido) return -1;
+            if (!a.es_preferido && b.es_preferido) return 1;
+            return b.compatibilidad - a.compatibilidad;
+        });
+
+        const topRecs = recomendaciones.slice(0, 3);
+
+        let consejos = [];
+        if (ph > 0 && ph < 5.5) consejos.push(`El suelo presenta acidez (pH ${ph.toFixed(1)}). Recomendable aplicar encalado.`);
+        else if (ph > 7.5) consejos.push(`El suelo es ligeramente alcalino (pH ${ph.toFixed(1)}).`);
+        else consejos.push(`El pH (${ph.toFixed(1)}) está en rango adecuado para cultivos del departamento del Huila.`);
+
+        if (n > 0 && p > 0 && k > 0) consejos.push(`Lecturas NPK registradas: N=${Math.round(n)}, P=${Math.round(p)}, K=${Math.round(k)} mg/kg.`);
+        consejos.push("Diagnóstico agronómico calculado 100% en modo offline local.");
+
         const diagnosticoOffline = {
-            recomendaciones: recomendaciones.slice(0, 3),
-            consejo_general: "Análisis calculado localmente sin internet usando modelos de rangos óptimos. Los resultados quedan listos para sincronizar."
+            recomendaciones: topRecs,
+            consejo_general: consejos.join(" "),
+            modo: "offline"
         };
 
         diagnosticoActual = diagnosticoOffline;
@@ -704,33 +873,46 @@
         const sub = document.getElementById('diagnosticoSub');
         
         if (modo === 'ia') {
-            icon.className = "w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4";
+            icon.className = "w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm";
             icon.innerHTML = '<i class="fa-solid fa-brain"></i>';
-            sub.innerText = "Generado por Inteligencia Artificial Especializada";
+            sub.innerHTML = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700"><i class="fa-solid fa-wifi"></i> Inteligencia Artificial Gemini (Modo Online)</span>';
         } else {
-            icon.className = "w-16 h-16 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4";
+            icon.className = "w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm";
             icon.innerHTML = '<i class="fa-solid fa-database"></i>';
-            sub.innerText = "Calculado localmente sin conexión a internet (Guardado offline)";
+            sub.innerHTML = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700"><i class="fa-solid fa-hard-drive"></i> Motor Agronómico Edafológico (Modo Offline - Huila)</span>';
         }
 
         let html = '';
-        diagnostico.recomendaciones.forEach(rec => {
-            let color = rec.compatibilidad > 75 ? 'bg-green-500' : (rec.compatibilidad > 50 ? 'bg-yellow-500' : 'bg-red-500');
+        (diagnostico.recomendaciones || []).forEach(rec => {
+            let color = rec.compatibilidad >= 75 ? 'bg-green-500' : (rec.compatibilidad >= 50 ? 'bg-yellow-500' : 'bg-red-500');
+            let viabilidadBadge = rec.viabilidad ? `<span class="text-xs px-2.5 py-0.5 rounded-md font-bold bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">Viabilidad ${rec.viabilidad}</span>` : '';
+            
             html += `
-            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:border-gray-200">
                 <div class="flex justify-between items-center mb-2">
-                    <h4 class="font-bold text-lg text-gray-900">${rec.cultivo}</h4>
-                    <span class="${color} text-white px-3 py-1 rounded-full text-xs font-bold">${rec.compatibilidad}% Ideal</span>
+                    <div class="flex items-center gap-2">
+                        <h4 class="font-bold text-lg text-gray-900 dark:text-white">${rec.cultivo}</h4>
+                        ${viabilidadBadge}
+                    </div>
+                    <span class="${color} text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">${rec.compatibilidad}% Ideal</span>
                 </div>
-                <p class="text-gray-600 text-sm">${rec.descripcion}</p>
+                <p class="text-gray-600 dark:text-gray-300 text-sm mb-3">${rec.descripcion}</p>
+                ${rec.plan_fertilizacion ? `
+                <div class="bg-white dark:bg-gray-700/60 p-3 rounded-xl border border-gray-200 dark:border-gray-600 text-xs">
+                    <div class="font-bold text-green-700 dark:text-green-400 mb-1 flex items-center gap-1.5">
+                        <i class="fa-solid fa-leaf"></i> Plan Agronómico Sugerido:
+                    </div>
+                    <p class="text-gray-600 dark:text-gray-300">${rec.plan_fertilizacion}</p>
+                </div>
+                ` : ''}
             </div>`;
         });
 
         if (diagnostico.consejo_general) {
             html += `
-            <div class="mt-4 bg-yellow-50 p-4 rounded-xl border border-yellow-100">
-                <h4 class="text-yellow-800 font-bold mb-1"><i class="fa-solid fa-lightbulb"></i> Consejo</h4>
-                <p class="text-sm text-yellow-700">${diagnostico.consejo_general}</p>
+            <div class="mt-4 bg-amber-50 dark:bg-amber-950/30 p-4 rounded-2xl border border-amber-200 dark:border-amber-800">
+                <h4 class="text-amber-800 dark:text-amber-300 font-bold mb-1 flex items-center gap-1.5"><i class="fa-solid fa-lightbulb"></i> Recomendación General del Lote</h4>
+                <p class="text-sm text-amber-900 dark:text-amber-200">${diagnostico.consejo_general}</p>
             </div>`;
         }
 
@@ -916,9 +1098,24 @@
     document.addEventListener('DOMContentLoaded', () => {
         actualizarBannerOffline();
         verificarYSincronizarOffline();
+
+        // 1. Precargar catálogo del servidor directamente en localStorage
+        const serverScript = document.getElementById('cultivosCatalogoServer');
+        if (serverScript && serverScript.textContent.trim()) {
+            try {
+                const parsed = JSON.parse(serverScript.textContent.trim());
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    localStorage.setItem('tier_cultivos_catalogo', JSON.stringify(parsed));
+                }
+            } catch (err) {}
+        }
+
+        // 2. Si hay conexión de red, refrescar catálogo
         if (navigator.onLine) {
             fetch('/api/ia/cultivos/').then(r => r.json()).then(d => {
-                if (d.estado === 'ok') localStorage.setItem('tier_cultivos_catalogo', JSON.stringify(d.cultivos));
+                if (d.estado === 'ok' && Array.isArray(d.cultivos)) {
+                    localStorage.setItem('tier_cultivos_catalogo', JSON.stringify(d.cultivos));
+                }
             }).catch(() => {});
         }
     });

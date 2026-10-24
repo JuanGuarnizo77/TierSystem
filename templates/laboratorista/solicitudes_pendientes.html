@@ -3,86 +3,634 @@
 
 {% block title %}Banco de Solicitudes - TierSystem{% endblock %}
 
-{% block content %}
-<div class="mb-8">
-    <h2 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight font-heading">Banco de Solicitudes</h2>
-    <p class="text-gray-500 dark:text-gray-400 mt-1 font-medium">Revisa y acepta las solicitudes de análisis pendientes de los agricultores.</p>
-</div>
+{% block extra_css %}
+<style>
+    /* Estilos visuales exactos y responsivos */
+    .kpi-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .kpi-card:hover {
+        transform: translateY(-2px);
+    }
+    .solicitud-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+    .solicitud-card:hover {
+        transform: translateY(-2px);
+    }
+    .tab-pill-active {
+        background-color: #0a4d3c !important;
+        color: #ffffff !important;
+        border-color: #0a4d3c !important;
+        box-shadow: 0 2px 6px rgba(10, 77, 60, 0.25);
+    }
+    .tab-pill-inactive {
+        background-color: #ffffff;
+        color: #4b5563;
+        border-color: #e5e7eb;
+    }
+    .dark .tab-pill-inactive {
+        background-color: #1e293b;
+        color: #9ca3af;
+        border-color: #374151;
+    }
+</style>
+{% endblock %}
 
-<div class="bento-card overflow-hidden p-0 bg-transparent shadow-none dark:bg-transparent">
-    <div class="p-0">
-        {% if solicitudes %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {% for sol in solicitudes %}
-            <div class="bg-white dark:bg-darkCard border border-gray-100 dark:border-gray-700 rounded-2xl p-6 hover:shadow-lg transition-all relative overflow-hidden group">
-                <div class="absolute top-0 right-0 w-16 h-16 bg-yellow-50 dark:bg-gray-700 rounded-bl-full -mr-8 -mt-8 flex items-end justify-start p-4 transition-transform group-hover:scale-110">
-                    <i class="fa-solid fa-hourglass-half text-yellow-600 dark:text-yellow-400 text-sm"></i>
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6 pb-12">
+    
+    <!-- HEADER Y KPIS -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+        <!-- Título con Icono Maletín Verde -->
+        <div class="flex items-center gap-4">
+            <div class="w-13 h-13 p-3.5 rounded-2xl bg-[#0a4d3c] text-white flex items-center justify-center shadow-md">
+                <i class="fa-solid fa-briefcase text-2xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Banco de Solicitudes</h1>
+                <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Gestiona las solicitudes de análisis de suelo pendientes y en proceso.</p>
+            </div>
+        </div>
+
+        <!-- 4 KPI Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto">
+            <!-- 1. Pendientes -->
+            <div onclick="filtrarPorPestana('PENDIENTE')" class="kpi-card cursor-pointer bg-white dark:bg-darkCard border border-gray-100 dark:border-gray-800 rounded-2xl p-3 sm:px-4 sm:py-3 flex items-center gap-3 shadow-sm min-w-[130px]">
+                <div class="w-9 h-9 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm shadow-sm flex-shrink-0">
+                    <i class="fa-regular fa-clock"></i>
                 </div>
-                
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1 relative z-10 font-heading">Solicitud #{{ sol.id }}</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400 font-medium mb-4 relative z-10"><i class="fa-regular fa-calendar mr-1 text-primary"></i> {{ sol.fecha_solicitud|date:"d M Y" }}</p>
-                
-                <div class="space-y-4 mb-8 relative z-10">
-                    <div class="flex items-start gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 border border-blue-100 dark:border-gray-600 shadow-sm">
-                            <i class="fa-solid fa-user"></i>
+                <div class="min-w-0">
+                    <span class="text-xl font-extrabold text-amber-600 dark:text-amber-500 block leading-tight">{{ pendientes_count }}</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 font-medium truncate block">Pendientes</span>
+                </div>
+            </div>
+
+            <!-- 2. Aceptadas -->
+            <div onclick="filtrarPorPestana('ASIGNADA')" class="kpi-card cursor-pointer bg-white dark:bg-darkCard border border-gray-100 dark:border-gray-800 rounded-2xl p-3 sm:px-4 sm:py-3 flex items-center gap-3 shadow-sm min-w-[130px]">
+                <div class="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center text-sm shadow-sm flex-shrink-0">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <div class="min-w-0">
+                    <span class="text-xl font-extrabold text-gray-800 dark:text-white block leading-tight">{{ aceptadas_count }}</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 font-medium truncate block">Aceptadas</span>
+                </div>
+            </div>
+
+            <!-- 3. En Proceso -->
+            <div onclick="filtrarPorPestana('EN_PROCESO')" class="kpi-card cursor-pointer bg-white dark:bg-darkCard border border-gray-100 dark:border-gray-800 rounded-2xl p-3 sm:px-4 sm:py-3 flex items-center gap-3 shadow-sm min-w-[130px]">
+                <div class="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm shadow-sm flex-shrink-0">
+                    <i class="fa-solid fa-flask"></i>
+                </div>
+                <div class="min-w-0">
+                    <span class="text-xl font-extrabold text-gray-800 dark:text-white block leading-tight">{{ en_proceso_count }}</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 font-medium truncate block">En proceso</span>
+                </div>
+            </div>
+
+            <!-- 4. Finalizadas -->
+            <div onclick="filtrarPorPestana('COMPLETADA')" class="kpi-card cursor-pointer bg-white dark:bg-darkCard border border-gray-100 dark:border-gray-800 rounded-2xl p-3 sm:px-4 sm:py-3 flex items-center gap-3 shadow-sm min-w-[130px]">
+                <div class="w-9 h-9 rounded-full bg-slate-500 text-white flex items-center justify-center text-sm shadow-sm flex-shrink-0">
+                    <i class="fa-solid fa-box-archive"></i>
+                </div>
+                <div class="min-w-0">
+                    <span class="text-xl font-extrabold text-gray-800 dark:text-white block leading-tight">{{ finalizadas_count }}</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 font-medium truncate block">Finalizadas</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BARRA DE BÚSQUEDA Y FILTROS -->
+    <div class="bg-white dark:bg-darkCard border border-gray-100 dark:border-gray-800 rounded-2xl p-3 shadow-sm flex flex-col md:flex-row items-center gap-3">
+        <!-- Input de Búsqueda -->
+        <div class="relative flex-1 w-full">
+            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+            <input type="text" id="searchInput" placeholder="Buscar por número de solicitud, agricultor o terreno..." 
+                   class="w-full bg-transparent pl-11 pr-4 py-2 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none">
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
+            <!-- Selector Fecha -->
+            <div class="relative">
+                <select id="dateFilter" class="appearance-none bg-white dark:bg-darkCard border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-xs sm:text-sm rounded-xl pl-9 pr-8 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+                    <option value="all">Fecha</option>
+                    <option value="recent">Más recientes</option>
+                    <option value="oldest">Más antiguas</option>
+                    <option value="7days">Últimos 7 días</option>
+                    <option value="30days">Último mes</option>
+                </select>
+                <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+                <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none"></i>
+            </div>
+
+            <!-- Selector Estado -->
+            <div class="relative">
+                <select id="statusFilter" class="appearance-none bg-white dark:bg-darkCard border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-xs sm:text-sm rounded-xl pl-9 pr-8 py-2.5 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer">
+                    <option value="all">Estado</option>
+                    <option value="PENDIENTE">Pendientes</option>
+                    <option value="ASIGNADA">Aceptadas</option>
+                    <option value="EN_PROCESO">En proceso</option>
+                    <option value="COMPLETADA">Finalizadas</option>
+                </select>
+                <i class="fa-solid fa-filter absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+                <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none"></i>
+            </div>
+
+            <!-- Botón Limpiar Filtros -->
+            <button id="clearFiltersBtn" type="button" class="bg-white dark:bg-darkCard hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 text-xs sm:text-sm font-semibold rounded-xl px-3.5 py-2.5 flex items-center gap-2 transition-colors">
+                <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                <span>Limpiar filtros</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- PESTAÑAS (TABS TIPO PILL) -->
+    <div class="flex flex-wrap items-center gap-2" id="statusTabs">
+        <button type="button" data-tab="all" class="tab-btn px-5 py-2 rounded-full text-xs sm:text-sm font-bold border transition-all tab-pill-active">
+            Todas ({{ total_count }})
+        </button>
+        <button type="button" data-tab="PENDIENTE" class="tab-btn px-5 py-2 rounded-full text-xs sm:text-sm font-semibold border transition-all tab-pill-inactive hover:bg-gray-50 dark:hover:bg-gray-800">
+            Pendientes ({{ pendientes_count }})
+        </button>
+        <button type="button" data-tab="ASIGNADA" class="tab-btn px-5 py-2 rounded-full text-xs sm:text-sm font-semibold border transition-all tab-pill-inactive hover:bg-gray-50 dark:hover:bg-gray-800">
+            Aceptadas ({{ aceptadas_count }})
+        </button>
+        <button type="button" data-tab="EN_PROCESO" class="tab-btn px-5 py-2 rounded-full text-xs sm:text-sm font-semibold border transition-all tab-pill-inactive hover:bg-gray-50 dark:hover:bg-gray-800">
+            En proceso ({{ en_proceso_count }})
+        </button>
+        <button type="button" data-tab="COMPLETADA" class="tab-btn px-5 py-2 rounded-full text-xs sm:text-sm font-semibold border transition-all tab-pill-inactive hover:bg-gray-50 dark:hover:bg-gray-800">
+            Finalizadas ({{ finalizadas_count }})
+        </button>
+    </div>
+
+    <!-- GRID DE TARJETAS DE SOLICITUD -->
+    <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {% for sol in solicitudes %}
+        <div class="solicitud-card bg-white dark:bg-darkCard border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-sm flex flex-col justify-between"
+             data-id="{{ sol.id }}"
+             data-estado="{{ sol.estado }}"
+             data-agricultor="{{ sol.agricultor.get_full_name|default:sol.agricultor.username|lower }}"
+             data-terreno="{{ sol.terreno.nombre|lower }}"
+             data-timestamp="{{ sol.fecha_solicitud|date:'U' }}"
+             data-modalidad="{{ sol.modalidad }}"
+             data-cultivo="{{ sol.cultivo_deseado }}">
+
+            <div>
+                <!-- HEADER DE LA TARJETA -->
+                <div class="flex items-start justify-between gap-2 mb-4 pb-3 border-b border-gray-50 dark:border-gray-800/60">
+                    <div class="flex items-center flex-wrap gap-2">
+                        <div class="flex items-center gap-1.5">
+                            <h3 class="text-base font-extrabold text-gray-900 dark:text-white font-heading">
+                                Solicitud #{{ sol.id }}
+                            </h3>
+                            <!-- Ícono de persona verde -->
+                            <i class="fa-solid fa-person-digging text-emerald-600 dark:text-emerald-400 text-sm"></i>
                         </div>
-                        <div>
-                            <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold tracking-widest">Agricultor</p>
-                            <p class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ sol.agricultor.get_full_name|default:sol.agricultor.username }}</p>
+
+                        <!-- BADGE DE ESTADO -->
+                        {% if sol.estado == 'PENDIENTE' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pendiente
+                        </span>
+                        {% elif sol.estado == 'ASIGNADA' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
+                            <i class="fa-solid fa-check text-[10px]"></i> Aceptada
+                        </span>
+                        {% elif sol.estado == 'EN_PROCESO' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60">
+                            <i class="fa-solid fa-arrows-rotate text-[10px]"></i> En proceso
+                        </span>
+                        {% elif sol.estado == 'COMPLETADA' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span> Finalizada
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
+                            {{ sol.get_estado_display }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- FECHA Y HORA -->
+                    <div class="text-right text-[11px] text-gray-500 dark:text-gray-400 font-medium flex-shrink-0">
+                        <div class="flex items-center justify-end gap-1">
+                            <i class="fa-regular fa-calendar text-[10px] text-gray-400"></i>
+                            <span>{{ sol.fecha_solicitud|date:"d M Y" }}</span>
+                        </div>
+                        <div class="text-[10px] text-gray-400">
+                            {{ sol.fecha_solicitud|date:"h:i a" }}
                         </div>
                     </div>
+                </div>
+
+                <!-- CUERPO DE LA TARJETA -->
+                <div class="relative space-y-3.5 mb-5">
                     
-                    <div class="flex items-start gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-green-50 dark:bg-gray-700 text-primary dark:text-green-400 flex items-center justify-center flex-shrink-0 border border-green-100 dark:border-gray-600 shadow-sm">
-                            <i class="fa-solid fa-map-location-dot"></i>
+                    <!-- BADGE DE TIEMPO EN ESPERA (SOLO PENDIENTES) -->
+                    {% if sol.estado == 'PENDIENTE' and sol.dias_espera_display %}
+                    <div class="float-right ml-2 mb-2 bg-[#ecfdf5] dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl px-3 py-2 text-center text-emerald-900 dark:text-emerald-200 shadow-sm">
+                        <div class="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium flex items-center justify-center gap-1">
+                            <i class="fa-regular fa-clock text-[10px]"></i> Lleva
                         </div>
-                        <div>
-                            <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold tracking-widest">Terreno</p>
-                            <p class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ sol.terreno.nombre }}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">{{ sol.terreno.ubicacion }} • {{ sol.terreno.hectareas }} ha</p>
+                        <div class="text-sm font-extrabold text-emerald-900 dark:text-emerald-200 leading-tight my-0.5">
+                            {{ sol.dias_espera_display }}
                         </div>
-                    </div>
-                    
-                    {% if sol.terreno.cultivo_principal %}
-                    <div class="flex items-start gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-orange-50 dark:bg-gray-700 text-orange-600 dark:text-orange-400 flex items-center justify-center flex-shrink-0 border border-orange-100 dark:border-gray-600 shadow-sm">
-                            <i class="fa-solid fa-seedling"></i>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold tracking-widest">Cultivo Principal</p>
-                            <p class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ sol.terreno.cultivo_principal }}</p>
-                        </div>
+                        <div class="text-[9px] text-emerald-600 dark:text-emerald-400 font-medium">en espera</div>
                     </div>
                     {% endif %}
-                </div>
-                
-                <div class="flex gap-3 relative z-10">
-                    <button onclick="rechazarSolicitud('{{ sol.id }}')" class="w-1/3 bg-red-50 dark:bg-gray-700 hover:bg-red-100 dark:hover:bg-gray-600 text-red-700 dark:text-red-400 font-bold py-3 rounded-xl transition-colors flex items-center justify-center border border-red-100 dark:border-gray-600 shadow-sm">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                    <button onclick="aceptarSolicitud('{{ sol.id }}')" class="w-2/3 bg-primary hover:bg-secondary text-white font-bold py-3 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-check"></i> Aceptar
-                    </button>
+
+                    <!-- 1. Agricultor -->
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs flex-shrink-0">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[11px] text-gray-400 dark:text-gray-500 font-medium leading-tight">Agricultor</p>
+                            <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight truncate">
+                                {{ sol.agricultor.get_full_name|default:sol.agricultor.username }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 2. Terreno -->
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs flex-shrink-0">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[11px] text-gray-400 dark:text-gray-500 font-medium leading-tight">Terreno</p>
+                            <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight truncate">
+                                {{ sol.terreno.nombre }}
+                            </p>
+                            <p class="text-[11px] text-gray-500 dark:text-gray-400 font-medium truncate">
+                                {{ sol.terreno.ubicacion }} • {{ sol.terreno.hectareas }} ha
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 3. Cultivo deseado -->
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-orange-50 dark:bg-orange-950/50 text-orange-500 dark:text-orange-400 flex items-center justify-center text-xs flex-shrink-0">
+                            <i class="fa-solid fa-seedling"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[11px] text-gray-400 dark:text-gray-500 font-medium leading-tight">Cultivo deseado</p>
+                            <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight truncate">
+                                {{ sol.cultivo_deseado }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 4. Modalidad de muestreo -->
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center text-xs flex-shrink-0">
+                            <i class="fa-solid fa-box"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[11px] text-gray-400 dark:text-gray-500 font-medium leading-tight">Modalidad de muestreo</p>
+                            <p class="text-sm font-bold text-gray-900 dark:text-white leading-tight truncate">
+                                {% if sol.modalidad == 'VISITA' %}
+                                    Muestra por visita
+                                {% else %}
+                                    Muestra por entrega
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-            {% endfor %}
+
+            <!-- FOOTER DE ACCIONES -->
+            <div class="pt-3 border-t border-gray-50 dark:border-gray-800/60">
+                {% if sol.estado == 'PENDIENTE' %}
+                <!-- Botones Rechazar y Aceptar -->
+                <div class="flex items-center gap-2.5">
+                    <button type="button" onclick="rechazarSolicitud('{{ sol.id }}')" 
+                            class="flex-1 py-2.5 px-3 rounded-xl border border-red-200 dark:border-red-900/60 bg-white dark:bg-darkCard hover:bg-red-50 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-xmark text-xs"></i> Rechazar
+                    </button>
+                    <button type="button" onclick="aceptarSolicitud('{{ sol.id }}', '{{ sol.modalidad }}')" 
+                            class="flex-1 py-2.5 px-3 rounded-xl bg-[#0a4d3c] hover:bg-[#0d624d] text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all shadow-sm">
+                        <i class="fa-solid fa-check text-xs"></i> Aceptar
+                    </button>
+                </div>
+                {% else %}
+                <!-- Botones Ver Detalles y Triple Punto ⋮ -->
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="verDetallesSolicitud({{ sol.id }})" 
+                            class="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-darkCard hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-all">
+                        <i class="fa-regular fa-eye text-xs text-gray-500"></i> Ver detalles
+                    </button>
+                    
+                    <!-- Menú desplegable con 3 puntos -->
+                    <div class="relative">
+                        <button type="button" onclick="toggleDropdown(event, 'dropdown-{{ sol.id }}')" 
+                                class="w-10 h-10 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-darkCard hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 flex items-center justify-center text-sm transition-all focus:outline-none">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                        
+                        <div id="dropdown-{{ sol.id }}" class="card-dropdown hidden absolute right-0 bottom-full mb-2 w-56 bg-white dark:bg-darkCard border border-gray-100 dark:border-gray-700 rounded-2xl shadow-xl z-30 py-2 text-xs sm:text-sm text-gray-700 dark:text-gray-200">
+                            {% if sol.estado == 'ASIGNADA' or sol.estado == 'EN_PROCESO' %}
+                            <a href="{% url 'toma_muestras_laboratorista' %}?solicitud_id={{ sol.id }}" class="flex items-center gap-2.5 px-4 py-2.5 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-medium">
+                                <i class="fa-solid fa-vial w-4 text-emerald-600"></i> Iniciar Toma de Muestras
+                            </a>
+                            {% endif %}
+                            {% if sol.estado == 'COMPLETADA' %}
+                            <a href="{% url 'solicitudes_agricultor:resultado_detalle' sol.id %}" target="_blank" class="flex items-center gap-2.5 px-4 py-2.5 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium">
+                                <i class="fa-solid fa-file-invoice w-4 text-blue-500"></i> Ver Resultado de Análisis
+                            </a>
+                            {% endif %}
+                            <button type="button" onclick="verDetallesSolicitud({{ sol.id }})" class="w-full text-left flex items-center gap-2.5 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200">
+                                <i class="fa-solid fa-circle-info w-4 text-gray-400"></i> Ver Ficha Completa
+                            </button>
+                            {% if sol.agricultor.email %}
+                            <a href="mailto:{{ sol.agricultor.email }}?subject=TierSystem - Solicitud #{{ sol.id }}" class="flex items-center gap-2.5 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200">
+                                <i class="fa-regular fa-envelope w-4 text-gray-400"></i> Enviar Correo al Agricultor
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
         </div>
-        {% else %}
-        <div class="text-center py-16 rounded-2xl border border-gray-100 dark:border-gray-700">
-            <div class="w-24 h-24 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4 text-gray-400 dark:text-gray-500 text-4xl shadow-sm border border-gray-200 dark:border-gray-700">
+        {% empty %}
+        <div class="col-span-full text-center py-16 bg-white dark:bg-darkCard rounded-3xl border border-gray-100 dark:border-gray-800">
+            <div class="w-20 h-20 bg-emerald-50 dark:bg-emerald-950/40 rounded-3xl flex items-center justify-center mx-auto mb-4 text-[#0a4d3c] dark:text-emerald-400 text-3xl shadow-sm">
                 <i class="fa-solid fa-inbox"></i>
             </div>
-            <h3 class="text-xl font-bold text-gray-900 dark:text-white tracking-tight font-heading">No hay solicitudes nuevas</h3>
-            <p class="text-gray-500 dark:text-gray-400 mt-2 font-medium">Todo el trabajo está al día. ¡Buen trabajo!</p>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white font-heading">No hay solicitudes registradas</h3>
+            <p class="text-gray-500 dark:text-gray-400 mt-1 font-medium text-sm">Cuando los agricultores creen solicitudes de análisis aparecerán aquí.</p>
         </div>
-        {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- MENSAJE DE BÚSQUEDA SIN RESULTADOS -->
+    <div id="noResultsMsg" class="hidden text-center py-16 bg-white dark:bg-darkCard rounded-3xl border border-gray-100 dark:border-gray-800">
+        <div class="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-3 text-gray-400 text-2xl">
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+        <h4 class="text-lg font-bold text-gray-900 dark:text-white">No se encontraron solicitudes</h4>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Prueba cambiando los términos de búsqueda o los filtros aplicados.</p>
+        <button type="button" onclick="resetearFiltros()" class="mt-4 px-4 py-2 bg-[#0a4d3c] text-white text-xs font-bold rounded-xl hover:bg-[#0d624d] transition-all">
+            Restablecer filtros
+        </button>
+    </div>
+
+</div>
+
+<!-- MODAL MODERNO VER DETALLES -->
+<div id="modalDetalles" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-md flex items-center justify-center p-4 transition-all">
+    <div class="bg-white dark:bg-darkCard rounded-3xl shadow-2xl max-w-lg w-full border border-gray-100 dark:border-gray-800 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
+        <!-- Header Modal -->
+        <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                </div>
+                <div>
+                    <h3 id="mdlTitulo" class="text-lg font-bold text-gray-900 dark:text-white font-heading">Solicitud #</h3>
+                    <p id="mdlFecha" class="text-xs text-gray-400 font-medium"></p>
+                </div>
+            </div>
+            <button type="button" onclick="cerrarModalDetalles()" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Contenido Modal -->
+        <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+            <!-- Estado -->
+            <div class="flex items-center justify-between p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700">
+                <span class="text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Estado actual</span>
+                <span id="mdlEstadoBadge"></span>
+            </div>
+
+            <!-- Fila Agricultor -->
+            <div class="space-y-1">
+                <span class="text-[11px] text-gray-400 uppercase font-bold tracking-wider">Agricultor</span>
+                <div class="p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <p id="mdlAgricultor" class="text-sm font-bold text-gray-900 dark:text-white"></p>
+                        <p id="mdlEmail" class="text-xs text-gray-500 dark:text-gray-400"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fila Terreno -->
+            <div class="space-y-1">
+                <span class="text-[11px] text-gray-400 uppercase font-bold tracking-wider">Terreno y Ubicación</span>
+                <div class="p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+                    <div>
+                        <p id="mdlTerreno" class="text-sm font-bold text-gray-900 dark:text-white"></p>
+                        <p id="mdlUbicacion" class="text-xs text-gray-500 dark:text-gray-400"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fila Cultivo y Modalidad -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800">
+                    <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider block mb-1">Cultivo Deseado</span>
+                    <p id="mdlCultivo" class="text-xs font-bold text-gray-900 dark:text-white"></p>
+                </div>
+                <div class="p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800">
+                    <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider block mb-1">Modalidad Muestreo</span>
+                    <p id="mdlModalidad" class="text-xs font-bold text-gray-900 dark:text-white"></p>
+                </div>
+            </div>
+
+            <!-- Fecha Programada -->
+            <div id="mdlFechaVisitaBox" class="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-800/60 hidden">
+                <div class="flex items-center gap-2 text-emerald-800 dark:text-emerald-300">
+                    <i class="fa-solid fa-calendar-check text-sm"></i>
+                    <span class="text-xs font-bold uppercase tracking-wider">Fecha Programada de Visita / Recepción</span>
+                </div>
+                <p id="mdlFechaVisita" class="text-sm font-extrabold text-emerald-900 dark:text-emerald-200 mt-1 pl-6"></p>
+            </div>
+
+            <!-- Notas del Agricultor -->
+            <div id="mdlNotasBox" class="space-y-1 hidden">
+                <span class="text-[11px] text-gray-400 uppercase font-bold tracking-wider">Observaciones del Agricultor</span>
+                <p id="mdlNotas" class="text-xs text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/40 p-3 rounded-2xl border border-gray-100 dark:border-gray-800 italic"></p>
+            </div>
+        </div>
+
+        <!-- Footer Modal con Botones de Acción -->
+        <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20 flex items-center justify-between gap-3">
+            <button type="button" onclick="cerrarModalDetalles()" class="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                Cerrar
+            </button>
+            <div id="mdlAccionesContainer" class="flex items-center gap-2"></div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL ULTRA-PREMIUM ACEPTAR / PROGRAMAR FECHA -->
+<div id="modalAceptar" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-md flex items-center justify-center p-4 transition-all">
+    <div class="bg-white dark:bg-darkCard rounded-3xl shadow-2xl max-w-lg w-full border border-gray-100 dark:border-gray-800 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
+        <!-- Header con Icono y Título -->
+        <div class="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-800 flex items-start justify-between">
+            <div class="flex items-center gap-3.5">
+                <div id="modalAceptarIcon" class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-[#0a4d3c] dark:text-emerald-400 flex items-center justify-center text-xl shadow-sm border border-emerald-100 dark:border-emerald-800/40 flex-shrink-0">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <div>
+                    <h3 id="modalAceptarTitulo" class="text-lg md:text-xl font-extrabold text-gray-900 dark:text-white font-heading">
+                        Programar Recepción de Muestra
+                    </h3>
+                    <p id="modalAceptarSubtitulo" class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">
+                        Selecciona la fecha estimada en la que se recepcionará la muestra en laboratorio.
+                    </p>
+                </div>
+            </div>
+            <button type="button" onclick="cerrarModalAceptar()" class="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <i class="fa-solid fa-xmark text-base"></i>
+            </button>
+        </div>
+
+        <!-- Cuerpo del Modal -->
+        <div class="p-6 space-y-4">
+            <!-- Tarjeta Resumen de la Solicitud -->
+            <div class="bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/80 rounded-2xl p-3.5 space-y-2">
+                <div class="flex items-center justify-between text-xs">
+                    <span id="modalAceptarSolId" class="font-extrabold text-gray-900 dark:text-white text-sm">Solicitud #</span>
+                    <span id="modalAceptarModalidadBadge" class="px-2.5 py-0.5 rounded-full font-semibold text-[11px] bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600"></span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200/60 dark:border-gray-700/60 text-xs">
+                    <div>
+                        <span class="text-[10px] text-gray-400 font-bold uppercase block">Agricultor</span>
+                        <span id="modalAceptarAgricultor" class="font-bold text-gray-800 dark:text-gray-200 truncate block"></span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-gray-400 font-bold uppercase block">Terreno</span>
+                        <span id="modalAceptarTerreno" class="font-bold text-gray-800 dark:text-gray-200 truncate block"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Atajos Rápidos de Fecha (Chips) -->
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                        Atajos rápidos de fecha
+                    </label>
+                    <span class="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">1 clic para asignar</span>
+                </div>
+                <div class="grid grid-cols-4 gap-2" id="chipsContainer">
+                    <button type="button" onclick="seleccionarFechaAtajo(0)" class="chip-fecha py-2 px-1 text-center rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-700 dark:text-gray-200 hover:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all">
+                        Hoy
+                    </button>
+                    <button type="button" onclick="seleccionarFechaAtajo(1)" class="chip-fecha py-2 px-1 text-center rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-700 dark:text-gray-200 hover:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all">
+                        Mañana
+                    </button>
+                    <button type="button" onclick="seleccionarFechaAtajo(3)" class="chip-fecha py-2 px-1 text-center rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-700 dark:text-gray-200 hover:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all">
+                        En 3 días
+                    </button>
+                    <button type="button" onclick="seleccionarFechaAtajo(7)" class="chip-fecha py-2 px-1 text-center rounded-xl border border-gray-200 dark:border-gray-700 text-xs font-bold text-gray-700 dark:text-gray-200 hover:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-all">
+                        En 1 sem.
+                    </button>
+                </div>
+            </div>
+
+            <!-- Selector de Fecha Manual Estilizado -->
+            <div>
+                <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">
+                    Seleccionar fecha específica
+                </label>
+                <div class="relative">
+                    <input type="date" id="modalFechaInput" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 pl-11 text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0a4d3c] focus:border-transparent transition-all cursor-pointer">
+                    <i class="fa-regular fa-calendar-days absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-base pointer-events-none"></i>
+                </div>
+                
+                <!-- Previsualización en texto legible -->
+                <div id="fechaPreviewBox" class="mt-2.5 p-3 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-800/50 flex items-center gap-2.5 text-xs text-emerald-900 dark:text-emerald-200">
+                    <i class="fa-solid fa-calendar-day text-emerald-600 text-sm"></i>
+                    <span id="fechaPreviewTexto" class="font-bold">Selecciona una fecha</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer con Botones -->
+        <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/30 flex items-center justify-end gap-3">
+            <button type="button" onclick="cerrarModalAceptar()" class="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                Cancelar
+            </button>
+            <button type="button" id="btnConfirmarAceptar" onclick="ejecutarAceptarSolicitud()" class="px-6 py-2.5 rounded-xl bg-[#0a4d3c] hover:bg-[#0d624d] text-white text-xs font-bold flex items-center gap-2 shadow-md hover:shadow-lg transition-all">
+                <i class="fa-solid fa-check"></i>
+                <span id="btnConfirmarAceptarTexto">Aceptar y Asignar</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL ULTRA-PREMIUM RECHAZAR SOLICITUD -->
+<div id="modalRechazar" class="fixed inset-0 z-50 hidden overflow-y-auto bg-gray-900/60 backdrop-blur-md flex items-center justify-center p-4 transition-all">
+    <div class="bg-white dark:bg-darkCard rounded-3xl shadow-2xl max-w-md w-full border border-gray-100 dark:border-gray-800 overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200">
+        <div class="p-6 text-center">
+            <div class="w-14 h-14 rounded-2xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center text-2xl mx-auto mb-4 border border-red-100 dark:border-red-800/40">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-lg font-extrabold text-gray-900 dark:text-white font-heading">
+                ¿Rechazar esta solicitud?
+            </h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1 mb-4">
+                La solicitud cambiará a estado <span class="font-bold text-red-600">Rechazada</span> y se notificará automáticamente al agricultor por correo electrónico.
+            </p>
+            <div class="p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/60 text-xs text-left mb-6 space-y-1">
+                <div class="font-extrabold text-gray-900 dark:text-white" id="modalRechazarSolId">Solicitud #</div>
+                <div class="text-gray-500 dark:text-gray-400" id="modalRechazarDetalle"></div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="cerrarModalRechazar()" class="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" id="btnConfirmarRechazar" onclick="ejecutarRechazarSolicitud()" class="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md transition-all">
+                    <i class="fa-solid fa-xmark"></i>
+                    <span id="btnConfirmarRechazarTexto">Sí, rechazar</span>
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    // Datos serializados de las solicitudes para uso instantáneo en el modal
+    const rawSolicitudesData = [
+        {% for sol in solicitudes %}
+        {
+            id: {{ sol.id }},
+            estado: "{{ sol.estado }}",
+            estado_display: "{{ sol.get_estado_display }}",
+            agricultor_nombre: "{{ sol.agricultor.get_full_name|default:sol.agricultor.username|escapejs }}",
+            agricultor_email: "{{ sol.agricultor.email|default:''|escapejs }}",
+            terreno_nombre: "{{ sol.terreno.nombre|escapejs }}",
+            terreno_ubicacion: "{{ sol.terreno.ubicacion|escapejs }}",
+            terreno_ha: "{{ sol.terreno.hectareas }} ha",
+            cultivo: "{{ sol.cultivo_deseado|escapejs }}",
+            modalidad: "{{ sol.modalidad }}",
+            modalidad_display: "{% if sol.modalidad == 'VISITA' %}Muestra por visita en campo{% else %}Muestra por entrega en laboratorio{% endif %}",
+            fecha_solicitud: "{{ sol.fecha_solicitud|date:'d M Y, h:i a' }}",
+            fecha_visita: "{{ sol.fecha_visita|date:'d M Y'|default:'' }}",
+            notas: "{{ sol.notas_agricultor|default:''|escapejs }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    const solicitudesMap = new Map();
+    rawSolicitudesData.forEach(item => solicitudesMap.set(item.id, item));
+
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -100,149 +648,510 @@
 
     const isDarkMode = () => document.documentElement.classList.contains('dark');
 
-    function aceptarSolicitud(solicitudId) {
-        Swal.fire({
-            title: 'Asignar Fecha de Visita',
-            html: `
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 font-medium">Por favor, selecciona la fecha programada para visitar este terreno.</p>
-                <input type="date" id="fechaVisita" class="glass-input w-full rounded-xl px-4 py-2.5 focus:outline-none" min="${new Date().toISOString().split('T')[0]}">
-            `,
-            showCancelButton: true,
-            background: isDarkMode() ? '#1e293b' : '#fff',
-            color: isDarkMode() ? '#fff' : '#000',
-            confirmButtonColor: '#22c55e',
-            cancelButtonColor: isDarkMode() ? '#475569' : '#ef4444',
-            confirmButtonText: '<i class="fa-solid fa-check mr-1"></i> Confirmar',
-            cancelButtonText: 'Cancelar',
-            customClass: {
-                popup: 'rounded-2xl',
-                confirmButton: 'rounded-xl shadow-md',
-                cancelButton: 'rounded-xl'
-            },
-            preConfirm: () => {
-                const fecha = document.getElementById('fechaVisita').value;
-                if (!fecha) {
-                    Swal.showValidationMessage('Debes seleccionar una fecha');
-                }
-                return fecha;
+    // ==========================================
+    // LÓGICA DE FILTRADO Y BÚSQUEDA
+    // ==========================================
+    let activeTab = 'all';
+    const searchInput = document.getElementById('searchInput');
+    const dateFilter = document.getElementById('dateFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const cards = Array.from(document.querySelectorAll('.solicitud-card'));
+    const cardsGrid = document.getElementById('cardsGrid');
+    const noResultsMsg = document.getElementById('noResultsMsg');
+
+    function applyFilters() {
+        const query = searchInput.value.toLowerCase().trim();
+        const selectedStatus = statusFilter.value;
+        const selectedDate = dateFilter.value;
+
+        let visibleCount = 0;
+        const nowSeconds = Math.floor(Date.now() / 1000);
+
+        cards.forEach(card => {
+            const id = card.dataset.id;
+            const estado = card.dataset.estado;
+            const agricultor = card.dataset.agricultor || '';
+            const terreno = card.dataset.terreno || '';
+            const timestamp = parseInt(card.dataset.timestamp || '0', 10);
+
+            // Filtro por pestaña
+            let tabMatch = (activeTab === 'all') || (estado === activeTab);
+
+            // Filtro por select de Estado
+            let statusMatch = (selectedStatus === 'all') || (estado === selectedStatus);
+
+            // Filtro por Texto de Búsqueda
+            let textMatch = !query || 
+                            id.includes(query) || 
+                            `#${id}`.includes(query) || 
+                            `solicitud #${id}`.includes(query) ||
+                            agricultor.includes(query) || 
+                            terreno.includes(query);
+
+            // Filtro por Fecha (días)
+            let dateMatch = true;
+            if (selectedDate === '7days') {
+                dateMatch = (nowSeconds - timestamp) <= (7 * 86400);
+            } else if (selectedDate === '30days') {
+                dateMatch = (nowSeconds - timestamp) <= (30 * 86400);
             }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const fechaVisita = result.value;
-                
-                Swal.fire({
-                    title: 'Asignando...',
-                    allowOutsideClick: false,
-                    background: isDarkMode() ? '#1e293b' : '#fff',
-                    color: isDarkMode() ? '#fff' : '#000',
-                    didOpen: () => Swal.showLoading()
-                });
-                
-                const formData = new FormData();
-                formData.append('fecha_visita', fechaVisita);
-                
-                fetch(`/laboratorista/solicitudes/aceptar/${solicitudId}/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.mensaje) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Asignada!',
-                            text: data.mensaje,
-                            timer: 2000,
-                            showConfirmButton: false,
-                            background: isDarkMode() ? '#1e293b' : '#fff',
-                            color: isDarkMode() ? '#fff' : '#000',
-                        }).then(() => {
-                            window.location.reload();
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: data.error || 'No se pudo asignar',
-                            background: isDarkMode() ? '#1e293b' : '#fff',
-                            color: isDarkMode() ? '#fff' : '#000',
-                        });
-                    }
-                })
-                .catch(error => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error de red',
-                        text: 'Hubo un problema de conexión',
-                        background: isDarkMode() ? '#1e293b' : '#fff',
-                        color: isDarkMode() ? '#fff' : '#000',
-                    });
-                });
+
+            if (tabMatch && statusMatch && textMatch && dateMatch) {
+                card.style.display = 'flex';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Ordenamiento por fecha
+        if (selectedDate === 'recent' || selectedDate === 'oldest') {
+            const sortedCards = [...cards].sort((a, b) => {
+                const timeA = parseInt(a.dataset.timestamp || '0', 10);
+                const timeB = parseInt(b.dataset.timestamp || '0', 10);
+                return selectedDate === 'recent' ? (timeB - timeA) : (timeA - timeB);
+            });
+            sortedCards.forEach(c => cardsGrid.appendChild(c));
+        }
+
+        if (visibleCount === 0 && cards.length > 0) {
+            noResultsMsg.classList.remove('hidden');
+        } else {
+            noResultsMsg.classList.add('hidden');
+        }
+    }
+
+    function setActiveTab(tab) {
+        activeTab = tab;
+        tabButtons.forEach(btn => {
+            if (btn.dataset.tab === tab) {
+                btn.classList.remove('tab-pill-inactive');
+                btn.classList.add('tab-pill-active');
+            } else {
+                btn.classList.remove('tab-pill-active');
+                btn.classList.add('tab-pill-inactive');
+            }
+        });
+        if (statusFilter) {
+            statusFilter.value = tab;
+        }
+        applyFilters();
+    }
+
+    function filtrarPorPestana(tab) {
+        setActiveTab(tab);
+    }
+
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            setActiveTab(btn.dataset.tab);
+        });
+    });
+
+    if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+    }
+    if (statusFilter) {
+        statusFilter.addEventListener('change', (e) => {
+            activeTab = e.target.value;
+            tabButtons.forEach(btn => {
+                if (btn.dataset.tab === activeTab) {
+                    btn.classList.remove('tab-pill-inactive');
+                    btn.classList.add('tab-pill-active');
+                } else {
+                    btn.classList.remove('tab-pill-active');
+                    btn.classList.add('tab-pill-inactive');
+                }
+            });
+            applyFilters();
+        });
+    }
+    if (dateFilter) {
+        dateFilter.addEventListener('change', applyFilters);
+    }
+
+    function resetearFiltros() {
+        if (searchInput) searchInput.value = '';
+        if (dateFilter) dateFilter.value = 'all';
+        if (statusFilter) statusFilter.value = 'all';
+        setActiveTab('all');
+    }
+
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', resetearFiltros);
+    }
+
+    // ==========================================
+    // MENÚS DROPDOWN TRIPLE PUNTO (⋮)
+    // ==========================================
+    function toggleDropdown(event, dropdownId) {
+        event.stopPropagation();
+        const targetDropdown = document.getElementById(dropdownId);
+        document.querySelectorAll('.card-dropdown').forEach(d => {
+            if (d !== targetDropdown) d.classList.add('hidden');
+        });
+        if (targetDropdown) {
+            targetDropdown.classList.toggle('hidden');
+        }
+    }
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.card-dropdown') && !e.target.closest('.action-dropdown-toggle')) {
+            document.querySelectorAll('.card-dropdown').forEach(d => d.classList.add('hidden'));
+        }
+    });
+
+    // ==========================================
+    // MODAL VER DETALLES
+    // ==========================================
+    function verDetallesSolicitud(id) {
+        const sol = solicitudesMap.get(id);
+        if (!sol) return;
+
+        document.getElementById('mdlTitulo').textContent = `Solicitud #${sol.id}`;
+        document.getElementById('mdlFecha').textContent = `Solicitada el ${sol.fecha_solicitud}`;
+        document.getElementById('mdlAgricultor').textContent = sol.agricultor_nombre;
+        document.getElementById('mdlEmail').textContent = sol.agricultor_email ? sol.agricultor_email : 'Sin correo registrado';
+        document.getElementById('mdlTerreno').textContent = sol.terreno_nombre;
+        document.getElementById('mdlUbicacion').textContent = `${sol.terreno_ubicacion} • ${sol.terreno_ha}`;
+        document.getElementById('mdlCultivo').textContent = sol.cultivo;
+        document.getElementById('mdlModalidad').textContent = sol.modalidad_display;
+
+        // Badge Estado
+        const badgeContainer = document.getElementById('mdlEstadoBadge');
+        if (sol.estado === 'PENDIENTE') {
+            badgeContainer.innerHTML = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pendiente</span>`;
+        } else if (sol.estado === 'ASIGNADA') {
+            badgeContainer.innerHTML = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200"><i class="fa-solid fa-check text-[10px]"></i> Aceptada</span>`;
+        } else if (sol.estado === 'EN_PROCESO') {
+            badgeContainer.innerHTML = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200"><i class="fa-solid fa-arrows-rotate text-[10px]"></i> En proceso</span>`;
+        } else if (sol.estado === 'COMPLETADA') {
+            badgeContainer.innerHTML = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200"><span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span> Finalizada</span>`;
+        } else {
+            badgeContainer.innerHTML = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">${sol.estado_display}</span>`;
+        }
+
+        // Fecha de visita
+        const boxFechaVisita = document.getElementById('mdlFechaVisitaBox');
+        if (sol.fecha_visita) {
+            document.getElementById('mdlFechaVisita').textContent = sol.fecha_visita;
+            boxFechaVisita.classList.remove('hidden');
+        } else {
+            boxFechaVisita.classList.add('hidden');
+        }
+
+        // Notas
+        const boxNotas = document.getElementById('mdlNotasBox');
+        if (sol.notas && sol.notas.trim() !== '') {
+            document.getElementById('mdlNotas').textContent = sol.notas;
+            boxNotas.classList.remove('hidden');
+        } else {
+            boxNotas.classList.add('hidden');
+        }
+
+        // Acciones dinámicas en footer modal
+        const containerAcciones = document.getElementById('mdlAccionesContainer');
+        containerAcciones.innerHTML = '';
+
+        if (sol.estado === 'PENDIENTE') {
+            containerAcciones.innerHTML = `
+                <button type="button" onclick="cerrarModalDetalles(); rechazarSolicitud('${sol.id}')" class="px-3.5 py-2 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold transition-colors">
+                    Rechazar
+                </button>
+                <button type="button" onclick="cerrarModalDetalles(); aceptarSolicitud('${sol.id}', '${sol.modalidad}')" class="px-4 py-2 rounded-xl bg-[#0a4d3c] text-white hover:bg-[#0d624d] text-xs font-bold transition-all shadow-sm">
+                    Aceptar Solicitud
+                </button>
+            `;
+        } else if (sol.estado === 'ASIGNADA' || sol.estado === 'EN_PROCESO') {
+            containerAcciones.innerHTML = `
+                <a href="/laboratorista/toma-muestras/?solicitud_id=${sol.id}" class="px-4 py-2 rounded-xl bg-[#0a4d3c] text-white hover:bg-[#0d624d] text-xs font-bold transition-all shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-vial"></i> Ir a Toma de Muestras
+                </a>
+            `;
+        } else if (sol.estado === 'COMPLETADA') {
+            containerAcciones.innerHTML = `
+                <a href="/agricultor/solicitudes/resultado/${sol.id}/" target="_blank" class="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-xs font-bold transition-all shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-file-invoice"></i> Ver Informe
+                </a>
+            `;
+        }
+
+        document.getElementById('modalDetalles').classList.remove('hidden');
+    }
+
+    function cerrarModalDetalles() {
+        document.getElementById('modalDetalles').classList.add('hidden');
+    }
+
+    document.getElementById('modalDetalles').addEventListener('click', (e) => {
+        if (e.target.id === 'modalDetalles') {
+            cerrarModalDetalles();
+        }
+    });
+
+    // ==========================================
+    // MODAL ULTRA-PREMIUM: ACEPTAR SOLICITUD
+    // ==========================================
+    let solicitudActivaParaAceptar = null;
+
+    function formatearFechaTexto(fechaStr) {
+        if (!fechaStr) return 'Selecciona una fecha';
+        const partes = fechaStr.split('-');
+        if (partes.length !== 3) return fechaStr;
+        const d = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
+        const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const fechaFormateada = d.toLocaleDateString('es-ES', opciones);
+        return fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+    }
+
+    function actualizarPreviewFecha(fechaVal) {
+        const previewTexto = document.getElementById('fechaPreviewTexto');
+        if (fechaVal) {
+            previewTexto.textContent = `Programada para: ${formatearFechaTexto(fechaVal)}`;
+        } else {
+            previewTexto.textContent = 'Selecciona una fecha en el calendario o atajo';
+        }
+    }
+
+    function seleccionarFechaAtajo(diasExtra) {
+        const hoy = new Date();
+        hoy.setDate(hoy.getDate() + diasExtra);
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dd = String(hoy.getDate()).padStart(2, '0');
+        const fechaFormatted = `${yyyy}-${mm}-${dd}`;
+
+        const inputFecha = document.getElementById('modalFechaInput');
+        inputFecha.value = fechaFormatted;
+        actualizarPreviewFecha(fechaFormatted);
+
+        // Resaltar chip activo
+        document.querySelectorAll('.chip-fecha').forEach((chip, idx) => {
+            if ((diasExtra === 0 && idx === 0) ||
+                (diasExtra === 1 && idx === 1) ||
+                (diasExtra === 3 && idx === 2) ||
+                (diasExtra === 7 && idx === 3)) {
+                chip.classList.add('bg-[#0a4d3c]', 'text-white', 'border-[#0a4d3c]');
+                chip.classList.remove('text-gray-700', 'dark:text-gray-200');
+            } else {
+                chip.classList.remove('bg-[#0a4d3c]', 'text-white', 'border-[#0a4d3c]');
+                chip.classList.add('text-gray-700', 'dark:text-gray-200');
             }
         });
     }
 
-    function rechazarSolicitud(solicitudId) {
-        Swal.fire({
-            title: '¿Rechazar solicitud?',
-            text: 'Esta acción devolverá la solicitud o la cancelará, ¿estás seguro?',
-            icon: 'warning',
-            showCancelButton: true,
-            background: isDarkMode() ? '#1e293b' : '#fff',
-            color: isDarkMode() ? '#fff' : '#000',
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: isDarkMode() ? '#475569' : '#6b7280',
-            confirmButtonText: '<i class="fa-solid fa-trash mr-1"></i> Rechazar',
-            cancelButtonText: 'Cancelar',
-            customClass: {
-                popup: 'rounded-2xl',
-                confirmButton: 'rounded-xl shadow-md',
-                cancelButton: 'rounded-xl'
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({ 
-                    title: 'Rechazando...', 
-                    allowOutsideClick: false, 
+    function aceptarSolicitud(solicitudId, modalidad) {
+        const sol = solicitudesMap.get(parseInt(solicitudId));
+        solicitudActivaParaAceptar = sol || { id: solicitudId, modalidad: modalidad };
+
+        const esVisita = (modalidad === 'VISITA');
+        const modalTitulo = document.getElementById('modalAceptarTitulo');
+        const modalSubtitulo = document.getElementById('modalAceptarSubtitulo');
+        const modalIcon = document.getElementById('modalAceptarIcon');
+
+        if (esVisita) {
+            modalTitulo.textContent = 'Programar Visita al Terreno';
+            modalSubtitulo.textContent = 'Selecciona la fecha acordada para trasladarse a la finca y tomar las muestras.';
+            modalIcon.innerHTML = '<i class="fa-solid fa-map-location-dot"></i>';
+        } else {
+            modalTitulo.textContent = 'Programar Recepción de Muestra';
+            modalSubtitulo.textContent = 'Selecciona la fecha estimada en la que se recepcionará la muestra en laboratorio.';
+            modalIcon.innerHTML = '<i class="fa-solid fa-flask-vial"></i>';
+        }
+
+        document.getElementById('modalAceptarSolId').textContent = `Solicitud #${solicitudId}`;
+        document.getElementById('modalAceptarModalidadBadge').textContent = esVisita ? 'Muestra por visita' : 'Muestra por entrega';
+        document.getElementById('modalAceptarAgricultor').textContent = sol ? sol.agricultor_nombre : 'Agricultor';
+        document.getElementById('modalAceptarTerreno').textContent = sol ? `${sol.terreno_nombre} (${sol.terreno_ha})` : 'Terreno';
+
+        // Configurar fecha mínima hoy
+        const hoy = new Date();
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+        const dd = String(hoy.getDate()).padStart(2, '0');
+        const minFecha = `${yyyy}-${mm}-${dd}`;
+
+        const inputFecha = document.getElementById('modalFechaInput');
+        inputFecha.min = minFecha;
+
+        // Por defecto seleccionar mañana o hoy si es entrega
+        seleccionarFechaAtajo(esVisita ? 1 : 0);
+
+        document.getElementById('modalAceptar').classList.remove('hidden');
+    }
+
+    function cerrarModalAceptar() {
+        document.getElementById('modalAceptar').classList.add('hidden');
+        solicitudActivaParaAceptar = null;
+    }
+
+    document.getElementById('modalFechaInput').addEventListener('input', (e) => {
+        actualizarPreviewFecha(e.target.value);
+        // Quitar estado activo de chips si fue manual
+        document.querySelectorAll('.chip-fecha').forEach(chip => {
+            chip.classList.remove('bg-[#0a4d3c]', 'text-white', 'border-[#0a4d3c]');
+            chip.classList.add('text-gray-700', 'dark:text-gray-200');
+        });
+    });
+
+    document.getElementById('modalAceptar').addEventListener('click', (e) => {
+        if (e.target.id === 'modalAceptar') {
+            cerrarModalAceptar();
+        }
+    });
+
+    function ejecutarAceptarSolicitud() {
+        if (!solicitudActivaParaAceptar) return;
+        const fechaVisita = document.getElementById('modalFechaInput').value;
+
+        if (!fechaVisita) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Fecha requerida',
+                text: 'Por favor, selecciona una fecha antes de continuar.',
+                background: isDarkMode() ? '#1e293b' : '#fff',
+                color: isDarkMode() ? '#fff' : '#000',
+                confirmButtonColor: '#0a4d3c',
+            });
+            return;
+        }
+
+        const btn = document.getElementById('btnConfirmarAceptar');
+        const btnTexto = document.getElementById('btnConfirmarAceptarTexto');
+        btn.disabled = true;
+        btnTexto.textContent = 'Guardando y notificando...';
+
+        const formData = new FormData();
+        formData.append('fecha_visita', fechaVisita);
+
+        fetch(`/laboratorista/solicitudes/aceptar/${solicitudActivaParaAceptar.id}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.mensaje) {
+                cerrarModalAceptar();
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Solicitud Asignada!',
+                    text: data.mensaje,
+                    timer: 1800,
+                    showConfirmButton: false,
                     background: isDarkMode() ? '#1e293b' : '#fff',
                     color: isDarkMode() ? '#fff' : '#000',
-                    didOpen: () => Swal.showLoading() 
+                }).then(() => {
+                    window.location.reload();
                 });
-                
-                fetch(`/laboratorista/solicitudes/rechazar/${solicitudId}/`, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': getCookie('csrftoken') }
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.mensaje) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Rechazada',
-                            text: data.mensaje,
-                            background: isDarkMode() ? '#1e293b' : '#fff',
-                            color: isDarkMode() ? '#fff' : '#000',
-                        }).then(() => window.location.reload());
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: data.error || 'Error desconocido',
-                            background: isDarkMode() ? '#1e293b' : '#fff',
-                            color: isDarkMode() ? '#fff' : '#000',
-                        });
-                    }
-                }).catch(() => Swal.fire({
+            } else {
+                btn.disabled = false;
+                btnTexto.textContent = 'Aceptar y Asignar';
+                Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Problema de red',
+                    text: data.error || 'No se pudo aceptar la solicitud.',
                     background: isDarkMode() ? '#1e293b' : '#fff',
                     color: isDarkMode() ? '#fff' : '#000',
-                }));
+                });
             }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btnTexto.textContent = 'Aceptar y Asignar';
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de red',
+                text: 'No se pudo conectar con el servidor.',
+                background: isDarkMode() ? '#1e293b' : '#fff',
+                color: isDarkMode() ? '#fff' : '#000',
+            });
+        });
+    }
+
+    // ==========================================
+    // MODAL ULTRA-PREMIUM: RECHAZAR SOLICITUD
+    // ==========================================
+    let solicitudActivaParaRechazar = null;
+
+    function rechazarSolicitud(solicitudId) {
+        const sol = solicitudesMap.get(parseInt(solicitudId));
+        solicitudActivaParaRechazar = sol || { id: solicitudId };
+
+        document.getElementById('modalRechazarSolId').textContent = `Solicitud #${solicitudId}`;
+        if (sol) {
+            document.getElementById('modalRechazarDetalle').textContent = `${sol.agricultor_nombre} • Terreno: ${sol.terreno_nombre}`;
+        } else {
+            document.getElementById('modalRechazarDetalle').textContent = 'Solicitud de análisis';
+        }
+
+        document.getElementById('modalRechazar').classList.remove('hidden');
+    }
+
+    function cerrarModalRechazar() {
+        document.getElementById('modalRechazar').classList.add('hidden');
+        solicitudActivaParaRechazar = null;
+    }
+
+    document.getElementById('modalRechazar').addEventListener('click', (e) => {
+        if (e.target.id === 'modalRechazar') {
+            cerrarModalRechazar();
+        }
+    });
+
+    function ejecutarRechazarSolicitud() {
+        if (!solicitudActivaParaRechazar) return;
+
+        const btn = document.getElementById('btnConfirmarRechazar');
+        const btnTexto = document.getElementById('btnConfirmarRechazarTexto');
+        btn.disabled = true;
+        btnTexto.textContent = 'Rechazando...';
+
+        fetch(`/laboratorista/solicitudes/rechazar/${solicitudActivaParaRechazar.id}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.mensaje) {
+                cerrarModalRechazar();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Solicitud rechazada',
+                    text: data.mensaje,
+                    timer: 1600,
+                    showConfirmButton: false,
+                    background: isDarkMode() ? '#1e293b' : '#fff',
+                    color: isDarkMode() ? '#fff' : '#000',
+                }).then(() => window.location.reload());
+            } else {
+                btn.disabled = false;
+                btnTexto.textContent = 'Sí, rechazar';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.error || 'No se pudo rechazar la solicitud',
+                    background: isDarkMode() ? '#1e293b' : '#fff',
+                    color: isDarkMode() ? '#fff' : '#000',
+                });
+            }
+        })
+        .catch(() => {
+            btn.disabled = false;
+            btnTexto.textContent = 'Sí, rechazar';
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de red',
+                text: 'Ocurrió un problema de conexión.',
+                background: isDarkMode() ? '#1e293b' : '#fff',
+                color: isDarkMode() ? '#fff' : '#000',
+            });
         });
     }
 </script>

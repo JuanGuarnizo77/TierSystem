@@ -218,14 +218,16 @@ class Command(BaseCommand):
         creados = 0
         actualizados = 0
 
+        from apps.cultivos.models import Cultivo
+
         for datos in COMPRADORES_HUILA:
+            cultivos_text = datos.get("cultivos_interes", "")
             comp, created = Comprador.objects.update_or_create(
                 nombre=datos["nombre"],
                 defaults={
                     "tipo": datos["tipo"],
                     "municipio": datos["municipio"],
                     "contacto": datos["contacto"],
-                    "cultivos_interes": datos["cultivos_interes"],
                     "precio_referencia": datos["precio_referencia"] or None,
                     "activo": True,
                     "email": datos["email"],
@@ -233,6 +235,11 @@ class Command(BaseCommand):
                     "sitio_web": datos["sitio_web"],
                 },
             )
+            for nom in [n.strip() for n in cultivos_text.split(',') if n.strip()]:
+                c_obj = Cultivo.objects.filter(nombre__icontains=nom).first()
+                if c_obj:
+                    comp.cultivos_rel.add(c_obj)
+
             if created:
                 creados += 1
                 self.stdout.write(f"  [+] Comprador creado: {comp.nombre}")

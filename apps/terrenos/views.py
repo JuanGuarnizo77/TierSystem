@@ -31,14 +31,15 @@ def crear_terreno(request):
         except ValueError:
             return JsonResponse({'error': 'El tamaño debe ser un número válido'}, status=400)
             
-        Terreno.objects.create(
+        t = Terreno(
             agricultor=request.user,
             nombre=nombre,
             ubicacion=ubicacion,
             hectareas=hectareas,
-            cultivo_principal=cultivo_principal,
             coordenadas_poligono=coordenadas_poligono
         )
+        t.cultivo_principal = cultivo_principal
+        t.save()
         return JsonResponse({'mensaje': 'Finca registrada correctamente.'})
     
     return JsonResponse({'error': 'Método no permitido'}, status=405)

@@ -3,7 +3,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
 from api.permissions import IsAgricultor
-from apps.sipsa.models import CultivoSipsa, PrecioSemanal
+from apps.cultivos.models import Cultivo
+from apps.sipsa.models import PrecioSemanal
 
 
 def _pred_dict(pred):
@@ -26,7 +27,7 @@ def reportes_lista_view(request):
     GET /api/v1/agricultor/reportes/
     Lista de cultivos SIPSA con último precio y predicción.
     """
-    cultivos = CultivoSipsa.objects.filter(activo=True).prefetch_related(
+    cultivos = Cultivo.objects.filter(activo=True).prefetch_related(
         'precios_semanales', 'prediccion'
     )
 
@@ -37,7 +38,7 @@ def reportes_lista_view(request):
             'id': c.pk,
             'nombre': c.nombre,
             'categoria': c.categoria,
-            'unidad': c.unidad,
+            'unidad': getattr(c, 'unidad', 'kg'),
             'ultimo_precio': float(ultimo.precio_kg) if ultimo else None,
             'semana': ultimo.semana_label if ultimo else None,
             'prediccion': _pred_dict(getattr(c, 'prediccion', None)),
@@ -58,7 +59,7 @@ def reportes_detalle_view(request, cultivo_id):
     GET /api/v1/agricultor/reportes/<id>/
     Serie histórica semanal + predicción de un cultivo.
     """
-    cultivo = get_object_or_404(CultivoSipsa, pk=cultivo_id, activo=True)
+    cultivo = get_object_or_404(Cultivo, pk=cultivo_id, activo=True)
     precios = cultivo.precios_semanales.order_by('fecha_semana')
 
     return Response({
@@ -66,7 +67,7 @@ def reportes_detalle_view(request, cultivo_id):
             'id': cultivo.pk,
             'nombre': cultivo.nombre,
             'categoria': cultivo.categoria,
-            'unidad': cultivo.unidad,
+            'unidad': getattr(cultivo, 'unidad', 'kg'),
         },
         'precios': [
             {

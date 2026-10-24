@@ -7,7 +7,8 @@ from django.utils.html import strip_tags
 from django.conf import settings
 from .models import SolicitudAnalisis
 from apps.analisis.models import RegistroAnalisis
-from apps.ia_recomendaciones.models import CultivoIdeal, ConfiguracionGlobal
+from apps.cultivos.models import Cultivo
+from apps.ia_recomendaciones.models import ConfiguracionGlobal
 from datetime import datetime
 import json
 import io
@@ -21,8 +22,49 @@ def solicitudes_pendientes(request):
     if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'LABORATORISTA':
         return redirect('home')
         
-    solicitudes = SolicitudAnalisis.objects.filter(estado='PENDIENTE').order_by('-fecha_solicitud')
-    return render(request, 'laboratorista/solicitudes_pendientes.html', {'solicitudes': solicitudes})
+    from django.utils import timezone
+    ahora = timezone.now()
+    
+    solicitudes = list(SolicitudAnalisis.objects.filter(
+        estado__in=['PENDIENTE', 'ASIGNADA', 'EN_PROCESO', 'COMPLETADA']
+    ).select_related('agricultor', 'terreno', 'cultivo_deseado_ref').order_by('-fecha_solicitud'))
+    
+    pendientes_count = 0
+    aceptadas_count = 0
+    en_proceso_count = 0
+    finalizadas_count = 0
+    
+    for sol in solicitudes:
+        if sol.estado == 'PENDIENTE':
+            pendientes_count += 1
+            dias = (ahora - sol.fecha_solicitud).days
+            if dias <= 0:
+                sol.dias_espera_display = "Hoy"
+            elif dias == 1:
+                sol.dias_espera_display = "1 día"
+            else:
+                sol.dias_espera_display = f"{dias} días"
+        elif sol.estado == 'ASIGNADA':
+            aceptadas_count += 1
+            sol.dias_espera_display = None
+        elif sol.estado == 'EN_PROCESO':
+            en_proceso_count += 1
+            sol.dias_espera_display = None
+        elif sol.estado == 'COMPLETADA':
+            finalizadas_count += 1
+            sol.dias_espera_display = None
+        else:
+            sol.dias_espera_display = None
+
+    context = {
+        'solicitudes': solicitudes,
+        'total_count': len(solicitudes),
+        'pendientes_count': pendientes_count,
+        'aceptadas_count': aceptadas_count,
+        'en_proceso_count': en_proceso_count,
+        'finalizadas_count': finalizadas_count,
+    }
+    return render(request, 'laboratorista/solicitudes_pendientes.html', context)
 
 @login_required(login_url='login')
 def solicitudes_asignadas(request):
@@ -132,7 +174,7 @@ def mis_solicitudes_agricultor(request):
     terrenos = Terreno.objects.filter(agricultor=request.user)
     
     # Lista de cultivos para el selector
-    cultivos = CultivoIdeal.objects.all().order_by('nombre')
+    cultivos = Cultivo.objects.filter(activo=True).order_by('nombre')
     
     context = {
         'solicitudes': solicitudes,
@@ -173,14 +215,15 @@ def crear_solicitud(request):
         from apps.terrenos.models import Terreno
         try:
             terreno = Terreno.objects.get(id=terreno_id, agricultor=request.user)
-            solicitud = SolicitudAnalisis.objects.create(
+            solicitud = SolicitudAnalisis(
                 agricultor=request.user,
                 terreno=terreno,
-                cultivo_deseado=cultivo_deseado,
                 modalidad=modalidad,
                 notas_agricultor=notas,
                 estado='PENDIENTE'
             )
+            solicitud.cultivo_deseado = cultivo_deseado
+            solicitud.save()
             return JsonResponse({
                 'mensaje': f'Solicitud #{solicitud.id} creada exitosamente. Tu solicitud está en estado Pendiente para atención del Laboratorista.'
             })
@@ -218,37 +261,43 @@ def _evaluar_parametros_agronomicos(analisis_obj, cultivo_nombre):
     Función utilitaria que calcula el estado de los 7 parámetros,
     rangos ideales, barras porcentuales y recomendaciones específicas.
     """
-    # Buscar cultivo ideal en BD
-    cultivo_ideal = CultivoIdeal.objects.filter(nombre__icontains=cultivo_nombre).first()
-    if not cultivo_ideal:
-        cultivo_ideal = CultivoIdeal.objects.first() # Fallback
+    # Buscar cultivo en catálogo maestro
+    if hasattr(cultivo_nombre, 'nombre'):
+        cultivo_ideal = cultivo_nombre
+    elif cultivo_nombre:
+        cultivo_ideal = Cultivo.objects.filter(nombre__icontains=str(cultivo_nombre)).first()
+    else:
+        cultivo_ideal = Cultivo.objects.first()
 
-    # Valores ideales por defecto si no existen
+    if not cultivo_ideal:
+        cultivo_ideal = Cultivo.objects.first() # Fallback
+
+    # Valores ideales convertidos estrictamente a float para evitar TypeError con Decimal
     c_ideal = {
-        'ph_min': getattr(cultivo_ideal, 'ph_min', 5.8),
-        'ph_max': getattr(cultivo_ideal, 'ph_max', 7.0),
-        'n_min': getattr(cultivo_ideal, 'nitrogeno_min', 30.0),
-        'n_max': getattr(cultivo_ideal, 'nitrogeno_max', 50.0),
-        'p_min': getattr(cultivo_ideal, 'fosforo_min', 20.0),
-        'p_max': getattr(cultivo_ideal, 'fosforo_max', 40.0),
-        'k_min': getattr(cultivo_ideal, 'potasio_min', 100.0),
-        'k_max': getattr(cultivo_ideal, 'potasio_max', 180.0),
-        'hum_min': getattr(cultivo_ideal, 'humedad_min', 50.0),
-        'hum_max': getattr(cultivo_ideal, 'humedad_max', 70.0),
-        'ce_min': getattr(cultivo_ideal, 'conductividad_min', 0.5),
-        'ce_max': getattr(cultivo_ideal, 'conductividad_max', 1.5),
-        'temp_min': getattr(cultivo_ideal, 'temperatura_min', 18.0),
-        'temp_max': getattr(cultivo_ideal, 'temperatura_max', 30.0),
+        'ph_min': float(getattr(cultivo_ideal, 'ph_min', 5.8) or 5.8),
+        'ph_max': float(getattr(cultivo_ideal, 'ph_max', 7.0) or 7.0),
+        'n_min': float(getattr(cultivo_ideal, 'nitrogeno_min', 30.0) or 30.0),
+        'n_max': float(getattr(cultivo_ideal, 'nitrogeno_max', 50.0) or 50.0),
+        'p_min': float(getattr(cultivo_ideal, 'fosforo_min', 20.0) or 20.0),
+        'p_max': float(getattr(cultivo_ideal, 'fosforo_max', 40.0) or 40.0),
+        'k_min': float(getattr(cultivo_ideal, 'potasio_min', 100.0) or 100.0),
+        'k_max': float(getattr(cultivo_ideal, 'potasio_max', 180.0) or 180.0),
+        'hum_min': float(getattr(cultivo_ideal, 'humedad_min', 50.0) or 50.0),
+        'hum_max': float(getattr(cultivo_ideal, 'humedad_max', 70.0) or 70.0),
+        'ce_min': float(getattr(cultivo_ideal, 'conductividad_min', 0.5) or 0.5),
+        'ce_max': float(getattr(cultivo_ideal, 'conductividad_max', 1.5) or 1.5),
+        'temp_min': float(getattr(cultivo_ideal, 'temperatura_min', 18.0) or 18.0),
+        'temp_max': float(getattr(cultivo_ideal, 'temperatura_max', 30.0) or 30.0),
     }
 
     medidos = {
-        'ph': float(analisis_obj.ph),
-        'n': float(analisis_obj.nitrogeno),
-        'p': float(analisis_obj.fosforo),
-        'k': float(analisis_obj.potasio),
-        'hum': float(analisis_obj.humedad),
-        'ce': float(analisis_obj.conductividad),
-        'temp': float(analisis_obj.temperatura),
+        'ph': float(analisis_obj.ph or 0),
+        'n': float(analisis_obj.nitrogeno or 0),
+        'p': float(analisis_obj.fosforo or 0),
+        'k': float(analisis_obj.potasio or 0),
+        'hum': float(analisis_obj.humedad or 0),
+        'ce': float(analisis_obj.conductividad or 0),
+        'temp': float(analisis_obj.temperatura or 0),
     }
 
     params = []
@@ -258,11 +307,15 @@ def _evaluar_parametros_agronomicos(analisis_obj, cultivo_nombre):
     # Evaluador por parámetro
     def procesar(nombre, med, v_min, v_max, unidad, escala_max, consejo_def, consejo_exc, ganancia_def, ganancia_exc):
         nonlocal optimos_count
+        med = float(med or 0)
+        v_min = float(v_min or 0)
+        v_max = float(v_max or 0)
+        diff_range = v_max - v_min
         if med < v_min:
             estado = 'Deficiente'
             clase_estado = 'pill-amber'
             barra_clase = 'bar-amber'
-            pct = max(10, min(100, int((med / v_max) * 80)))
+            pct = max(10, min(100, int((med / max(v_max, 1.0)) * 80)))
             recomendaciones.append({
                 'parametro': nombre,
                 'tipo': 'Deficiente',
@@ -290,8 +343,9 @@ def _evaluar_parametros_agronomicos(analisis_obj, cultivo_nombre):
             estado = 'Óptimo'
             clase_estado = 'pill-green'
             barra_clase = 'bar-green'
-            pct = max(20, min(100, int(((med - v_min) / (v_max - v_min + 0.001)) * 40 + 50)))
+            pct = max(20, min(100, int(((med - v_min) / (diff_range if diff_range > 0 else 1.0)) * 40 + 50)))
             optimos_count += 1
+
 
         params.append({
             'nombre': nombre,
@@ -383,17 +437,30 @@ def _evaluar_parametros_agronomicos(analisis_obj, cultivo_nombre):
 @login_required(login_url='login')
 def resultado_detalle_agricultor(request, solicitud_id):
     """
-    US-0028, US-0029, US-0030: Pantalla de resultado completo de análisis del Agricultor.
+    US-0028, US-0029, US-0030: Pantalla de resultado completo de análisis del suelo.
+    Accesible para el Agricultor dueño, Laboratoristas y Administradores.
     """
-    if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
+    if not hasattr(request.user, 'perfil'):
         return redirect('home')
         
-    solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id, agricultor=request.user)
+    rol = request.user.perfil.rol
+    if rol == 'AGRICULTOR':
+        solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id, agricultor=request.user)
+        base_template = 'agricultor/base_dashboard.html'
+    elif rol == 'LABORATORISTA':
+        solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id)
+        base_template = 'laboratorista/base_dashboard.html'
+    elif rol == 'ADMIN':
+        solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id)
+        base_template = 'admin/base_admin.html'
+    else:
+        return redirect('home')
     
     if not hasattr(solicitud, 'analisis_resultado'):
         return render(request, 'agricultor/resultado_detalle.html', {
             'solicitud': solicitud,
-            'analisis_pendiente': True
+            'analisis_pendiente': True,
+            'base_template': base_template,
         })
         
     analisis = solicitud.analisis_resultado
@@ -403,7 +470,8 @@ def resultado_detalle_agricultor(request, solicitud_id):
         'solicitud': solicitud,
         'analisis': analisis,
         'evaluacion': evaluacion,
-        'analisis_pendiente': False
+        'analisis_pendiente': False,
+        'base_template': base_template,
     }
     return render(request, 'agricultor/resultado_detalle.html', context)
 
@@ -689,13 +757,21 @@ def exportar_historial_excel(request):
 def exportar_analisis_individual_pdf(request, solicitud_id):
     """
     US-0012: Exporta la ficha técnica y certificado de un análisis individual.
+    Permitido para el agricultor dueño, laboratoristas y administradores.
     """
-    if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
+    if not hasattr(request.user, 'perfil'):
         return redirect('home')
         
-    solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id, agricultor=request.user)
+    rol = request.user.perfil.rol
+    if rol == 'AGRICULTOR':
+        solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id, agricultor=request.user)
+    elif rol in ['LABORATORISTA', 'ADMIN']:
+        solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id)
+    else:
+        return redirect('home')
+        
     if not hasattr(solicitud, 'analisis_resultado'):
-        return redirect('solicitudes_agricultor:mis_solicitudes')
+        return redirect('home')
         
     from reportlab.pdfgen import canvas
     from reportlab.lib.pagesizes import letter
@@ -723,7 +799,7 @@ def exportar_analisis_individual_pdf(request, solicitud_id):
     p.drawString(40, 690, f"Solicitud #{solicitud.id} — Cultivo Objetivo: {solicitud.cultivo_deseado}")
     
     p.setFont("Helvetica", 10)
-    p.drawString(40, 670, f"Agricultor: {request.user.get_full_name() or request.user.username} | Finca: {solicitud.terreno.nombre} ({solicitud.terreno.hectareas} ha)")
+    p.drawString(40, 670, f"Agricultor: {solicitud.agricultor.get_full_name() or solicitud.agricultor.username} | Finca: {solicitud.terreno.nombre} ({solicitud.terreno.hectareas} ha)")
     p.drawString(40, 655, f"Fecha: {solicitud.fecha_solicitud.strftime('%d/%m/%Y')} | Compatibilidad Calculada: {ev['compatibilidad']}% ({ev['nivel_compatibilidad']})")
     
     # Tabla Parámetros
@@ -771,13 +847,21 @@ def exportar_analisis_individual_pdf(request, solicitud_id):
 def exportar_analisis_individual_excel(request, solicitud_id):
     """
     US-0012: Exporta la ficha técnica de un análisis individual en formato Excel (.xlsx).
+    Permitido para el agricultor dueño, laboratoristas y administradores.
     """
-    if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
+    if not hasattr(request.user, 'perfil'):
         return redirect('home')
 
-    solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id, agricultor=request.user)
+    rol = request.user.perfil.rol
+    if rol == 'AGRICULTOR':
+        solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id, agricultor=request.user)
+    elif rol in ['LABORATORISTA', 'ADMIN']:
+        solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id)
+    else:
+        return redirect('home')
+
     if not hasattr(solicitud, 'analisis_resultado'):
-        return redirect('solicitudes_agricultor:mis_solicitudes')
+        return redirect('home')
 
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment
