@@ -110,6 +110,12 @@ def toma_muestras_laboratorista(request):
                 
             except SolicitudAnalisis.DoesNotExist:
                 pass
+
+        # Precargar catálogo de cultivos para operación y caché OFFLINE
+        from apps.cultivos.models import Cultivo
+        cultivos_activos = Cultivo.objects.filter(activo=True)
+        context['cultivos_lista'] = cultivos_activos
+        context['cultivos_catalogo_json'] = json.dumps([c.to_dict() for c in cultivos_activos])
                 
         return render(request, 'laboratorista/toma_muestras.html', context)
     else:

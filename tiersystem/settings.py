@@ -16,8 +16,12 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dummy-key-for-dev')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,tiersystem.pythonanywhere.com').split(',')
-CSRF_TRUSTED_ORIGINS = ['https://tiersystem.pythonanywhere.com']
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,tiersystem.pythonanywhere.com').split(',')
+
+CSRF_TRUSTED_ORIGINS = ['https://tiersystem.pythonanywhere.com', 'http://localhost:8000', 'http://127.0.0.1:8000']
 
 # Application definition
 INSTALLED_APPS = [
