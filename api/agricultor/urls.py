@@ -7,6 +7,7 @@ from .views_perfil import perfil_view, cambiar_password_view
 from .views_resultados import historial_view, resultado_view, comparar_view
 from .views_cultivos import catalogo_cultivos_view
 from .views_mercado import precios_sipsa_view, actualizar_precios_view
+from .views_reportes import reportes_lista_view, reportes_detalle_view
 
 router = DefaultRouter()
 router.register(r'terrenos', TerrenoViewSet, basename='agricultor_terrenos')
@@ -21,4 +22,6 @@ urlpatterns = [
     path('cultivos/', catalogo_cultivos_view, name='agricultor_cultivos'),
     path('mercado/precios/', precios_sipsa_view, name='agricultor_mercado_precios'),
     path('mercado/actualizar/', actualizar_precios_view, name='agricultor_mercado_actualizar'),
+    path('reportes/', reportes_lista_view, name='agricultor_reportes'),
+    path('reportes/<int:cultivo_id>/', reportes_detalle_view, name='agricultor_reportes_detalle'),
 ] + router.urls

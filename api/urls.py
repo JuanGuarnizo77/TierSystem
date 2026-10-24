@@ -12,6 +12,9 @@ urlpatterns = [
     # Módulo de Agricultor (fincas, solicitudes y perfil)
     path('agricultor/', include('api.agricultor.urls')),
 
+    # Módulo de Laboratorista (dashboard)
+    path('laboratorista/', include('api.laboratorista.urls')),
+
     # Alias directo para compatibilidad con llamadas existentes (/api/v1/terrenos/, /api/v1/solicitudes/)
     path('', include('api.agricultor.urls')),
 ]
