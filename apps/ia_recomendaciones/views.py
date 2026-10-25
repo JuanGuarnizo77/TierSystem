@@ -560,90 +560,155 @@ def api_sincronizar_offline(request):
         return JsonResponse({"estado": "error", "mensaje": str(e)}, status=500)
 
 
+def _norm(texto):
+    """Minúsculas y sin tildes, para comparar nombres de cultivos."""
+    import unicodedata
+    t = unicodedata.normalize('NFD', str(texto or '').lower())
+    return ''.join(ch for ch in t if unicodedata.category(ch) != 'Mn').strip()
+
+
+def puntuar_cultivo(cultivo, h, t, c, ph, n, p, k):
+    """
+    % de compatibilidad REAL: compara cada lectura del suelo con los rangos
+    del cultivo en la tabla cultivos_cultivo. Dentro del rango = 100.
+    Fuera del rango baja en proporción a la distancia (ancho del rango = 0%).
+    Devuelve (porcentaje o None, lista de detalles por parámetro).
+    """
+    params = [
+        ('pH', ph, cultivo.ph_min, cultivo.ph_max, 0.25, ''),
+        ('Nitrógeno', n, cultivo.nitrogeno_min, cultivo.nitrogeno_max, 0.15, ' mg/kg'),
+        ('Fósforo', p, cultivo.fosforo_min, cultivo.fosforo_max, 0.15, ' mg/kg'),
+        ('Potasio', k, cultivo.potasio_min, cultivo.potasio_max, 0.15, ' mg/kg'),
+        ('Humedad', h, cultivo.humedad_min, cultivo.humedad_max, 0.10, '%'),
+        ('Temperatura', t, cultivo.temperatura_min, cultivo.temperatura_max, 0.10, ' °C'),
+        ('Conductividad', c, cultivo.conductividad_min, cultivo.conductividad_max, 0.10, ' us/cm'),
+    ]
+    total, peso, detalle = 0.0, 0.0, []
+    for nombre, valor, lo, hi, w, unidad in params:
+        v = float(valor or 0)
+        if v <= 0:
+            continue  # sensor sin lectura: no se inventa
+        lo, hi = float(lo), float(hi)
+        ancho = max(hi - lo, 0.1 * max(abs(hi), 1.0))
+        dist = (lo - v) if v < lo else ((v - hi) if v > hi else 0.0)
+        score = max(0.0, 100.0 - 100.0 * dist / ancho)
+        total += score * w
+        peso += w
+        estado = 'dentro del rango' if dist == 0 else ('por debajo' if v < lo else 'por encima')
+        detalle.append(f"{nombre}: {v:g}{unidad} (ideal {lo:g}-{hi:g}{unidad}) -> {estado}")
+    if peso == 0:
+        return None, detalle
+    return int(round(total / peso)), detalle
+
+
 @login_required(login_url='login')
 @csrf_exempt
 def api_consultar_ia_agricultor(request):
     """
-    Permite al agricultor consultar compatibilidad de un cultivo específico
-    utilizando los parámetros de suelo registrados en su análisis completado.
-    Solo el agricultor dueño del análisis puede consultar.
+    Consulta la compatibilidad de un cultivo con el suelo de un análisis.
+    El PORCENTAJE se calcula con los rangos del catálogo (no lo inventa la IA).
+    Gemini solo redacta la explicación. Pueden consultar el agricultor dueño
+    o el laboratorista asignado.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Solo POST permitido"}, status=405)
-        
+
     try:
         data = json.loads(request.body)
         solicitud_id = data.get("solicitud_id")
         cultivo_busqueda = data.get("cultivo", "").strip()
-        
+
         if not solicitud_id or not cultivo_busqueda:
             return JsonResponse({"estado": "error", "mensaje": "Faltan datos de consulta"}, status=400)
-            
-        from apps.analisis.models import RegistroAnalisis
-        # Verificar ownership — solo el agricultor dueño puede consultar su análisis
+
         from django.db.models import Q
-        analisis = RegistroAnalisis.objects.get(
-            Q(solicitud__agricultor=request.user) |
-            Q(solicitud__laboratorista_asignado=request.user),
-            solicitud_id=solicitud_id,
-        )
-        
+        from apps.analisis.models import RegistroAnalisis
+        try:
+            analisis = RegistroAnalisis.objects.get(
+                Q(solicitud__agricultor=request.user) |
+                Q(solicitud__laboratorista_asignado=request.user),
+                solicitud_id=solicitud_id,
+            )
+        except RegistroAnalisis.DoesNotExist:
+            return JsonResponse({"estado": "error", "mensaje": "Análisis no encontrado"}, status=404)
+
+        # 1) Buscar el cultivo en el catálogo (sin tildes ni mayúsculas)
+        q = _norm(cultivo_busqueda)
+        catalogo = list(Cultivo.objects.filter(activo=True).order_by('nombre'))
+        cultivo = next((c for c in catalogo if _norm(c.nombre) == q), None) \
+            or next((c for c in catalogo if q in _norm(c.nombre)), None)
+
+        # 2) Porcentaje real con los rangos del catálogo
+        compat, detalle = (None, [])
+        if cultivo:
+            compat, detalle = puntuar_cultivo(
+                cultivo, analisis.humedad, analisis.temperatura, analisis.conductividad,
+                analisis.ph, analisis.nitrogeno, analisis.fosforo, analisis.potasio,
+            )
+        nombre_cultivo = cultivo.nombre if cultivo else cultivo_busqueda
+
+        # 3) Texto explicativo con Gemini (opcional)
+        texto = None
         api_key = os.getenv("GEMINI_API_KEY")
         if api_key and genai is not None:
             try:
                 genai.configure(api_key=api_key)
                 model = obtener_modelo_gemini()
-                prompt = f"""
-Eres un ingeniero agrónomo experto en suelos del departamento del Huila, Colombia.
-El agricultor desea consultar si su lote '{analisis.solicitud.terreno.nombre}' es apto para cultivar: '{cultivo_busqueda}'.
-Los parámetros reales medidos con sensor en su terreno son:
-- Humedad: {analisis.humedad}%
-- pH: {analisis.ph}
-- Nitrógeno: {analisis.nitrogeno} mg/kg
-- Fósforo: {analisis.fosforo} mg/kg
-- Potasio: {analisis.potasio} mg/kg
-- Conductividad Eléctrica: {analisis.conductividad} us/cm
-- Temperatura: {analisis.temperatura} °C
-
-Responde estrictamente en formato JSON válido (sin markdown ```json):
-{{
-  "cultivo": "{cultivo_busqueda}",
-  "compatibilidad": 80,
-  "descripcion": "Análisis agronómico detallado y real de viabilidad para esta zona andina/huilense considerando estos nutrientes y pH exactos.",
-  "recomendacion_suelo": "Qué enmienda orgánica o química (cal, materia orgánica), ajuste de riego o fertilización NPK específica requiere este suelo para alcanzar máxima producción de {cultivo_busqueda}."
-}}
-"""
-                res = model.generate_content(prompt)
-                raw_text = res.text.strip()
-                # Extraer JSON de forma segura
-                inicio = raw_text.find('{')
-                fin = raw_text.rfind('}')
-                if inicio != -1 and fin != -1:
-                    clean_text = raw_text[inicio:fin+1]
+                if compat is not None:
+                    contexto = (
+                        f"La compatibilidad ya fue calculada con rangos del catálogo: {compat}%. "
+                        "NO la cambies ni la menciones con otro valor.\n"
+                        "Comparación por parámetro:\n- " + "\n- ".join(detalle)
+                    )
                 else:
-                    clean_text = raw_text.replace("```json", "").replace("```", "").strip()
-                evaluacion = json.loads(clean_text)
+                    contexto = (
+                        "Este cultivo NO está en el catálogo de rangos, así que NO des ningún "
+                        "porcentaje ni número de compatibilidad. Da solo una orientación cualitativa.\n"
+                        f"Lecturas: pH {analisis.ph}, N {analisis.nitrogeno}, P {analisis.fosforo}, "
+                        f"K {analisis.potasio} mg/kg, humedad {analisis.humedad}%, "
+                        f"temperatura {analisis.temperatura} °C."
+                    )
+                prompt = (
+                    "Eres un ingeniero agrónomo experto en suelos del Huila, Colombia.\n"
+                    f"Lote: '{analisis.solicitud.terreno.nombre}'. Cultivo consultado: '{nombre_cultivo}'.\n"
+                    + contexto +
+                    "\nResponde SOLO con JSON válido (sin markdown) con estas dos claves:\n"
+                    '{"descripcion": "explicación breve de por qué este suelo sirve o no para el cultivo, '
+                    'citando los parámetros fuera de rango", '
+                    '"recomendacion_suelo": "enmiendas o fertilización concretas para corregir lo que falte"}'
+                )
+                res = model.generate_content(prompt)
+                raw = res.text.strip()
+                ini, fin = raw.find('{'), raw.rfind('}')
+                texto = json.loads(raw[ini:fin + 1] if ini != -1 and fin != -1 else raw)
             except Exception as ex:
-                import traceback
                 print(f"[GEMINI ERROR en consulta]: {ex}")
-                traceback.print_exc()
-                evaluacion = None
-        else:
-            evaluacion = None
+                texto = None
 
-        if not evaluacion:
-            # Fallback matemático inteligente basado en rangos
-            ph_val = float(analisis.ph)
-            n_val = float(analisis.nitrogeno)
-            compat = 85 if (5.5 <= ph_val <= 6.8 and n_val > 100) else (65 if (5.0 <= ph_val <= 7.2) else 45)
-            evaluacion = {
-                "cultivo": cultivo_busqueda,
-                "compatibilidad": compat,
-                "descripcion": f"Evaluado con los nutrientes registrados en tu predio (pH {analisis.ph}, N {analisis.nitrogeno}mg/kg, P {analisis.fosforo}mg/kg, K {analisis.potasio}mg/kg). Ofrece condiciones {'óptimas y de alto rendimiento' if compat >= 80 else ('favorables con plan de fertilización' if compat >= 60 else 'requiere acondicionamiento previo del pH')}.",
-                "recomendacion_suelo": f"Para {cultivo_busqueda}, mantén una humedad cercana al 60% y refuerza la materia orgánica para facilitar la absorción de N-P-K."
-            }
-            
+        # 4) Respaldo sin IA, también con datos reales
+        if not texto or not texto.get("descripcion"):
+            if compat is not None:
+                fuera = [d.split(' (')[0] for d in detalle if 'dentro' not in d]
+                texto = {
+                    "descripcion": f"Compatibilidad calculada con los rangos de {nombre_cultivo}. "
+                                   + ("Todos los parámetros medidos están en rango." if not fuera
+                                      else "Fuera de rango: " + ", ".join(fuera) + "."),
+                    "recomendacion_suelo": "; ".join(d for d in detalle if 'dentro' not in d)
+                                           or "Mantener el plan de fertilización estándar.",
+                }
+            else:
+                texto = {
+                    "descripcion": f"'{nombre_cultivo}' no está en el catálogo de cultivos, "
+                                   "por eso no se puede calcular un porcentaje real.",
+                    "recomendacion_suelo": "Pide al administrador que registre sus rangos de suelo.",
+                }
+
+        evaluacion = {
+            "cultivo": nombre_cultivo,
+            "compatibilidad": compat,
+            "descripcion": texto.get("descripcion", ""),
+            "recomendacion_suelo": texto.get("recomendacion_suelo", ""),
+        }
         return JsonResponse({"estado": "ok", "evaluacion": evaluacion})
     except Exception as e:
         return JsonResponse({"estado": "error", "mensaje": str(e)}, status=500)
-
