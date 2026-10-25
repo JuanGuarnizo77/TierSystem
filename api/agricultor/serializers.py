@@ -1,11 +1,30 @@
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
+from apps.cultivos.models import Cultivo
 from apps.terrenos.models import Terreno
 from apps.solicitudes.models import SolicitudAnalisis
 
 
+def _validar_cultivo(value):
+    """Acepta ID numérico o nombre. Vacío se permite (queda sin cultivo)."""
+    value = str(value or '').strip()
+    if not value:
+        return value
+    if value.isdigit():
+        existe = Cultivo.objects.filter(id=int(value)).exists()
+    else:
+        existe = Cultivo.objects.filter(nombre__icontains=value).exists()
+    if not existe:
+        raise serializers.ValidationError("El cultivo no existe en el catálogo.")
+    return value
+
+
 class TerrenoSerializer(serializers.ModelSerializer):
+    cultivo_principal = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
+
     class Meta:
         model = Terreno
         fields = [
@@ -19,10 +38,14 @@ class TerrenoSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Las hectáreas deben ser mayores a 0.")
         return value
 
+    def validate_cultivo_principal(self, value):
+        return _validar_cultivo(value)
+
 
 class SolicitudSerializer(serializers.ModelSerializer):
     terreno = serializers.PrimaryKeyRelatedField(queryset=Terreno.objects.none())
     terreno_nombre = serializers.CharField(source='terreno.nombre', read_only=True)
+    cultivo_deseado = serializers.CharField()
     estado_texto = serializers.CharField(source='get_estado_display', read_only=True)
     modalidad_texto = serializers.CharField(source='get_modalidad_display', read_only=True)
     diagnostico_ia = serializers.SerializerMethodField()
@@ -49,6 +72,9 @@ class SolicitudSerializer(serializers.ModelSerializer):
             return obj.analisis_resultado.diagnostico_ia
         except ObjectDoesNotExist:
             return None
+
+    def validate_cultivo_deseado(self, value):
+        return _validar_cultivo(value)
 
     def validate_terreno(self, value):
         request = self.context.get('request')

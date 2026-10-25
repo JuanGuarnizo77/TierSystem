@@ -355,7 +355,7 @@ def exportar_pdf(request):
     if usuario_id:
         analisis = analisis.filter(solicitud__agricultor_id=usuario_id)
     if cultivo_nombre:
-        analisis = analisis.filter(solicitud__cultivo_deseado__icontains=cultivo_nombre)
+        analisis = analisis.filter(solicitud__cultivo_deseado_ref__nombre__icontains=cultivo_nombre)
     if fecha_inicio:
         analisis = analisis.filter(fecha_analisis__gte=fecha_inicio)
     if fecha_fin:
@@ -404,7 +404,7 @@ def exportar_excel(request):
     if usuario_id:
         analisis = analisis.filter(solicitud__agricultor_id=usuario_id)
     if cultivo_nombre:
-        analisis = analisis.filter(solicitud__cultivo_deseado__icontains=cultivo_nombre)
+        analisis = analisis.filter(solicitud__cultivo_deseado_ref__nombre__icontains=cultivo_nombre)
     if fecha_inicio:
         analisis = analisis.filter(fecha_analisis__gte=fecha_inicio)
     if fecha_fin:
