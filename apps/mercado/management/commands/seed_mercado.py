@@ -1,10 +1,15 @@
 """
-Management command: seed_mercado
-Siembra compradores regionales del Huila y los vincula a los cultivos canónicos.
+Comando de Gestión Django: `seed_mercado`.
+==========================================
+Puebla el directorio de entidades comerciales y compradores regionales
+en el departamento del Huila (`apps.mercado.models.Comprador`), vinculándolos
+a través de una relación de muchos a muchos con las especies correspondientes
+en el catálogo maestro `Cultivo`.
 
 Uso:
     python manage.py seed_mercado
 """
+
 from django.core.management.base import BaseCommand
 from apps.mercado.models import Comprador
 from apps.mercado.views import DATOS_MERCADO_HUILA
@@ -12,6 +17,7 @@ from apps.cultivos.models import Cultivo
 
 
 class Command(BaseCommand):
+    """Siembra compradores regionales del Huila y los vincula relacionalmente con Cultivo."""
     help = 'Siembra compradores regionales del Huila y los vincula a Cultivo.'
 
     def handle(self, *args, **options):
@@ -20,6 +26,7 @@ class Command(BaseCommand):
         compradores_creados = 0
         compradores_existentes = 0
 
+        # Agrupación y mapeo de compradores a partir del diccionario de mercado
         compradores_map = {}
         for cultivo_nombre, datos in DATOS_MERCADO_HUILA.items():
             for c in datos.get('compradores', []):
@@ -34,6 +41,7 @@ class Command(BaseCommand):
                     }
                 compradores_map[nombre]['cultivos'].append(cultivo_nombre)
 
+        # Inserción idempotente en la base de datos
         for nombre, datos_c in compradores_map.items():
             comp, created = Comprador.objects.get_or_create(
                 nombre=nombre,
@@ -45,7 +53,7 @@ class Command(BaseCommand):
                     'activo': True,
                 }
             )
-            # Vincular relacionalmente los cultivos
+            # Asociación relacional de ManyToMany con los cultivos de interés
             for c_nom in datos_c['cultivos']:
                 cultivo_obj = Cultivo.objects.filter(nombre__icontains=c_nom).first()
                 if cultivo_obj:
@@ -58,7 +66,7 @@ class Command(BaseCommand):
                 compradores_existentes += 1
                 self.stdout.write(f'  [=] Comprador ya existe: {nombre}')
 
-        # Actualizar contactos específicos
+        # Enriquecimiento de metadatos de contacto para entidades clave (CADEFIHUILA)
         Comprador.objects.filter(nombre__icontains='CADEFIHUILA').update(
             email='info@cadefihuila.com',
             whatsapp='3105554321',

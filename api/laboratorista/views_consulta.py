@@ -1,3 +1,10 @@
+"""
+Controlador de Consulta Agronómica Interactiva para Laboratoristas - TierSystem API.
+Permite al técnico evaluar sobre el terreno la viabilidad de cualquier cultivo del catálogo
+o especie solicitada por el campesino frente a las lecturas químicas reales de un análisis.
+Desacopla el porcentaje edafológico (matemático) de la redacción explicativa (Gemini o local).
+"""
+
 import json
 import os
 
@@ -14,15 +21,22 @@ from apps.ia_recomendaciones import views as ia
 @permission_classes([IsLaboratorista])
 def consulta_cultivo_view(request, solicitud_id):
     """
-    POST /api/v1/laboratorista/resultados/<id>/consulta-cultivo/
-    Body: {"cultivo": "Café Castillo"}
-    El porcentaje se calcula con los rangos del catálogo (no lo inventa la IA).
-    Gemini solo redacta la explicación; si falla, se responde con texto calculado.
+    POST /api/v1/laboratorista/resultados/<solicitud_id>/consulta-cultivo/
+    Body JSON: {"cultivo": "Café Castillo"}
+
+    Flujo de ejecución:
+    1. Sanitiza la consulta y valida pertenencia del análisis al laboratorista asignado.
+    2. Localiza el cultivo en la tabla maestra (insensible a mayúsculas y acentos).
+    3. Si existe en catálogo, calcula el porcentaje real con puntuar_cultivo() (algoritmo edafológico ponderado).
+    4. Envía a Google Gemini los parámetros exactos exigiendo que respete el porcentaje precalculado.
+    5. Si la API de Google no responde o no hay internet, entrega el respaldo algorítmico local determinístico.
     """
+    # Sanitización de la cadena de búsqueda enviada por el cliente
     cultivo_busqueda = str(request.data.get('cultivo', '')).strip()
     if not cultivo_busqueda:
         return Response({'error': 'Escribe el cultivo que quieres consultar.'}, status=400)
 
+    # Recupera el informe definitivo asegurando que el laboratorista en sesión sea el responsable
     try:
         analisis = RegistroAnalisis.objects.select_related(
             'solicitud__terreno'
@@ -33,13 +47,14 @@ def consulta_cultivo_view(request, solicitud_id):
     except RegistroAnalisis.DoesNotExist:
         return Response({'error': 'Análisis no encontrado.'}, status=404)
 
-    # 1) Cultivo en el catálogo (sin tildes ni mayúsculas)
+    # 1) Normalización de texto (remueve diacríticos NFD) y búsqueda en catálogo activo
     q = ia._norm(cultivo_busqueda)
     catalogo = list(Cultivo.objects.filter(activo=True).order_by('nombre'))
+    # Prioriza coincidencia exacta y luego coincidencia parcial
     cultivo = next((c for c in catalogo if ia._norm(c.nombre) == q), None) \
         or next((c for c in catalogo if q in ia._norm(c.nombre)), None)
 
-    # 2) Porcentaje real
+    # 2) Puntuación edafológica real: compara valores químicos contra rangos agronómicos de MySQL
     compat, detalle = (None, [])
     if cultivo:
         compat, detalle = ia.puntuar_cultivo(
@@ -48,7 +63,7 @@ def consulta_cultivo_view(request, solicitud_id):
         )
     nombre_cultivo = cultivo.nombre if cultivo else cultivo_busqueda
 
-    # 3) Explicación con Gemini (opcional)
+    # 3) Generación de redacción con Google Gemini (cuando hay API Key y conectividad)
     texto = None
     fuente = 'calculo'
     api_key = os.getenv('GEMINI_API_KEY')
@@ -56,6 +71,8 @@ def consulta_cultivo_view(request, solicitud_id):
         try:
             ia.genai.configure(api_key=api_key)
             model = ia.obtener_modelo_gemini()
+
+            # Instrucción estricta anti-alucinación: prohíbe a la IA alterar el porcentaje matemático
             if compat is not None:
                 contexto = (
                     f"La compatibilidad ya fue calculada con rangos del catálogo: {compat}%. "
@@ -70,6 +87,7 @@ def consulta_cultivo_view(request, solicitud_id):
                     f"K {analisis.potasio} mg/kg, humedad {analisis.humedad}%, "
                     f"temperatura {analisis.temperatura} °C."
                 )
+
             prompt = (
                 "Eres un ingeniero agrónomo experto en suelos del Huila, Colombia.\n"
                 f"Lote: '{analisis.solicitud.terreno.nombre}'. Cultivo consultado: '{nombre_cultivo}'.\n"
@@ -79,7 +97,10 @@ def consulta_cultivo_view(request, solicitud_id):
                 'citando los parámetros fuera de rango", '
                 '"recomendacion_suelo": "enmiendas o fertilización concretas para corregir lo que falte"}'
             )
+
+            # Envío de la consulta al modelo LLM
             raw = model.generate_content(prompt).text.strip()
+            # Extracción limpia de la carga útil JSON ignorando posibles caracteres circundantes
             ini, fin = raw.find('{'), raw.rfind('}')
             texto = json.loads(raw[ini:fin + 1] if ini != -1 and fin != -1 else raw)
             if texto.get('descripcion'):
@@ -87,12 +108,14 @@ def consulta_cultivo_view(request, solicitud_id):
             else:
                 texto = None
         except Exception as ex:
+            # En caso de timeout, cuota excedida o falla de red, se activa el respaldo determinístico
             print(f"[GEMINI ERROR en consulta lab]: {ex}")
             texto = None
 
-    # 4) Respaldo sin IA, también con datos reales
+    # 4) Respaldo determinístico sin IA: construye la explicación a partir del detalle matemático
     if not texto:
         if compat is not None:
+            # Filtra los nutrientes que cayeron fuera de rango óptimo
             fuera = [d.split(' (')[0] for d in detalle if 'dentro' not in d]
             texto = {
                 'descripcion': f"Compatibilidad calculada con los rangos de {nombre_cultivo}. "
@@ -108,6 +131,7 @@ def consulta_cultivo_view(request, solicitud_id):
                 'recomendacion_suelo': 'Pide al administrador que registre sus rangos de suelo.',
             }
 
+    # Respuesta unificada hacia el cliente móvil
     return Response({
         'cultivo': nombre_cultivo,
         'compatibilidad': compat,

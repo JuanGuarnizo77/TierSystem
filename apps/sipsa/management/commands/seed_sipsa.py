@@ -1,11 +1,17 @@
 """
-Management command: seed_sipsa
-Carga 8 semanas de precios históricos SIPSA/DANE para los cultivos del catálogo maestro.
-Idempotente — usa get_or_create.
+Comando de Gestión Django: `seed_sipsa`.
+========================================
+Inicializa la base de datos con una serie histórica de 8 semanas de precios
+reales de SIPSA/DANE para los 10 cultivos principales monitoreados en el Huila.
+
+Es una operación idempotente (`get_or_create`) que suministra la masa crítica
+mínima requerida por el modelo de regresión lineal (`MIN_SEMANAS=3`, `MAX_SEMANAS_CONFIANZA=8`)
+para calcular tendencias inmediatas tras la instalación inicial del sistema.
 
 Uso:
     python manage.py seed_sipsa
 """
+
 from datetime import date, timedelta
 from django.core.management.base import BaseCommand
 from apps.cultivos.models import Cultivo
@@ -13,20 +19,23 @@ from apps.sipsa.models import PrecioSemanal
 
 
 def _lunes_hace_n_semanas(n):
-    """Devuelve el lunes de hace n semanas."""
+    """Calcula la fecha del día lunes correspondiente a `n` semanas atrás."""
     hoy = date.today()
     lunes_actual = hoy - timedelta(days=hoy.weekday())
     return lunes_actual - timedelta(weeks=n)
 
 
+# Generación de las 8 fechas semanales previas
 SEMANAS = [_lunes_hace_n_semanas(8 - i) for i in range(8)]
 
 
 def _label(d: date) -> str:
+    """Retorna la etiqueta legible en formato ISO (ej. 'Sem 42-2026')."""
     iso = d.isocalendar()
     return f"Sem {iso[1]}-{iso[0]}"
 
 
+# Dataset histórico calibrado con precios mayoristas representativos
 CULTIVOS_SEED = [
     {
         "nombre": "Papa Pastusa",
@@ -92,6 +101,7 @@ CULTIVOS_SEED = [
 
 
 class Command(BaseCommand):
+    """Siembra 8 semanas de precios SIPSA históricos vinculados al catálogo maestro Cultivo."""
     help = 'Siembra 8 semanas de precios SIPSA históricos vinculados al catálogo maestro Cultivo.'
 
     def handle(self, *args, **options):
@@ -99,6 +109,7 @@ class Command(BaseCommand):
         creados_p = 0
 
         for datos in CULTIVOS_SEED:
+            # Vinculación o resolución del cultivo en el catálogo maestro
             cultivo = Cultivo.objects.filter(nombre__icontains=datos['nombre'].split()[0]).first()
             if not cultivo:
                 cultivo, _ = Cultivo.objects.get_or_create(
@@ -109,6 +120,7 @@ class Command(BaseCommand):
                     }
                 )
 
+            # Inserción de la serie semanal de precios
             for semana_date, precio in zip(SEMANAS, datos['precios']):
                 label = _label(semana_date)
                 ps, p_new = PrecioSemanal.objects.get_or_create(

@@ -1,3 +1,13 @@
+"""
+Controladores Web del Módulo de Mercado, Precios Regionales y Comercialización.
+==============================================================================
+Gestiona las cotizaciones de mercado agropecuario para el departamento del Huila:
+  1. Comparativa de cotizaciones promedio nacional vs mercado mayorista regional (Surabastos).
+  2. Directorio comercial de compradores, cooperativas agrícolas y centros de acopio.
+  3. Diagnóstico de frescura de la información según la periodicidad de los boletines SIPSA.
+  4. Endpoints asíncronos (AJAX) para cambio interactivo de cultivo en el tablero.
+"""
+
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -571,6 +581,12 @@ DATOS_MERCADO_HUILA = {
 
 
 def _normalizar_tendencia(valor):
+    """
+    Normaliza el valor descriptivo de tendencia económica a un formato estándar.
+
+    Retorna:
+        str: 'Alza', 'Baja' o 'Estable'.
+    """
     mapping = {
         'sube': 'Alza',
         'alza': 'Alza',
@@ -581,7 +597,14 @@ def _normalizar_tendencia(valor):
 
 
 def _get_compradores_for_cultivo(cultivo_key):
-    """Devuelve la lista de compradores (dict) para un cultivo dado, preferiendo BD relacional."""
+    """
+    Obtiene la lista de compradores comerciales interesados en un cultivo específico.
+
+    Estrategia de resolución:
+      1. Prioriza la consulta relacional sobre la base de datos MySQL (`Comprador` y `cultivos_rel`).
+      2. Si no existen registros en base de datos, recurre al catálogo estático de contingencia
+         definido en `DATOS_MERCADO_HUILA`.
+    """
     qs = Comprador.objects.filter(activo=True, cultivos_rel__nombre__icontains=cultivo_key).distinct()
     if qs.exists():
         compradores = []
@@ -601,7 +624,9 @@ def _get_compradores_for_cultivo(cultivo_key):
 
 
 def _normalizar_texto(s):
-    """Quita tildes y convierte a minúsculas para comparación flexible."""
+    """
+    Elimina tildes mediante descomposición NFD y pasa a minúsculas para comparaciones laxas.
+    """
     return ''.join(
         c for c in unicodedata.normalize('NFD', s)
         if unicodedata.category(c) != 'Mn'
@@ -609,6 +634,11 @@ def _normalizar_texto(s):
 
 
 def _resolver_cultivo_key(nombre):
+    """
+    Resuelve el nombre canónico de un cultivo a partir de una cadena de búsqueda informal.
+
+    Compara subcadenas normalizadas sin diacríticos con las llaves de `DATOS_MERCADO_HUILA`.
+    """
     solicitado_raw = (nombre or 'Maíz').strip() or 'Maíz'
     solicitado = _normalizar_texto(solicitado_raw)
     cultivo_key = "Maíz"
@@ -621,10 +651,12 @@ def _resolver_cultivo_key(nombre):
 
 
 def _datos_cultivo(cultivo_key):
+    """Retorna el sub-diccionario de mercado para la llave de cultivo especificada."""
     return DATOS_MERCADO_HUILA.get(cultivo_key, DATOS_MERCADO_HUILA["Maíz"])
 
 
 def _listado_precios_tabla():
+    """Construye un listado tabular simplificado con todos los cultivos y su precio de referencia."""
     precios = []
     for nombre, datos in DATOS_MERCADO_HUILA.items():
         precios.append({
@@ -638,6 +670,19 @@ def _listado_precios_tabla():
 
 @login_required(login_url='login')
 def precios_sipsa(request):
+    """
+    Vista principal del módulo de precios y mercado agropecuario para agricultores.
+
+    Flujo y cálculos:
+      - Resuelve el cultivo seleccionado mediante `_resolver_cultivo_key` (por defecto 'Maíz').
+      - Evalúa la frescura de los datos en base a la última marca temporal en `PrecioSemanal`:
+          * Menos de 24 horas: 'online'.
+          * Entre 24 y 72 horas: 'reciente'.
+          * Más de 72 horas: 'desactualizado'.
+      - Calcula los porcentajes de altura para las barras del gráfico histórico de 6 meses.
+      - Contrasta el precio de plaza nacional con la cotización local en Surabastos Neiva (~97%).
+      - Renderiza la plantilla `agricultor/precios_sipsa.html` con compradores sugeridos.
+    """
     if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
         return redirect('home')
 
@@ -648,7 +693,7 @@ def precios_sipsa(request):
 
     cultivos_disponibles = list(DATOS_MERCADO_HUILA.keys())
 
-    # Indicador de estado de conexión
+    # Indicador de estado y frescura de la conexión con fuentes DANE
     hace_24h = timezone.now() - timedelta(hours=24)
     hace_72h = timezone.now() - timedelta(hours=72)
 
@@ -696,6 +741,7 @@ def precios_sipsa(request):
     precios_historial = [item["precio"] for item in datos_cultivo.get("historial", [])]
     max_precio = max(precios_historial) if precios_historial else 1
 
+    # Cálculo porcentual para dimensionar barras del gráfico histórico
     historial_con_porcentajes = []
     for h in datos_cultivo.get("historial", []):
         pct = int((h["precio"] / max_precio) * 100) if max_precio else 30
@@ -731,7 +777,11 @@ def precios_sipsa(request):
 
 @login_required(login_url='login')
 def actualizar_precios_view(request):
-    """Dispara el comando actualizar_precios vía POST y devuelve JSON con el resultado."""
+    """
+    Endpoint AJAX: Dispara sincrónicamente el comando `actualizar_sipsa`.
+
+    Captura la salida estándar en un búfer `StringIO` y devuelve el log en formato JSON.
+    """
     if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
         return JsonResponse({'error': 'No autorizado'}, status=403)
 
@@ -750,7 +800,10 @@ def actualizar_precios_view(request):
 @login_required(login_url='login')
 def api_datos_cultivo_mercado(request, cultivo_nombre):
     """
-    Retorna JSON con los precios, tendencia, gráfica y compradores para actualización AJAX.
+    Endpoint AJAX: GET /mercado/api/cultivo/<cultivo_nombre>/
+    ---------------------------------------------------------
+    Suministra la información económica dinámica (precios, tendencia, serie histórica
+    y compradores locales) al seleccionar un cultivo diferente en el panel del agricultor.
     """
     if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
         return JsonResponse({'error': 'No autorizado'}, status=403)
@@ -788,6 +841,7 @@ def api_datos_cultivo_mercado(request, cultivo_nombre):
 
 @login_required(login_url='login')
 def listado_productos(request):
+    """Vista de catálogo de productos comercializables por agricultores."""
     if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
         return redirect('home')
 
@@ -796,6 +850,7 @@ def listado_productos(request):
 
 @login_required(login_url='login')
 def mi_tienda(request):
+    """Vista de administración de la vitrina comercial del productor."""
     if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
         return redirect('home')
 
@@ -804,6 +859,7 @@ def mi_tienda(request):
 
 @login_required(login_url='login')
 def agregar_producto(request):
+    """Endpoint para la publicación de un nuevo lote cosechado en la vitrina."""
     if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
         return JsonResponse({'error': 'No autorizado'}, status=403)
 
@@ -812,7 +868,9 @@ def agregar_producto(request):
 
 @login_required(login_url='login')
 def eliminar_producto(request, producto_id):
+    """Endpoint para despublicar un producto de la vitrina."""
     if not hasattr(request.user, 'perfil') or request.user.perfil.rol != 'AGRICULTOR':
         return JsonResponse({'error': 'No autorizado'}, status=403)
 
     return JsonResponse({'mensaje': 'Producto eliminado.'})
+

@@ -1,11 +1,17 @@
 """
-Management command: actualizar_sipsa
-Actualiza precios semanales SIPSA/DANE desde datos.gov.co (Socrata) o fallback estático,
-vinculando directamente al modelo canónico Cultivo.
+Comando de Gestión Django: `actualizar_sipsa`.
+==============================================
+Descarga y sincroniza las cotizaciones mayoristas semanales oficiales desde
+la plataforma de datos abiertos de Colombia (datos.gov.co / Socrata API) o
+aplica valores de contingencia calibrados para el departamento del Huila.
+
+Vincula cada precio al modelo canónico `Cultivo` y calcula el precio mayorista
+regional Huila como un ~97% del promedio nacional reportado en centrales de abastos.
 
 Uso:
     python manage.py actualizar_sipsa
 """
+
 import requests
 from datetime import date, timedelta
 from django.core.management.base import BaseCommand
@@ -14,15 +20,17 @@ from apps.cultivos.models import Cultivo
 from apps.sipsa.models import PrecioSemanal
 
 
+# Tiempo límite en segundos para peticiones HTTP a la API pública de datos.gov.co
 HTTP_TIMEOUT = 12
 
-# Datasets DANE en datos.gov.co (Socrata endpoints)
+# Endpoints oficiales del DANE en datos.gov.co (Arquitectura Socrata Open Data API)
 APIS_DANE = [
     "https://www.datos.gov.co/resource/3sp3-mua5.json",   # Abastecimiento centrales
     "https://www.datos.gov.co/resource/8ff4-g29n.json",   # SIPSA mayoristas
     "https://www.datos.gov.co/resource/2hfu-fu5g.json",   # SIPSA abastecimiento
 ]
 
+# Tabla de cotizaciones de contingencia en caso de indisponibilidad o timeout de la API gubernamental
 FALLBACK_PRECIOS = {
     "Papa Pastusa":       {"precio": 2260},
     "Tomate Chonto":      {"precio": 3300},
@@ -38,20 +46,28 @@ FALLBACK_PRECIOS = {
 
 
 def _semana_actual():
-    """Devuelve el lunes de la semana actual."""
+    """Calcula y retorna la fecha correspondiente al día lunes de la semana actual."""
     hoy = date.today()
     return hoy - timedelta(days=hoy.weekday())
 
 
 def _label(d: date) -> str:
+    """Genera la etiqueta estandarizada de semana según la norma ISO 8601 (ej. 'Sem 42-2026')."""
     iso = d.isocalendar()
     return f"Sem {iso[1]}-{iso[0]}"
 
 
 class Command(BaseCommand):
+    """Actualiza precios semanales SIPSA desde datos.gov.co (Socrata) con contingencia estática."""
     help = "Actualiza precios semanales SIPSA desde datos.gov.co (Socrata) con fallback estático."
 
     def _guardar_precio(self, cultivo_nombre, precio, fuente, fuente_url=""):
+        """
+        Inserta o actualiza un registro en `PrecioSemanal`.
+
+        Aplica la regla de negocio del Huila:
+          `precio_local = round(precio * 0.97, 2)`
+        """
         cultivo = Cultivo.objects.filter(nombre__icontains=cultivo_nombre.split()[0]).first()
         if not cultivo:
             cultivo, _ = Cultivo.objects.get_or_create(nombre=cultivo_nombre)
@@ -74,7 +90,11 @@ class Command(BaseCommand):
         return True
 
     def _intentar_apis_dane(self, actualizados):
-        """Intenta cada endpoint Socrata y parsea filas buscando cultivos."""
+        """
+        Consume secuencialmente los endpoints Socrata del DANE y empareja registros con el catálogo.
+
+        Mapea sinónimos mediante `nombre_dane` y `nombre` para asegurar la homologación exacta.
+        """
         alias_map = {}
         for cultivo in Cultivo.objects.filter(activo=True):
             if cultivo.nombre_dane:
@@ -84,6 +104,7 @@ class Command(BaseCommand):
         total_activos = Cultivo.objects.filter(activo=True).count()
 
         for api_url in APIS_DANE:
+            # Si ya se completaron todos los cultivos del catálogo, finaliza la búsqueda
             if len(actualizados) >= total_activos:
                 break
             try:
@@ -113,6 +134,7 @@ class Command(BaseCommand):
                         if alias in nombre_raw:
                             try:
                                 precio = float(str(precio_raw).replace(",", "."))
+                                # Validación de plausibilidad de precio (filtra errores o valores extremos)
                                 if 50 < precio < 200_000:
                                     self._guardar_precio(
                                         nombre_cultivo, precio,
@@ -126,12 +148,14 @@ class Command(BaseCommand):
         return actualizados
 
     def handle(self, *args, **options):
+        """Punto de entrada del comando de gestión."""
         self.stdout.write(self.style.MIGRATE_HEADING("=== actualizar_sipsa: iniciando ==="))
         actualizados = set()
 
+        # Fase 1: Ingesta desde endpoints REST de datos.gov.co
         actualizados = self._intentar_apis_dane(actualizados)
 
-        # Fallback para cultivos no actualizados por las APIs
+        # Fase 2: Aplicación de contingencia para cultivos faltantes
         pendientes = [n for n in FALLBACK_PRECIOS if n not in actualizados]
         if pendientes:
             self.stdout.write(self.style.WARNING(

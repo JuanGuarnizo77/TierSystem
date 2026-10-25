@@ -208,9 +208,24 @@ COMPRADORES_HUILA = [
 
 
 class Command(BaseCommand):
-    help = "Registra los 12 compradores oficiales del Huila. Idempotente."
+    """
+    Comando administrativo para el sembrado inicial del directorio de compradores del Huila.
+
+    Garantiza la idempotencia del proceso utilizando `update_or_create` sobre el campo `nombre`.
+    Vincula además las relaciones ManyToMany con el catálogo de cultivos (`Cultivo`).
+    """
+    help = "Registra y sincroniza los 12 compradores mayoristas y cooperativas oficiales del Huila. Idempotente."
 
     def handle(self, *args, **options):
+        """
+        Ejecuta la lógica de inserción y vinculación agronómica de compradores.
+
+        Pasos ejecutados:
+          1. Itera sobre cada registro estructurado de `COMPRADORES_HUILA`.
+          2. Inserta o actualiza el registro en el modelo `Comprador`.
+          3. Parsea la cadena de cultivos de interés y asocia las referencias ManyToMany hacia `Cultivo`.
+          4. Emite un resumen consolidado de entidades creadas, actualizadas y el total en base de datos.
+        """
         self.stdout.write(
             self.style.MIGRATE_HEADING("=== seed_compradores_huila: iniciando ===")
         )
@@ -218,10 +233,14 @@ class Command(BaseCommand):
         creados = 0
         actualizados = 0
 
+        # Importación diferida del modelo Cultivo para evitar dependencias circulares en apps
         from apps.cultivos.models import Cultivo
 
+        # Procesamiento secuencial del catálogo
         for datos in COMPRADORES_HUILA:
             cultivos_text = datos.get("cultivos_interes", "")
+
+            # Operación idempotente por nombre institucional
             comp, created = Comprador.objects.update_or_create(
                 nombre=datos["nombre"],
                 defaults={
@@ -235,11 +254,14 @@ class Command(BaseCommand):
                     "sitio_web": datos["sitio_web"],
                 },
             )
+
+            # Asociación relacional ManyToMany con los cultivos reconocidos en el sistema
             for nom in [n.strip() for n in cultivos_text.split(',') if n.strip()]:
                 c_obj = Cultivo.objects.filter(nombre__icontains=nom).first()
                 if c_obj:
                     comp.cultivos_rel.add(c_obj)
 
+            # Contabilización y reporte visual en consola
             if created:
                 creados += 1
                 self.stdout.write(f"  [+] Comprador creado: {comp.nombre}")
@@ -247,6 +269,7 @@ class Command(BaseCommand):
                 actualizados += 1
                 self.stdout.write(f"  [~] Comprador actualizado: {comp.nombre}")
 
+        # Resumen de resultados
         self.stdout.write(
             self.style.SUCCESS(
                 f"\nComprador — creados: {creados}, actualizados: {actualizados}"
