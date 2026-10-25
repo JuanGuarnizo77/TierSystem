@@ -204,6 +204,10 @@ def calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia='', altit
             compatibilidad = 50.0
 
         compat_final = round(float(compatibilidad), 1)
+        # % REAL: se usa el mismo cálculo que la consulta de cultivo
+        real, _det = puntuar_cultivo(cultivo, h, t, c, ph, n, p, k)
+        if real is not None:
+            compat_final = float(real)
 
         # Plan de fertilización y recomendaciones agronómicas locales
         planes = []
@@ -335,7 +339,8 @@ Reglas estrictas de respuesta:
   "recomendaciones": [
     {{
       "cultivo": "Nombre del Cultivo (Variedad)",
-      "compatibilidad": 85,
+      3. NO incluyas porcentajes ni números de compatibilidad: se calculan aparte con los rangos del catálogo. Propón solo cultivos comunes del Huila.
+      3b. IMPORTANTE: Si algunos parámetros están en 0 o faltan, asume que no fueron medidos. AUN ASÍ DEBES dar una recomendación o análisis basado en los datos que sí están disponibles.
       "descripcion": "Razón breve de por qué es adecuado o inadecuado."
     }}
   ],
@@ -346,6 +351,26 @@ Reglas estrictas de respuesta:
             text = response.text.replace("```json", "").replace("```", "").strip()
             resultado_json = json.loads(text.strip())
             resultado_json["modo"] = "ia"
+                        # Porcentajes REALES: se calculan con los rangos del catálogo, no con la IA
+            catalogo = list(Cultivo.objects.filter(activo=True))
+            recs_reales = []
+            for rec in resultado_json.get("recomendaciones", []):
+                base = _norm(str(rec.get("cultivo", "")).split('(')[0])
+                if len(base) < 3:
+                    continue
+                cult = next((x for x in catalogo if _norm(x.nombre) == base), None) \
+                    or next((x for x in catalogo if base in _norm(x.nombre)), None)
+                if not cult:
+                    continue  # sin rangos no hay porcentaje real
+                real, _det = puntuar_cultivo(cult, h, t, c, ph, n, p, k)
+                if real is None:
+                    continue
+                rec["cultivo"] = cult.nombre
+                rec["compatibilidad"] = real
+                recs_reales.append(rec)
+            if not recs_reales:
+                raise ValueError("Gemini no propuso cultivos del catálogo")
+            resultado_json["recomendaciones"] = recs_reales
 
             if solicitud_id:
                 _guardar_diagnostico_solicitud(solicitud_id, resultado_json, h, t, c, ph, n, p, k)
