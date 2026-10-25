@@ -581,9 +581,11 @@ def api_consultar_ia_agricultor(request):
             
         from apps.analisis.models import RegistroAnalisis
         # Verificar ownership — solo el agricultor dueño puede consultar su análisis
+        from django.db.models import Q
         analisis = RegistroAnalisis.objects.get(
+            Q(solicitud__agricultor=request.user) |
+            Q(solicitud__laboratorista_asignado=request.user),
             solicitud_id=solicitud_id,
-            solicitud__agricultor=request.user
         )
         
         api_key = os.getenv("GEMINI_API_KEY")
