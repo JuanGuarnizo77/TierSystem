@@ -75,12 +75,12 @@ def _guardar_diagnostico_solicitud(solicitud_id, diagnostico, h, t, c, ph, n, p,
 
 def obtener_modelo_gemini():
     """Retorna un modelo Gemini activo con fallback a gemini-1.5-flash."""
-    for nombre in ['gemini-2.5-flash', 'gemini-flash-latest']:
+    for nombre in ['gemini-flash-lite-latest', 'gemini-flash-latest']:
         try:
             return genai.GenerativeModel(nombre)
         except Exception:
             continue
-    return genai.GenerativeModel('gemini-2.5-flash')
+    return genai.GenerativeModel('gemini-flash-lite-latest')
 
 def calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia='', altitud=None):
     """
