@@ -8,6 +8,7 @@ from .views_solicitudes import (
     rechazar_view,
     banco_view,
 )
+from .views_consulta import consulta_cultivo_view
 
 
 from .views_historial import historial_view, resultado_view
@@ -25,4 +26,5 @@ urlpatterns = [
     path('muestreo/sensor/', sensor_view, name='laboratorista_sensor'),
     path('muestreo/<int:solicitud_id>/', muestreo_view, name='laboratorista_muestreo'),
     path('muestreo/puntos/<int:punto_id>/guardar/', guardar_punto_view, name='laboratorista_guardar_punto'),
+    path('resultados/<int:solicitud_id>/consulta-cultivo/', consulta_cultivo_view, name='laboratorista_consulta_cultivo'),
 ]
