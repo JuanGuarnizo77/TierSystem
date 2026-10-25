@@ -6,13 +6,17 @@ from .views_solicitudes import (
     mis_tareas_view,
     aceptar_view,
     rechazar_view,
+    banco_view,
 )
+
+
 from .views_historial import historial_view, resultado_view
 from .views_muestreo import muestreo_view, sensor_view, guardar_punto_view
 
 urlpatterns = [
     path('dashboard/', dashboard_view, name='laboratorista_dashboard'),
     path('solicitudes/pendientes/', pendientes_view, name='laboratorista_pendientes'),
+    path('solicitudes/banco/', banco_view, name='laboratorista_banco'),
     path('solicitudes/mis-tareas/', mis_tareas_view, name='laboratorista_mis_tareas'),
     path('solicitudes/<int:solicitud_id>/aceptar/', aceptar_view, name='laboratorista_aceptar'),
     path('solicitudes/<int:solicitud_id>/rechazar/', rechazar_view, name='laboratorista_rechazar'),

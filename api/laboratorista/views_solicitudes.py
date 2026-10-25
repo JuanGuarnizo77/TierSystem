@@ -140,3 +140,18 @@ def rechazar_view(request, solicitud_id):
     solicitud = get_object_or_404(_base_qs(), pk=solicitud_id)
     _notificar(solicitud, request.user, 'RECHAZADA')
     return Response({'mensaje': 'Solicitud rechazada.'})
+
+@api_view(['GET'])
+@permission_classes([IsLaboratorista])
+def banco_view(request):
+    """
+    GET /api/v1/laboratorista/solicitudes/banco/
+    Igual que la web: todas las solicitudes visibles al laboratorista, con contadores.
+    """
+    estados = ['PENDIENTE', 'ASIGNADA', 'EN_PROCESO', 'COMPLETADA']
+    qs = _base_qs().filter(estado__in=estados).order_by('-fecha_solicitud')
+    solicitudes = [_solicitud_dict(s) for s in qs]
+    conteos = {e: 0 for e in estados}
+    for s in solicitudes:
+        conteos[s['estado']] += 1
+    return Response({'conteos': conteos, 'solicitudes': solicitudes})
