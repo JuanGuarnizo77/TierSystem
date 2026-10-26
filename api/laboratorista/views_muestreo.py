@@ -121,6 +121,7 @@ def muestreo_view(request, solicitud_id):
             'terreno_nombre': s.terreno.nombre,
             'terreno_ubicacion': s.terreno.ubicacion,
             'hectareas': float(s.terreno.hectareas),
+            'poligono': s.terreno.coordenadas_poligono,
             'tiene_analisis': hasattr(s, 'analisis_resultado'),
         },
         'total_puntos': len(puntos),
