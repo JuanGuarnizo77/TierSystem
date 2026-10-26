@@ -1,5 +1,6 @@
 import json
 import os
+import socket
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
@@ -10,6 +11,20 @@ try:
     import google.generativeai as genai
 except ImportError:
     genai = None
+
+def verificar_conexion_internet(timeout=0.8):
+    """
+    Verifica rápidamente si el servidor tiene salida real a internet hacia DNS públicos.
+    Retorna True si hay internet, False si está offline o en red local sin salida.
+    """
+    for host in [("8.8.8.8", 53), ("1.1.1.1", 53)]:
+        try:
+            s = socket.create_connection(host, timeout=timeout)
+            s.close()
+            return True
+        except (socket.timeout, OSError):
+            continue
+    return False
 
 def _guardar_recomendaciones_relacionales(registro, diagnostico):
     """Guarda cada recomendación en la tabla relacional RecomendacionAnalisis en MySQL."""
@@ -74,13 +89,13 @@ def _guardar_diagnostico_solicitud(solicitud_id, diagnostico, h, t, c, ph, n, p,
 
 
 def obtener_modelo_gemini():
-    """Retorna un modelo Gemini activo con fallback a gemini-1.5-flash."""
-    for nombre in ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']:
+    """Retorna un modelo Gemini activo con fallback a versiones vigentes."""
+    for nombre in ['gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-3.5-flash-lite', 'gemini-3.8-flash']:
         try:
             return genai.GenerativeModel(nombre)
         except Exception:
             continue
-    return genai.GenerativeModel('gemini-1.5-flash')
+    return genai.GenerativeModel('gemini-flash-lite-latest')
 
 def calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia='', altitud=None):
     """
@@ -105,13 +120,29 @@ def calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia='', altit
             "modo": "offline"
         }
 
+    import unicodedata
+
+    def normalizar_cadena(txt):
+        if not txt:
+            return ""
+        texto = ''.join(
+            c for c in unicodedata.normalize('NFD', str(txt).lower())
+            if unicodedata.category(c) != 'Mn'
+        )
+        return ''.join(c for c in texto if c.isalnum())
+
+    pref_norm = normalizar_cadena(preferencia)
+
     evaluaciones = []
-    preferencia_lower = preferencia.lower().strip() if preferencia else ''
+
+    # Ley del Mínimo de Liebig y evaluación de viabilidad agronómica del suelo
+    es_suelo_critico = (n <= 5 and p <= 5 and k <= 5)
+    deficits_graves = (n < 10 or p < 10 or k < 10 or c < 0.2)
 
     for cultivo in cultivos:
         puntajes = []
         
-        # 1. Evaluación de pH (Ponderación 25%)
+        # 1. Evaluación de pH (Ponderación 20%)
         ph_min = float(cultivo.ph_min)
         ph_max = float(cultivo.ph_max)
         if ph > 0:
@@ -119,137 +150,168 @@ def calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia='', altit
                 score_ph = 100.0
             elif ph < ph_min:
                 diff = ph_min - ph
-                score_ph = max(20.0, 100.0 - (diff / 1.5) * 80.0)
+                score_ph = max(5.0, 100.0 - (diff / 1.5) * 80.0)
             else:
                 diff = ph - ph_max
-                score_ph = max(20.0, 100.0 - (diff / 1.5) * 80.0)
-            puntajes.append(('ph', score_ph, 0.25))
+                score_ph = max(5.0, 100.0 - (diff / 1.5) * 80.0)
+            puntajes.append(('ph', score_ph, 0.20))
 
-        # 2. Evaluación de Nitrógeno (15%)
+        # 2. Evaluación de Nitrógeno (20%)
         n_min = float(cultivo.nitrogeno_min)
         n_max = float(cultivo.nitrogeno_max)
-        if n > 0:
-            if n_min <= n <= n_max:
-                score_n = 100.0
-            elif n < n_min:
-                score_n = max(30.0, 100.0 - ((n_min - n) / max(n_min, 1)) * 70.0)
-            else:
-                score_n = max(60.0, 100.0 - ((n - n_max) / max(n_max, 1)) * 40.0)
-            puntajes.append(('n', score_n, 0.15))
+        if n == 0:
+            score_n = 0.0
+        elif n < n_min:
+            score_n = max(0.0, (n / max(n_min, 1)) * 50.0)
+        elif n_min <= n <= n_max:
+            score_n = 100.0
+        else:
+            score_n = max(40.0, 100.0 - ((n - n_max) / max(n_max, 1)) * 40.0)
+        puntajes.append(('n', score_n, 0.20))
 
-        # 3. Evaluación de Fósforo (15%)
+        # 3. Evaluación de Fósforo (20%)
         p_min = float(cultivo.fosforo_min)
         p_max = float(cultivo.fosforo_max)
-        if p > 0:
-            if p_min <= p <= p_max:
-                score_p = 100.0
-            elif p < p_min:
-                score_p = max(30.0, 100.0 - ((p_min - p) / max(p_min, 1)) * 70.0)
-            else:
-                score_p = max(60.0, 100.0 - ((p - p_max) / max(p_max, 1)) * 40.0)
-            puntajes.append(('p', score_p, 0.15))
+        if p == 0:
+            score_p = 0.0
+        elif p < p_min:
+            score_p = max(0.0, (p / max(p_min, 1)) * 50.0)
+        elif p_min <= p <= p_max:
+            score_p = 100.0
+        else:
+            score_p = max(50.0, 100.0 - ((p - p_max) / max(p_max, 1)) * 40.0)
+        puntajes.append(('p', score_p, 0.20))
 
-        # 4. Evaluación de Potasio (15%)
+        # 4. Evaluación de Potasio (20%)
         k_min = float(cultivo.potasio_min)
         k_max = float(cultivo.potasio_max)
-        if k > 0:
-            if k_min <= k <= k_max:
-                score_k = 100.0
-            elif k < k_min:
-                score_k = max(30.0, 100.0 - ((k_min - k) / max(k_min, 1)) * 70.0)
-            else:
-                score_k = max(60.0, 100.0 - ((k - k_max) / max(k_max, 1)) * 40.0)
-            puntajes.append(('k', score_k, 0.15))
+        if k == 0:
+            score_k = 0.0
+        elif k < k_min:
+            score_k = max(0.0, (k / max(k_min, 1)) * 50.0)
+        elif k_min <= k <= k_max:
+            score_k = 100.0
+        else:
+            score_k = max(50.0, 100.0 - ((k - maxK_val if (maxK_val := max(k_max, 1)) else 1) / maxK_val) * 40.0)
+        puntajes.append(('k', score_k, 0.20))
 
         # 5. Conductividad Eléctrica (10%)
         c_min = float(cultivo.conductividad_min)
         c_max = float(cultivo.conductividad_max)
-        if c > 0:
-            if c_min <= c <= c_max:
-                score_c = 100.0
-            elif c < c_min:
-                score_c = 85.0
-            else:
-                score_c = max(20.0, 100.0 - ((c - c_max) / max(c_max, 0.1)) * 80.0)
-            puntajes.append(('c', score_c, 0.10))
+        if c == 0:
+            score_c = 0.0
+        elif c < c_min:
+            score_c = max(10.0, (c / max(c_min, 0.1)) * 60.0)
+        elif c_min <= c <= c_max:
+            score_c = 100.0
+        else:
+            score_c = max(10.0, 100.0 - ((c - c_max) / max(c_max, 0.1)) * 80.0)
+        puntajes.append(('c', score_c, 0.10))
 
-        # 6. Humedad y Temperatura (10% c/u)
+        # 6. Humedad y Temperatura (5% c/u)
         h_min = float(cultivo.humedad_min)
         h_max = float(cultivo.humedad_max)
         if h > 0:
-            score_h = 100.0 if (h_min <= h <= h_max) else max(40.0, 80.0)
-            puntajes.append(('h', score_h, 0.10))
+            if h < h_min:
+                score_h = max(5.0, (h / max(h_min, 1)) * 50.0)
+            elif h_min <= h <= h_max:
+                score_h = 100.0
+            else:
+                score_h = max(20.0, 100.0 - ((h - h_max) / max(h_max, 1)) * 50.0)
+            puntajes.append(('h', score_h, 0.05))
 
         t_min = float(cultivo.temperatura_min)
         t_max = float(cultivo.temperatura_max)
         if t > 0:
-            score_t = 100.0 if (t_min <= t <= t_max) else max(40.0, 80.0)
-            puntajes.append(('t', score_t, 0.10))
-
-        # 7. Altitud (msnm) si está disponible (15%)
-        if altitud and altitud > 0:
-            alt_min = float(cultivo.altitud_min)
-            alt_max = float(cultivo.altitud_max)
-            if alt_min <= altitud <= alt_max:
-                score_alt = 100.0
-            else:
-                diff_alt = min(abs(altitud - alt_min), abs(altitud - alt_max))
-                score_alt = max(20.0, 100.0 - (diff_alt / 500.0) * 80.0)
-            puntajes.append(('alt', score_alt, 0.15))
+            score_t = 100.0 if (t_min <= t <= t_max) else max(20.0, 60.0)
+            puntajes.append(('t', score_t, 0.05))
 
         if puntajes:
             peso_total = sum(p[2] for p in puntajes)
             compatibilidad = sum(p[1] * p[2] for p in puntajes) / peso_total
         else:
-            compatibilidad = 50.0
+            compatibilidad = 10.0
+
+        if es_suelo_critico:
+            compatibilidad = min(compatibilidad, 8.0)
+        elif deficits_graves:
+            compatibilidad = min(compatibilidad, 30.0)
 
         compat_final = round(float(compatibilidad), 1)
 
-        # Plan de fertilización y recomendaciones agronómicas locales
         planes = []
-        if ph > 0 and ph < ph_min:
-            planes.append("Aplicar enmienda calcárea (Cal Dolomita o Cal Agrícola) para corregir acidez.")
-        if n > 0 and n < n_min:
-            planes.append("Reforzar Nitrógeno con materia orgánica compostada o fertilización nitrogenada fraccionada.")
-        if p > 0 and p < p_min:
-            planes.append("Aplicar Fósforo localizado (DAP o Roca Fosfórica) para estimular desarrollo radicular.")
-        if k > 0 and k < k_min:
-            planes.append("Suplir Potasio (KCl o Sulfato de Potasio) para llenado de fruto y resistencia hídrica.")
-        if not planes:
-            planes.append("Condiciones nutricionales óptimas. Mantener plan de fertilización estándar.")
+        if es_suelo_critico:
+            planes.append("Déficit nutricional crítico total: N, P y K en 0 mg/kg. Suelo no viable para siembra inmediata. Requiere acondicionamiento orgánico de fondo y fertilización compuesta NPK completa antes de cualquier siembra.")
+        else:
+            if ph > 0 and ph < ph_min:
+                planes.append("Aplicar enmienda calcárea (Cal Dolomita o Cal Agrícola) para corregir acidez.")
+            if n < n_min:
+                planes.append("Reforzar Nitrógeno con materia orgánica compostada o fertilización nitrogenada fraccionada.")
+            if p < p_min:
+                planes.append("Aplicar Fósforo localizado (DAP o Roca Fosfórica) para estimular desarrollo radicular.")
+            if k < k_min:
+                planes.append("Suplir Potasio (KCl o Sulfato de Potasio) para llenado de fruto y resistencia hídrica.")
+            if not planes:
+                planes.append("Condiciones nutricionales óptimas. Mantener plan de fertilización estándar.")
 
-        es_preferido = preferencia_lower and (preferencia_lower in cultivo.nombre.lower() or cultivo.nombre.lower() in preferencia_lower)
+        cultivo_norm = normalizar_cadena(cultivo.nombre)
+        cat_norm = normalizar_cadena(cultivo.categoria or '')
+        es_preferido = bool(pref_norm and (pref_norm in cultivo_norm or cultivo_norm in pref_norm or pref_norm in cat_norm))
+
+        if compat_final >= 75:
+            viabilidad = "Alta"
+        elif compat_final >= 50:
+            viabilidad = "Media"
+        elif compat_final >= 25:
+            viabilidad = "Baja"
+        else:
+            viabilidad = "No Apto"
 
         evaluaciones.append({
             "cultivo": cultivo.nombre,
             "compatibilidad": compat_final,
-            "viabilidad": "Alta" if compat_final >= 75 else ("Media" if compat_final >= 50 else "Baja"),
-            "descripcion": f"{cultivo.descripcion[:160]}..." if cultivo.descripcion else f"Variedad adaptada al Huila en clima {cultivo.clima}.",
+            "viabilidad": viabilidad,
+            "descripcion": f"{cultivo.descripcion[:160]}..." if cultivo.descripcion else f"Variedad del catálogo regional del Huila.",
             "plan_fertilizacion": " ".join(planes),
             "es_preferido": bool(es_preferido)
+        })
+
+    # Si el usuario solicitó un cultivo específico que no estaba en el catálogo, evaluarlo
+    if pref_norm and not any(e['es_preferido'] for e in evaluaciones):
+        compat_custom = 8.0 if es_suelo_critico else (20.0 if deficits_graves else 50.0)
+        viab_custom = "No Apto" if compat_custom < 25 else ("Baja" if compat_custom < 50 else "Media")
+        evaluaciones.insert(0, {
+            "cultivo": preferencia.strip(),
+            "compatibilidad": compat_custom,
+            "viabilidad": viab_custom,
+            "descripcion": f"Cultivo consultado específicamente por el usuario ({preferencia.strip()}).",
+            "plan_fertilizacion": f"Déficit nutricional crítico total: N, P y K en 0 mg/kg. Suelo no viable para siembra de {preferencia.strip()}. Requiere acondicionamiento orgánico de fondo y fertilización compuesta NPK completa antes de cualquier siembra." if es_suelo_critico else f"Requiere acondicionamiento y plan de fertilización adaptado a {preferencia.strip()}.",
+            "es_preferido": True
         })
 
     evaluaciones.sort(key=lambda x: (1 if x['es_preferido'] else 0, x['compatibilidad']), reverse=True)
     top_recomendaciones = evaluaciones[:3]
 
     consejos = []
-    if ph < 5.5 and ph > 0:
-        consejos.append(f"El suelo presenta acidez (pH {ph:.1f}), común en suelos del Huila. Se recomienda encalar.")
-    elif ph > 7.5:
-        consejos.append(f"El suelo es ligeramente alcalino (pH {ph:.1f}). Monitorear microelementos.")
+    if es_suelo_critico:
+        consejos.append("ALERTA AGRONÓMICA: El suelo analizado NO ES APTO para ningún cultivo en su estado actual. Presenta un agotamiento severo con lecturas en 0 de Nitrógeno, Fósforo, Potasio y conductividad eléctrica nula (0 µS/cm). Ninguna planta podrá germinar ni desarrollarse sin una recuperación previa mediante enmienda orgánica profunda, fertilización NPK intensiva y corrección de pH.")
     else:
-        consejos.append(f"El pH ({ph:.1f}) se encuentra en un rango balanceado para cultivos del Huila.")
+        if ph < 5.5 and ph > 0:
+            consejos.append(f"El suelo presenta acidez (pH {ph:.1f}), común en suelos del Huila. Se recomienda encalar.")
+        elif ph > 7.5:
+            consejos.append(f"El suelo es ligeramente alcalino (pH {ph:.1f}). Monitorear microelementos.")
+        else:
+            consejos.append(f"El pH ({ph:.1f}) se encuentra en un rango balanceado para cultivos del Huila.")
 
-    if n > 0 and p > 0 and k > 0:
-        consejos.append(f"Perfil NPK registrado: N={n:.0f}, P={p:.0f}, K={k:.0f} mg/kg. Balance nutricional general evaluado.")
-    else:
-        consejos.append("Algunos macronutrientes no fueron detectados por la sonda; se consideraron las lecturas disponibles.")
+        if n > 0 and p > 0 and k > 0:
+            consejos.append(f"Perfil NPK registrado: N={n:.0f}, P={p:.0f}, K={k:.0f} mg/kg. Balance nutricional general evaluado.")
 
-    consejos.append("Diagnóstico agronómico generado 100% en modo offline.")
+    consejos.append("Diagnóstico agronómico generado 100% en modo offline (Motor Huila).")
 
     return {
         "recomendaciones": top_recomendaciones,
         "consejo_general": " ".join(consejos),
+        "es_critico": es_suelo_critico,
         "modo": "offline"
     }
 
@@ -292,17 +354,46 @@ def api_diagnosticar_ia(request):
         preferencia = str(data.get("preferencia", "")).strip()
         modo_solicitado = data.get("modo", "auto") # 'auto', 'online', 'offline'
 
-        # Si se solicita explícitamente modo offline:
+        # 1. Si se solicita explícitamente modo offline:
         if modo_solicitado == 'offline':
             resultado_offline = calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia=preferencia)
             if solicitud_id:
                 _guardar_diagnostico_solicitud(solicitud_id, resultado_offline, h, t, c, ph, n, p, k)
             return JsonResponse({"estado": "ok", "diagnostico": resultado_offline, "modo": "offline"})
 
-        # MODO ONLINE: Intentar con Gemini si hay API Key disponible
+        # Verificación rápida de salida a internet (máx 0.8s)
+        hay_internet = verificar_conexion_internet(timeout=0.8)
+
+        # 2. Si el usuario solicitó específicamente MODO ONLINE (IA) y NO hay internet:
+        if modo_solicitado == 'online' and not hay_internet:
+            return JsonResponse({
+                "estado": "error",
+                "sin_internet": True,
+                "mensaje": "No hay conexión a internet activa para consultar la IA de Google Gemini. Para realizar el análisis sin internet, utiliza el modo 'Offline (Motor Huila)'."
+            })
+
+        # 3. Si está en MODO AUTOMÁTICO y NO hay internet:
+        if modo_solicitado == 'auto' and not hay_internet:
+            # Va directo a la base de datos local sin demoras ni falsas consultas
+            resultado_offline = calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia=preferencia)
+            resultado_offline["aviso"] = "Sin conexión a internet: Se utilizó el catálogo local de cultivos del Huila."
+            if solicitud_id:
+                _guardar_diagnostico_solicitud(solicitud_id, resultado_offline, h, t, c, ph, n, p, k)
+            return JsonResponse({
+                "estado": "ok",
+                "diagnostico": resultado_offline,
+                "modo": "offline",
+                "motivo": "sin_internet"
+            })
+
+        # 4. MODO ONLINE O AUTO CON INTERNET:
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key or genai is None:
-            # Fallback inteligente al motor edafológico offline
+            if modo_solicitado == 'online':
+                return JsonResponse({
+                    "estado": "error",
+                    "mensaje": "La clave GEMINI_API_KEY no está configurada o no está disponible la librería genai."
+                })
             resultado_offline = calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia=preferencia)
             if solicitud_id:
                 _guardar_diagnostico_solicitud(solicitud_id, resultado_offline, h, t, c, ph, n, p, k)
@@ -329,20 +420,23 @@ Evalúa los siguientes parámetros de suelo obtenidos de un sensor en tiempo rea
 Reglas estrictas de respuesta:
 1. Ten en cuenta que el suelo es del Huila, Colombia (climas cálidos, cafeteros y arroceros).
 2. Propón 1 o 2 cultivos ideales (incluye su variedad si aplica, ej: Café Borbón, Maíz Amarillo). {prompt_preferencia}
-3. IMPORTANTE: Si algunos parámetros están en 0 o faltan, asume que no fueron medidos. AUN ASÍ DEBES dar una recomendación o análisis basado en los datos que sí están disponibles.
+3. IMPORTANTE (RIGOR AGRONÓMICO): Si los macronutrientes principales (N, P, K) están en 0 o cercanos a 0 y la conductividad es 0, reconoce con rigor que el suelo presenta un agotamiento nutricional crítico y es NO APTO en su estado actual para ningún cultivo comercial sin una enmienda y fertilización intensiva previa. La compatibilidad debe reflejar este estado crítico (<15%) y viabilidad 'No Apto'.
 4. Devuelve estrictamente el resultado en formato JSON válido (sin markdown ```json) con la siguiente estructura:
 {{
   "recomendaciones": [
     {{
       "cultivo": "Nombre del Cultivo (Variedad)",
-      "compatibilidad": 85,
-      "descripcion": "Razón breve de por qué es adecuado o inadecuado."
+      "compatibilidad": 8,
+      "viabilidad": "No Apto",
+      "descripcion": "Razón técnica del estado del suelo y limitaciones.",
+      "plan_fertilizacion": "Enmiendas y fertilizantes requeridos."
     }}
   ],
-  "consejo_general": "Un consejo general sobre fertilización o riego, y menciona si faltan datos relevantes."
+  "consejo_general": "Consejo agronómico general del lote y plan correctivo.",
+  "es_critico": true
 }}
 """
-            response = model.generate_content(prompt)
+            response = model.generate_content(prompt, request_options={"timeout": 6.0})
             text = response.text.replace("```json", "").replace("```", "").strip()
             resultado_json = json.loads(text.strip())
             resultado_json["modo"] = "ia"
@@ -353,9 +447,16 @@ Reglas estrictas de respuesta:
             return JsonResponse({"estado": "ok", "diagnostico": resultado_json, "modo": "ia"})
 
         except Exception as gemini_error:
-            # Si Gemini falla (ej. sin internet en campo, timeout, quota), fallback al motor offline local
+            # Si el usuario eligió MODO ONLINE (IA) de forma explícita, avisarle del fallo
+            if modo_solicitado == 'online':
+                return JsonResponse({
+                    "estado": "error",
+                    "mensaje": f"No se pudo completar la consulta con la IA de Google: {str(gemini_error)}. Puedes intentar de nuevo o cambiar al modo Offline."
+                })
+
+            # En modo AUTO: fallback al motor offline local de contingencia
             resultado_offline = calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia=preferencia)
-            resultado_offline["aviso"] = "Se activó el motor agronómico offline debido a interrupción de internet."
+            resultado_offline["aviso"] = "Se activó el motor agronómico offline debido a interrupción temporal en el servicio de IA."
             if solicitud_id:
                 _guardar_diagnostico_solicitud(solicitud_id, resultado_offline, h, t, c, ph, n, p, k)
             return JsonResponse({"estado": "ok", "diagnostico": resultado_offline, "modo": "offline"})

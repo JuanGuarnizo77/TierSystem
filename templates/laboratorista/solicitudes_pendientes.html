@@ -168,6 +168,7 @@
     <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {% for sol in solicitudes %}
         <div class="solicitud-card bg-white dark:bg-darkCard border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-sm flex flex-col justify-between"
+             {% if sol.estado == 'COMPLETADA' %}style="display: none;"{% endif %}
              data-id="{{ sol.id }}"
              data-estado="{{ sol.estado }}"
              data-agricultor="{{ sol.agricultor.get_full_name|default:sol.agricultor.username|lower }}"
@@ -338,7 +339,7 @@
                             </a>
                             {% endif %}
                             {% if sol.estado == 'COMPLETADA' %}
-                            <a href="{% url 'solicitudes_agricultor:resultado_detalle' sol.id %}" target="_blank" class="flex items-center gap-2.5 px-4 py-2.5 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium">
+                            <a href="{% url 'solicitudes_agricultor:resultado_detalle' sol.id %}" class="flex items-center gap-2.5 px-4 py-2.5 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium">
                                 <i class="fa-solid fa-file-invoice w-4 text-blue-500"></i> Ver Resultado de Análisis
                             </a>
                             {% endif %}
@@ -677,10 +678,10 @@
             const timestamp = parseInt(card.dataset.timestamp || '0', 10);
 
             // Filtro por pestaña
-            let tabMatch = (activeTab === 'all') || (estado === activeTab);
+            let tabMatch = (activeTab === 'all') ? (estado !== 'COMPLETADA') : (estado === activeTab);
 
             // Filtro por select de Estado
-            let statusMatch = (selectedStatus === 'all') || (estado === selectedStatus);
+            let statusMatch = (selectedStatus === 'all') ? (activeTab === 'all' ? estado !== 'COMPLETADA' : true) : (estado === selectedStatus);
 
             // Filtro por Texto de Búsqueda
             let textMatch = !query || 
@@ -783,6 +784,9 @@
         clearFiltersBtn.addEventListener('click', resetearFiltros);
     }
 
+    // Ejecutar filtro inicial para ocultar las finalizadas en la vista "Todas"
+    applyFilters();
+
     // ==========================================
     // MENÚS DROPDOWN TRIPLE PUNTO (⋮)
     // ==========================================
@@ -872,7 +876,7 @@
             `;
         } else if (sol.estado === 'COMPLETADA') {
             containerAcciones.innerHTML = `
-                <a href="/agricultor/solicitudes/resultado/${sol.id}/" target="_blank" class="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-xs font-bold transition-all shadow-sm flex items-center gap-2">
+                <a href="/agricultor/solicitudes/resultado/${sol.id}/" class="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-xs font-bold transition-all shadow-sm flex items-center gap-2">
                     <i class="fa-solid fa-file-invoice"></i> Ver Informe
                 </a>
             `;

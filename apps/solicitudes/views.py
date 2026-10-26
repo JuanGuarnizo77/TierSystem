@@ -56,9 +56,12 @@ def solicitudes_pendientes(request):
         else:
             sol.dias_espera_display = None
 
+    activas_count = pendientes_count + aceptadas_count + en_proceso_count
+
     context = {
         'solicitudes': solicitudes,
-        'total_count': len(solicitudes),
+        'total_count': activas_count,
+        'activas_count': activas_count,
         'pendientes_count': pendientes_count,
         'aceptadas_count': aceptadas_count,
         'en_proceso_count': en_proceso_count,

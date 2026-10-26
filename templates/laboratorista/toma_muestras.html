@@ -213,102 +213,226 @@
 </div>
 
 <!-- Modal para Mostrar Resultados de Captura -->
-<div id="resultadosModal" class="hidden fixed inset-0 z-[100] bg-gray-900/60 flex items-center justify-center p-4 transition-opacity">
-    <div class="bento-card max-w-lg w-full p-6 relative">
-        <button onclick="cerrarModalResultados()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 hover:text-gray-700 dark:hover:text-white flex items-center justify-center transition-colors">
+<div id="resultadosModal" class="hidden fixed inset-0 z-[100] bg-gray-900/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto transition-all">
+    <div class="bento-card max-w-xl w-full p-5 sm:p-7 relative max-h-[92vh] overflow-y-auto my-auto rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#151c28]">
+        
+        <!-- Botón Cerrar -->
+        <button onclick="cerrarModalResultados()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800/80 text-gray-400 hover:text-gray-700 dark:hover:text-white flex items-center justify-center transition-all hover:scale-105 shadow-2xs cursor-pointer">
             <i class="fa-solid fa-xmark text-lg"></i>
         </button>
-        <div class="text-center mb-6">
-            <div class="w-16 h-16 bg-green-50 dark:bg-gray-800 border border-green-100 dark:border-gray-700 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm">
+
+        <!-- Header del Modal -->
+        <div class="flex items-start gap-4 mb-5 pb-4 border-b border-gray-100 dark:border-gray-800">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center text-xl shadow-md shadow-emerald-500/25 shrink-0">
                 <i class="fa-solid fa-check-double"></i>
             </div>
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight font-heading">Lectura Exitosa</h3>
-            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Datos capturados y estabilizados desde el ESP32</p>
-        </div>
-        
-        <div class="grid grid-cols-2 gap-3 mb-4">
-            <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Humedad</span><span id="res_humedad" class="font-bold text-lg text-gray-800 dark:text-gray-200">0%</span></div>
-            <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Temperatura</span><span id="res_temperatura" class="font-bold text-lg text-gray-800 dark:text-gray-200">0°C</span></div>
-            <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Conductividad</span><span id="res_conductividad" class="font-bold text-lg text-gray-800 dark:text-gray-200">0</span></div>
-            <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">pH</span><span id="res_ph" class="font-bold text-lg text-gray-800 dark:text-gray-200">0</span></div>
-            <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Nitrógeno (N)</span><span id="res_n" class="font-bold text-lg text-gray-800 dark:text-gray-200">0</span></div>
-            <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Fósforo (P)</span><span id="res_p" class="font-bold text-lg text-gray-800 dark:text-gray-200">0</span></div>
-            <div class="bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-center col-span-2"><span class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Potasio (K)</span><span id="res_k" class="font-bold text-lg text-gray-800 dark:text-gray-200">0</span></div>
+            <div class="min-w-0 pr-8">
+                <div class="flex items-center gap-2 flex-wrap mb-1">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Sensor Estabilizado
+                    </span>
+                    <span class="text-[11px] text-gray-400 dark:text-gray-500 font-medium">Lectura ESP32</span>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight font-heading leading-tight">
+                    Datos Capturados del Suelo
+                </h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    Parámetros fisicoquímicos y macronutrientes NPK listos para evaluación.
+                </p>
+            </div>
         </div>
 
-        <!-- Selector de Modo Dual: Online vs Offline -->
-        <div class="mb-4 bg-gray-50 dark:bg-gray-800 p-3 rounded-2xl border border-gray-200 dark:border-gray-700">
+        <!-- 1. Sección Fisicoquímica (4 métricas) -->
+        <div class="mb-4">
             <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <i class="fa-solid fa-sliders text-blue-500"></i> Modo de Análisis
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
+                    <i class="fa-solid fa-gauge-high text-teal-600"></i> Parámetros Fisicoquímicos
                 </span>
-                <span id="badgeModoActual" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">Automático</span>
             </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <!-- Humedad -->
+                <div class="bg-gradient-to-br from-blue-50/70 to-cyan-50/40 dark:from-blue-950/30 dark:to-cyan-950/20 p-3 rounded-2xl border border-blue-100 dark:border-blue-900/40 text-center transition-all hover:shadow-xs">
+                    <div class="flex items-center justify-center gap-1 text-blue-600 dark:text-blue-400 text-xs mb-1">
+                        <i class="fa-solid fa-droplet"></i>
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider">Humedad</span>
+                    </div>
+                    <span id="res_humedad" class="font-extrabold text-lg sm:text-xl text-gray-900 dark:text-white tracking-tight">0%</span>
+                </div>
+
+                <!-- Temperatura -->
+                <div class="bg-gradient-to-br from-amber-50/70 to-orange-50/40 dark:from-amber-950/30 dark:to-orange-950/20 p-3 rounded-2xl border border-amber-100 dark:border-amber-900/40 text-center transition-all hover:shadow-xs">
+                    <div class="flex items-center justify-center gap-1 text-amber-600 dark:text-amber-400 text-xs mb-1">
+                        <i class="fa-solid fa-temperature-half"></i>
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider">Temp.</span>
+                    </div>
+                    <span id="res_temperatura" class="font-extrabold text-lg sm:text-xl text-gray-900 dark:text-white tracking-tight">0°C</span>
+                </div>
+
+                <!-- Conductividad -->
+                <div class="bg-gradient-to-br from-indigo-50/70 to-violet-50/40 dark:from-indigo-950/30 dark:to-violet-950/20 p-3 rounded-2xl border border-indigo-100 dark:border-indigo-900/40 text-center transition-all hover:shadow-xs">
+                    <div class="flex items-center justify-center gap-1 text-indigo-600 dark:text-indigo-400 text-xs mb-1">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider">Conductividad</span>
+                    </div>
+                    <span id="res_conductividad" class="font-extrabold text-lg sm:text-xl text-gray-900 dark:text-white tracking-tight">0 us/cm</span>
+                </div>
+
+                <!-- pH -->
+                <div class="bg-gradient-to-br from-emerald-50/70 to-teal-50/40 dark:from-emerald-950/30 dark:to-teal-950/20 p-3 rounded-2xl border border-emerald-100 dark:border-emerald-900/40 text-center transition-all hover:shadow-xs">
+                    <div class="flex items-center justify-center gap-1 text-emerald-600 dark:text-emerald-400 text-xs mb-1">
+                        <i class="fa-solid fa-vial"></i>
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider">pH Suelo</span>
+                    </div>
+                    <span id="res_ph" class="font-extrabold text-lg sm:text-xl text-gray-900 dark:text-white tracking-tight">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Sección Macronutrientes Primarios (NPK) -->
+        <div class="mb-5">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
+                    <i class="fa-solid fa-seedling text-emerald-600"></i> Macronutrientes Primarios (NPK)
+                </span>
+                <span class="text-[10px] font-semibold text-gray-400">mg/kg (ppm)</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2.5">
+                <!-- Nitrógeno -->
+                <div class="bg-emerald-500/5 dark:bg-emerald-950/30 p-3.5 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/60 text-center relative overflow-hidden">
+                    <div class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 mb-0.5 flex items-center justify-center gap-1">
+                        <span class="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 font-extrabold text-[10px] flex items-center justify-center">N</span>
+                        Nitrógeno
+                    </div>
+                    <span id="res_n" class="font-extrabold text-lg sm:text-xl text-gray-900 dark:text-white block mt-0.5">0 mg/kg</span>
+                </div>
+
+                <!-- Fósforo -->
+                <div class="bg-amber-500/5 dark:bg-amber-950/30 p-3.5 rounded-2xl border border-amber-200/80 dark:border-amber-800/60 text-center relative overflow-hidden">
+                    <div class="text-[11px] font-bold text-amber-700 dark:text-amber-400 mb-0.5 flex items-center justify-center gap-1">
+                        <span class="w-5 h-5 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 font-extrabold text-[10px] flex items-center justify-center">P</span>
+                        Fósforo
+                    </div>
+                    <span id="res_p" class="font-extrabold text-lg sm:text-xl text-gray-900 dark:text-white block mt-0.5">0 mg/kg</span>
+                </div>
+
+                <!-- Potasio -->
+                <div class="bg-purple-500/5 dark:bg-purple-950/30 p-3.5 rounded-2xl border border-purple-200/80 dark:border-purple-800/60 text-center relative overflow-hidden">
+                    <div class="text-[11px] font-bold text-purple-700 dark:text-purple-400 mb-0.5 flex items-center justify-center gap-1">
+                        <span class="w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-extrabold text-[10px] flex items-center justify-center">K</span>
+                        Potasio
+                    </div>
+                    <span id="res_k" class="font-extrabold text-lg sm:text-xl text-gray-900 dark:text-white block mt-0.5">0 mg/kg</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Selector de Modo de Análisis -->
+        <div class="mb-5 bg-gray-50/80 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-200/80 dark:border-gray-700/80">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-sliders text-emerald-600"></i> Modo de Análisis
+                </span>
+                <span id="badgeModoActual" class="text-[11px] px-2.5 py-0.5 rounded-full font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">
+                    Automático
+                </span>
+            </div>
+            
             <div class="grid grid-cols-3 gap-2 text-xs font-bold">
-                <button type="button" id="btnModoAuto" onclick="cambiarModoAnalisis('auto')" class="py-2 px-1 rounded-xl border text-center transition-all bg-blue-600 text-white border-blue-600 shadow-sm flex flex-col items-center justify-center gap-1">
+                <button type="button" id="btnModoAuto" onclick="cambiarModoAnalisis('auto')" class="py-2.5 px-2 rounded-xl border text-center transition-all bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/25 flex flex-col items-center justify-center gap-1 cursor-pointer font-bold">
                     <i class="fa-solid fa-arrows-rotate text-sm"></i>
                     <span>Auto</span>
                 </button>
-                <button type="button" id="btnModoOnline" onclick="cambiarModoAnalisis('online')" class="py-2 px-1 rounded-xl border text-center transition-all bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:bg-gray-100 flex flex-col items-center justify-center gap-1">
+                <button type="button" id="btnModoOnline" onclick="cambiarModoAnalisis('online')" class="py-2.5 px-2 rounded-xl border text-center transition-all bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex flex-col items-center justify-center gap-1 cursor-pointer shadow-2xs">
                     <i class="fa-solid fa-brain text-purple-500 text-sm"></i>
                     <span>Online IA</span>
                 </button>
-                <button type="button" id="btnModoOffline" onclick="cambiarModoAnalisis('offline')" class="py-2 px-1 rounded-xl border text-center transition-all bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:bg-gray-100 flex flex-col items-center justify-center gap-1">
+                <button type="button" id="btnModoOffline" onclick="cambiarModoAnalisis('offline')" class="py-2.5 px-2 rounded-xl border text-center transition-all bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex flex-col items-center justify-center gap-1 cursor-pointer shadow-2xs">
                     <i class="fa-solid fa-database text-amber-500 text-sm"></i>
                     <span>Offline</span>
                 </button>
             </div>
-            <p id="modoAnalisisDesc" class="text-[11px] text-gray-500 dark:text-gray-400 mt-2 text-center">
+            
+            <p id="modoAnalisisDesc" class="text-[11px] text-gray-500 dark:text-gray-400 mt-2.5 text-center leading-relaxed">
                 Automático: usa Gemini AI con internet; si falla o estás en campo, cambia a motor offline.
             </p>
         </div>
 
-        <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700">
-            <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Cultivo de interés (Opcional)</label>
-            <input type="text" id="inputCultivo" list="listaCultivos" placeholder="Ej. Café, Maíz, Cacao..." class="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 mb-4 focus:outline-none focus:ring-2 focus:ring-primary text-gray-700 dark:text-white" onchange="actualizarVariedades()" oninput="actualizarVariedades()">
-            <datalist id="listaCultivos">
-                <option value="Café"></option>
-                <option value="Cacao"></option>
-                <option value="Maíz"></option>
-                <option value="Frijol"></option>
-                <option value="Tomate"></option>
-                <option value="Plátano"></option>
-                <option value="Cholupa"></option>
-                <option value="Granadilla"></option>
-                <option value="Aguacate Hass"></option>
-            </datalist>
+        <!-- 4. Cultivo y Variedad a Evaluar -->
+        <div class="bg-gray-50/80 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-200/80 dark:border-gray-700/80 mb-5 space-y-3.5">
+            <div>
+                <label class="block text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                    <span class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-wheat-awn text-emerald-600"></i> Cultivo de Interés
+                    </span>
+                    <span class="text-[10px] text-gray-400 font-normal lowercase">(opcional)</span>
+                </label>
+                <div class="relative">
+                    <i class="fa-solid fa-seedling absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="text" id="inputCultivo" list="listaCultivos" placeholder="Ej. Café, Cacao, Maíz..." 
+                           class="w-full bg-white dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-800 dark:text-white placeholder-gray-400 transition-all" 
+                           onchange="actualizarVariedades()" oninput="actualizarVariedades()">
+                </div>
+                <datalist id="listaCultivos">
+                    <option value="Café"></option>
+                    <option value="Cacao"></option>
+                    <option value="Maíz"></option>
+                    <option value="Frijol"></option>
+                    <option value="Tomate"></option>
+                    <option value="Plátano"></option>
+                    <option value="Cholupa"></option>
+                    <option value="Granadilla"></option>
+                    <option value="Aguacate Hass"></option>
+                </datalist>
+            </div>
 
-            <div id="containerVariedad" class="hidden mb-4">
-                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Variedad Específica (Opcional)</label>
-                <input type="text" id="inputVariedad" list="listaVariedades" placeholder="Selecciona o escribe una variedad" class="w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary text-gray-700 dark:text-white">
+            <div id="containerVariedad" class="hidden">
+                <label class="block text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                    <span class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-dna text-purple-600"></i> Variedad Específica
+                    </span>
+                    <span class="text-[10px] text-gray-400 font-normal lowercase">(opcional)</span>
+                </label>
+                <div class="relative">
+                    <i class="fa-solid fa-tag absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="text" id="inputVariedad" list="listaVariedades" placeholder="Selecciona o escribe una variedad" 
+                           class="w-full bg-white dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 rounded-xl pl-10 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-800 dark:text-white placeholder-gray-400 transition-all">
+                </div>
                 <datalist id="listaVariedades">
                 </datalist>
             </div>
-            
-            <button class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2" onclick="procesarDiagnosticoAutomatico()">
-                <i class="fa-solid fa-microchip"></i> Generar Diagnóstico
+        </div>
+
+        <!-- 5. Botones de Acción -->
+        <div class="space-y-2.5">
+            <button class="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-[#0a4d3c] hover:from-emerald-700 hover:to-[#093e31] text-white font-bold py-3.5 px-5 rounded-2xl shadow-lg shadow-emerald-600/25 hover:shadow-emerald-600/35 active:scale-[0.99] transition-all flex items-center justify-center gap-2.5 text-sm cursor-pointer" onclick="procesarDiagnosticoAutomatico()">
+                <i class="fa-solid fa-microchip text-base"></i>
+                <span>Generar Diagnóstico Agronómico</span>
             </button>
-            <button onclick="compartirResultadosConAgricultorDirecto()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 mt-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
-                <i class="fa-solid fa-share-nodes"></i> Guardar y Compartir con Agricultor
+            
+            <button onclick="compartirResultadosConAgricultorDirecto()" class="w-full bg-white dark:bg-gray-800 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 font-bold py-3 px-5 rounded-2xl shadow-2xs hover:shadow-xs transition-all flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer">
+                <i class="fa-solid fa-share-nodes text-emerald-600 dark:text-emerald-400"></i>
+                <span>Guardar y Compartir con Agricultor</span>
+            </button>
+            
+            <button class="w-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 font-semibold py-1.5 rounded-xl transition-colors text-xs text-center cursor-pointer" onclick="cerrarModalResultados()">
+                Cerrar sin guardar
             </button>
         </div>
-        <button class="w-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white font-bold py-2 mt-1 rounded-xl transition-colors text-sm" onclick="cerrarModalResultados()">
-            Cerrar ventana
-        </button>
+
     </div>
 </div>
 
 <!-- Modal para Diagnóstico -->
-<div id="diagnosticoModal" class="hidden fixed inset-0 z-[110] bg-gray-900/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto py-10 transition-opacity">
-    <div class="bento-card max-w-2xl w-full p-6 relative">
-        <button onclick="cerrarModalDiagnostico()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-400 hover:text-gray-700 dark:hover:text-white flex items-center justify-center transition-colors">
+<div id="diagnosticoModal" class="hidden fixed inset-0 z-[110] bg-gray-900/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto transition-all">
+    <div class="bento-card max-w-2xl w-full p-6 sm:p-8 relative max-h-[92vh] overflow-y-auto my-auto rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#151c28]">
+        <button onclick="cerrarModalDiagnostico()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800/80 text-gray-400 hover:text-gray-700 dark:hover:text-white flex items-center justify-center transition-all hover:scale-105 shadow-2xs cursor-pointer">
             <i class="fa-solid fa-xmark text-lg"></i>
         </button>
         <div class="text-center mb-6">
             <div id="diagnosticoIcon" class="w-16 h-16 bg-blue-100/80 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm">
                 <i class="fa-solid fa-brain"></i>
             </div>
-            <h3 id="diagnosticoTitle" class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Resultados del Diagnóstico</h3>
+            <h3 id="diagnosticoTitle" class="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight font-heading">Resultados del Diagnóstico</h3>
             <p id="diagnosticoSub" class="text-gray-500 dark:text-gray-400 text-sm mt-1 font-medium">Generado por Inteligencia Artificial</p>
         </div>
         
@@ -317,13 +441,13 @@
         </div>
         
         <div class="flex flex-col sm:flex-row gap-3 mt-6 pt-6 border-t border-gray-100 dark:border-gray-800/50">
-            <button class="bg-gray-200/80 dark:bg-gray-800 text-gray-800 dark:text-gray-200 font-bold py-3 px-4 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2" onclick="volverAResultados()">
-                <i class="fa-solid fa-search"></i> Otro Cultivo
+            <button class="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold py-3 px-4 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer" onclick="volverAResultados()">
+                <i class="fa-solid fa-arrow-left"></i> Modificar Parámetros
             </button>
-            <button id="btnCompartirAgricultor" onclick="compartirResultadosConAgricultor()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-green-600/30 transition-all flex items-center justify-center gap-2">
+            <button id="btnCompartirAgricultor" onclick="compartirResultadosConAgricultor()" class="flex-1 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer">
                 <i class="fa-solid fa-share-nodes"></i> Compartir con Agricultor
             </button>
-            <button class="bg-primary hover:bg-secondary text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-primary/30 transition-colors flex items-center justify-center" onclick="cerrarModalDiagnostico()">
+            <button class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white font-bold py-3 px-4 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center text-xs sm:text-sm cursor-pointer" onclick="cerrarModalDiagnostico()">
                 Cerrar
             </button>
         </div>
@@ -525,9 +649,18 @@
         }
     }
 
-    // Funciones auxiliares para obtener la preferencia unificada
+    // Funciones auxiliares para normalización y preferencia de cultivo
+    function normalizarTextoJS(txt) {
+        if (!txt) return '';
+        return txt.toString().toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]/gi, '')
+            .trim();
+    }
+
     function obtenerPreferenciaUnificada() {
-        const cultivo = document.getElementById('inputCultivo').value.trim();
+        const cultivo = document.getElementById('inputCultivo') ? document.getElementById('inputCultivo').value.trim() : '';
         const variedad = document.getElementById('inputVariedad') ? document.getElementById('inputVariedad').value.trim() : '';
         if (cultivo && variedad) return `${cultivo} (${variedad})`;
         return cultivo;
@@ -599,28 +732,28 @@
         // Reset estilos
         [btnAuto, btnOnline, btnOffline].forEach(b => {
             if (b) {
-                b.className = "py-2 px-1 rounded-xl border text-center transition-all bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:bg-gray-100 flex flex-col items-center justify-center gap-1";
+                b.className = "py-2.5 px-2 rounded-xl border text-center transition-all bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex flex-col items-center justify-center gap-1 cursor-pointer shadow-2xs";
             }
         });
 
         if (modo === 'auto') {
-            if (btnAuto) btnAuto.className = "py-2 px-1 rounded-xl border text-center transition-all bg-blue-600 text-white border-blue-600 shadow-sm flex flex-col items-center justify-center gap-1";
+            if (btnAuto) btnAuto.className = "py-2.5 px-2 rounded-xl border text-center transition-all bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/25 flex flex-col items-center justify-center gap-1 cursor-pointer font-bold";
             if (badge) {
-                badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300";
+                badge.className = "text-[11px] px-2.5 py-0.5 rounded-full font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300";
                 badge.innerText = "Automático";
             }
             if (desc) desc.innerText = "Automático: usa Gemini AI con internet; si falla o estás en campo, cambia a motor offline.";
         } else if (modo === 'online') {
-            if (btnOnline) btnOnline.className = "py-2 px-1 rounded-xl border text-center transition-all bg-purple-600 text-white border-purple-600 shadow-sm flex flex-col items-center justify-center gap-1";
+            if (btnOnline) btnOnline.className = "py-2.5 px-2 rounded-xl border text-center transition-all bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-500/25 flex flex-col items-center justify-center gap-1 cursor-pointer font-bold";
             if (badge) {
-                badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300";
+                badge.className = "text-[11px] px-2.5 py-0.5 rounded-full font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300";
                 badge.innerText = "Online (IA Gemini)";
             }
             if (desc) desc.innerText = "Modo forzado con Inteligencia Artificial Google Gemini. Requiere conexión a internet activa.";
         } else if (modo === 'offline') {
-            if (btnOffline) btnOffline.className = "py-2 px-1 rounded-xl border text-center transition-all bg-amber-600 text-white border-amber-600 shadow-sm flex flex-col items-center justify-center gap-1";
+            if (btnOffline) btnOffline.className = "py-2.5 px-2 rounded-xl border text-center transition-all bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-500/25 flex flex-col items-center justify-center gap-1 cursor-pointer font-bold";
             if (badge) {
-                badge.className = "text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300";
+                badge.className = "text-[11px] px-2.5 py-0.5 rounded-full font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300";
                 badge.innerText = "Offline (Motor Huila)";
             }
             if (desc) desc.innerText = "Modo 100% offline local: evalúa rangos óptimos con el catálogo de cultivos del Huila sin internet.";
@@ -632,15 +765,9 @@
         
         if (modoAnalisisSeleccionado === 'offline') {
             solicitarDiagnosticoOffline();
-        } else if (modoAnalisisSeleccionado === 'online') {
-            solicitarDiagnosticoIA();
         } else {
-            // Modo Automático: intenta con IA, si no hay internet o falla, usa Offline
-            if (navigator.onLine) {
-                solicitarDiagnosticoIA();
-            } else {
-                solicitarDiagnosticoOffline();
-            }
+            // Modos 'online' y 'auto': el backend valida internet real en < 0.8s
+            solicitarDiagnosticoIA();
         }
     }
 
@@ -648,9 +775,13 @@
         const preferencia = obtenerPreferenciaUnificada();
         cerrarModalResultados();
         
+        const esModoOnlinePuro = (modoAnalisisSeleccionado === 'online');
+        
         Swal.fire({
-            title: 'Consultando a la IA...',
-            text: 'Conexión a internet detectada. Analizando nutrientes...',
+            title: esModoOnlinePuro ? 'Consultando a la IA (Gemini)...' : 'Analizando Muestra de Suelo...',
+            text: esModoOnlinePuro 
+                ? 'Conectando con Google Gemini...' 
+                : 'Evaluando parámetros nutricionales...',
             allowOutsideClick: false,
             didOpen: () => {
                 Swal.showLoading();
@@ -685,19 +816,46 @@
                 diagnosticoActual = result.diagnostico;
                 mostrarDiagnosticoUI(result.diagnostico, result.modo || 'ia');
             } else {
-                // Fallback automático al motor offline
-                console.warn("Fallo IA en backend, cambiando a modo offline...", result.mensaje);
-                solicitarDiagnosticoOffline(result.mensaje);
+                if (esModoOnlinePuro) {
+                    // Si el usuario forzó el modo Online (IA) y no hay internet o falló:
+                    Swal.fire({
+                        icon: 'warning',
+                        title: result.sin_internet ? 'Sin Conexión a Internet' : 'IA No Disponible',
+                        text: result.mensaje || 'No fue posible conectar con la Inteligencia Artificial de Google Gemini sin internet. Si deseas procesar la muestra sin conexión, selecciona el modo "Offline (Motor Huila)".',
+                        confirmButtonText: 'Entendido'
+                    });
+                } else {
+                    // Modo automático: Fallback inmediato al motor offline local de JS
+                    console.warn("Fallo o sin internet en backend, ejecutando motor local offline...", result.mensaje);
+                    solicitarDiagnosticoOffline(result.mensaje || 'Sin conexión a internet: procesado con la base de datos local.');
+                }
             }
         } catch (e) {
-            console.warn("Error de red hacia endpoint IA, cambiando a modo offline...", e);
-            solicitarDiagnosticoOffline("No se detectó acceso a Google Cloud. Se activó el Motor Offline.");
+            Swal.close();
+            if (esModoOnlinePuro) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sin Conexión a Internet',
+                    text: 'No se puede contactar con la IA de Google Gemini porque no hay conexión a internet activa. Cambia al modo Offline para analizar con la base de datos local.',
+                    confirmButtonText: 'Entendido'
+                });
+            } else {
+                console.warn("Servidor inalcanzable, fallback a cálculo offline 100% en navegador...", e);
+                solicitarDiagnosticoOffline("Modo sin conexión: Procesando con la base de datos de cultivos del Huila...");
+            }
         }
     }
 
     async function solicitarDiagnosticoOffline(avisoPrevio = '') {
         if (!datosSensorActual) return;
-        const preferencia = obtenerPreferenciaUnificada().toLowerCase();
+        const inputCultivoVal = document.getElementById('inputCultivo') ? document.getElementById('inputCultivo').value.trim() : '';
+        const inputVariedadVal = document.getElementById('inputVariedad') ? document.getElementById('inputVariedad').value.trim() : '';
+        const preferencia = obtenerPreferenciaUnificada();
+        const cultivoNorm = normalizarTextoJS(inputCultivoVal);
+        const variedadNorm = normalizarTextoJS(inputVariedadVal);
+        const preferenciaNorm = normalizarTextoJS(preferencia);
+        const tienePreferencia = Boolean(cultivoNorm);
+
         cerrarModalResultados();
         
         Swal.fire({
@@ -741,6 +899,32 @@
             ];
         }
 
+        // Si el usuario especificó cultivo de interés, verificar si coincide con alguno o sintetizarlo
+        if (tienePreferencia) {
+            let coincide = false;
+            for (let c of cultivos) {
+                const cNom = normalizarTextoJS(c.nombre);
+                const cCat = normalizarTextoJS(c.categoria || '');
+                if (cNom.includes(cultivoNorm) || cultivoNorm.includes(cNom) || cCat.includes(cultivoNorm) || (preferenciaNorm && (cNom.includes(preferenciaNorm) || preferenciaNorm.includes(cNom)))) {
+                    coincide = true;
+                    break;
+                }
+            }
+            if (!coincide) {
+                let nombreSintetizado = inputCultivoVal;
+                if (inputVariedadVal && !normalizarTextoJS(inputCultivoVal).includes(variedadNorm)) {
+                    nombreSintetizado += ` (${inputVariedadVal})`;
+                }
+                cultivos.unshift({
+                    nombre: nombreSintetizado,
+                    categoria: "Cultivo del Productor",
+                    clima: "Templado",
+                    descripcion: `Cultivo de interés especificado directamente por el usuario (${nombreSintetizado}).`,
+                    rangos: { humedad: [50, 80], temperatura: [18, 28], ph: [5.5, 6.8], conductividad: [0.8, 2.0], nitrogeno: [120, 240], fosforo: [30, 60], potasio: [140, 280] }
+                });
+            }
+        }
+
         const d = datosSensorActual;
         const ph = parseFloat(d.ph || 0);
         const n = parseFloat(d.nitrogeno || 0);
@@ -750,80 +934,152 @@
         const t = parseFloat(d.temperatura || 0);
         const c = parseFloat(d.conductividad || 0);
 
+        // Ley del Mínimo de Liebig y evaluación de viabilidad del suelo:
+        const esSueloCritico = (n <= 5 && p <= 5 && k <= 5);
+        const deficitsGraves = (n < 10 || p < 10 || k < 10 || c < 0.2);
+
         let recomendaciones = [];
 
         cultivos.forEach(item => {
             const r = item.rangos || {};
             let puntajes = [];
 
-            // pH (25%)
+            // 1. pH (20%)
             if (r.ph && ph > 0) {
                 const [minPh, maxPh] = r.ph;
                 if (ph >= minPh && ph <= maxPh) {
-                    puntajes.push(100.0 * 0.25);
+                    puntajes.push(100.0 * 0.20);
                 } else if (ph < minPh) {
                     const diff = minPh - ph;
-                    puntajes.push(Math.max(20.0, 100.0 - (diff / 1.5) * 80.0) * 0.25);
+                    puntajes.push(Math.max(5.0, 100.0 - (diff / 1.5) * 80.0) * 0.20);
                 } else {
                     const diff = ph - maxPh;
-                    puntajes.push(Math.max(20.0, 100.0 - (diff / 1.5) * 80.0) * 0.25);
+                    puntajes.push(Math.max(5.0, 100.0 - (diff / 1.5) * 80.0) * 0.20);
                 }
-            } else { puntajes.push(80.0 * 0.25); }
+            } else { puntajes.push(50.0 * 0.20); }
 
-            // Nitrógeno (15%)
-            if (r.nitrogeno && n > 0) {
+            // 2. Nitrógeno (20%)
+            if (r.nitrogeno) {
                 const [minN, maxN] = r.nitrogeno;
-                if (n >= minN && n <= maxN) puntajes.push(100.0 * 0.15);
-                else if (n < minN) puntajes.push(Math.max(30.0, 100.0 - ((minN - n) / minN) * 70.0) * 0.15);
-                else puntajes.push(Math.max(60.0, 100.0 - ((n - maxN) / maxN) * 40.0) * 0.15);
-            } else { puntajes.push(80.0 * 0.15); }
+                if (n === 0) {
+                    puntajes.push(0.0);
+                } else if (n < minN) {
+                    puntajes.push(Math.max(0.0, (n / minN) * 50.0) * 0.20);
+                } else if (n <= maxN) {
+                    puntajes.push(100.0 * 0.20);
+                } else {
+                    puntajes.push(Math.max(40.0, 100.0 - ((n - maxN) / maxN) * 40.0) * 0.20);
+                }
+            } else { puntajes.push(0.0); }
 
-            // Fósforo (15%)
-            if (r.fosforo && p > 0) {
+            // 3. Fósforo (20%)
+            if (r.fosforo) {
                 const [minP, maxP] = r.fosforo;
-                if (p >= minP && p <= maxP) puntajes.push(100.0 * 0.15);
-                else if (p < minP) puntajes.push(Math.max(30.0, 100.0 - ((minP - p) / minP) * 70.0) * 0.15);
-                else puntajes.push(Math.max(60.0, 100.0 - ((p - maxP) / maxP) * 40.0) * 0.15);
-            } else { puntajes.push(80.0 * 0.15); }
+                if (p === 0) {
+                    puntajes.push(0.0);
+                } else if (p < minP) {
+                    puntajes.push(Math.max(0.0, (p / minP) * 50.0) * 0.20);
+                } else if (p <= maxP) {
+                    puntajes.push(100.0 * 0.20);
+                } else {
+                    puntajes.push(Math.max(50.0, 100.0 - ((p - maxP) / maxP) * 40.0) * 0.20);
+                }
+            } else { puntajes.push(0.0); }
 
-            // Potasio (15%)
-            if (r.potasio && k > 0) {
+            // 4. Potasio (20%)
+            if (r.potasio) {
                 const [minK, maxK] = r.potasio;
-                if (k >= minK && k <= maxK) puntajes.push(100.0 * 0.15);
-                else if (k < minK) puntajes.push(Math.max(30.0, 100.0 - ((minK - k) / minK) * 70.0) * 0.15);
-                else puntajes.push(Math.max(60.0, 100.0 - ((k - maxK) / maxK) * 40.0) * 0.15);
-            } else { puntajes.push(80.0 * 0.15); }
+                if (k === 0) {
+                    puntajes.push(0.0);
+                } else if (k < minK) {
+                    puntajes.push(Math.max(0.0, (k / minK) * 50.0) * 0.20);
+                } else if (k <= maxK) {
+                    puntajes.push(100.0 * 0.20);
+                } else {
+                    puntajes.push(Math.max(50.0, 100.0 - ((k - maxK) / maxK) * 40.0) * 0.20);
+                }
+            } else { puntajes.push(0.0); }
 
-            // Humedad, Temp, CE (30%)
+            // 5. Conductividad Eléctrica (10%)
+            if (r.conductividad) {
+                const [minC, maxC] = r.conductividad;
+                if (c === 0) {
+                    puntajes.push(0.0);
+                } else if (c < minC) {
+                    puntajes.push(Math.max(10.0, (c / minC) * 60.0) * 0.10);
+                } else if (c <= maxC) {
+                    puntajes.push(100.0 * 0.10);
+                } else {
+                    puntajes.push(Math.max(10.0, 100.0 - ((c - maxC) / maxC) * 80.0) * 0.10);
+                }
+            } else { puntajes.push(0.0); }
+
+            // 6. Humedad y Temp (10% total)
             let otros = 0;
-            if (r.humedad && h > 0 && h >= r.humedad[0] && h <= r.humedad[1]) otros += 10; else otros += 7;
-            if (r.temperatura && t > 0 && t >= r.temperatura[0] && t <= r.temperatura[1]) otros += 10; else otros += 7;
-            if (r.conductividad && c > 0 && c >= r.conductividad[0] && c <= r.conductividad[1]) otros += 10; else otros += 7;
+            if (r.humedad && h > 0) {
+                if (h >= r.humedad[0] && h <= r.humedad[1]) otros += 5;
+                else otros += Math.max(1, (h / r.humedad[0]) * 3);
+            }
+            if (r.temperatura && t > 0) {
+                if (t >= r.temperatura[0] && t <= r.temperatura[1]) otros += 5;
+                else otros += 3;
+            }
             puntajes.push(otros);
 
-            const compat = Math.min(100, Math.round(puntajes.reduce((a, b) => a + b, 0)));
+            let compat = Math.min(100, Math.round(puntajes.reduce((a, b) => a + b, 0)));
+
+            // Ley de Liebig estricta: si los macronutrientes esenciales están agotados (0 mg/kg), ninguna planta puede prosperar
+            if (esSueloCritico) {
+                compat = Math.min(compat, 8); // Máximo 8% Ideal
+            } else if (deficitsGraves) {
+                compat = Math.min(compat, 30);
+            }
 
             // Plan de fertilización offline
             let planes = [];
-            if (r.ph && ph > 0 && ph < r.ph[0]) planes.push("Aplicar enmienda calcárea (Cal Dolomita) para corregir acidez.");
-            if (r.nitrogeno && n > 0 && n < r.nitrogeno[0]) planes.push("Reforzar Nitrógeno con abono orgánico o Urea fraccionada.");
-            if (r.fosforo && p > 0 && p < r.fosforo[0]) planes.push("Aplicar Fósforo localizado (DAP o Roca Fosfórica) a la siembra.");
-            if (r.potasio && k > 0 && k < r.potasio[0]) planes.push("Suplir Potasio (KCl) para favorecer llenado de fruto.");
-            if (planes.length === 0) planes.push("Parámetros balanceados. Mantener fertilización de sostenimiento.");
+            if (esSueloCritico) {
+                planes.push("Déficit nutricional crítico total: N, P y K en 0 mg/kg con conductividad nula. El suelo no es apto para siembra inmediata. Se requiere acondicionamiento estructural con 15-20 t/ha de materia orgánica compostada y fertilización de base con NPK antes de sembrar.");
+            } else {
+                if (r.ph && ph > 0 && ph < r.ph[0]) planes.push("Aplicar enmienda calcárea (Cal Dolomita o Cal Agrícola) para corregir acidez.");
+                if (r.nitrogeno && n < r.nitrogeno[0]) planes.push("Reforzar Nitrógeno con materia orgánica compostada o fertilización nitrogenada fraccionada.");
+                if (r.fosforo && p < r.fosforo[0]) planes.push("Aplicar Fósforo localizado (DAP o Roca Fosfórica) a la siembra.");
+                if (r.potasio && k < r.potasio[0]) planes.push("Suplir Potasio (KCl) para favorecer resistencia hídrica y llenado.");
+                if (planes.length === 0) planes.push("Parámetros balanceados. Mantener fertilización de sostenimiento.");
+            }
 
-            const esPref = preferencia && (item.nombre.toLowerCase().includes(preferencia) || preferencia.includes(item.nombre.toLowerCase()));
+            const itemNom = normalizarTextoJS(item.nombre);
+            const itemCat = normalizarTextoJS(item.categoria || '');
+            let esPref = false;
+
+            if (tienePreferencia) {
+                if (preferenciaNorm && (itemNom.includes(preferenciaNorm) || preferenciaNorm.includes(itemNom))) {
+                    esPref = true;
+                } else if (itemNom.includes(cultivoNorm) || cultivoNorm.includes(itemNom) || itemCat.includes(cultivoNorm)) {
+                    esPref = true;
+                }
+            }
+
+            let nombreMostrar = item.nombre;
+            if (esPref && inputVariedadVal && !itemNom.includes(variedadNorm)) {
+                nombreMostrar = `${item.nombre} (${inputVariedadVal})`;
+            }
+
+            let viab = "No Apto";
+            if (compat >= 75) viab = "Alta";
+            else if (compat >= 50) viab = "Media";
+            else if (compat >= 25) viab = "Baja";
 
             recomendaciones.push({
-                cultivo: item.nombre,
+                cultivo: nombreMostrar,
                 compatibilidad: compat,
-                viabilidad: compat >= 75 ? "Alta" : (compat >= 50 ? "Media" : "Baja"),
-                descripcion: item.descripcion || `Variedad recomendada para el Huila.`,
+                viabilidad: viab,
+                descripcion: item.descripcion || `Variedad agronómica evaluada para el departamento del Huila.`,
                 plan_fertilizacion: planes.join(" "),
                 es_preferido: Boolean(esPref)
             });
         });
 
-        // Ordenar dando prioridad al cultivo de interés si coincide, luego por compatibilidad
+        // Ordenar dando prioridad absoluta al cultivo de interés si coincide, luego por compatibilidad
         recomendaciones.sort((a, b) => {
             if (a.es_preferido && !b.es_preferido) return -1;
             if (!a.es_preferido && b.es_preferido) return 1;
@@ -833,16 +1089,25 @@
         const topRecs = recomendaciones.slice(0, 3);
 
         let consejos = [];
-        if (ph > 0 && ph < 5.5) consejos.push(`El suelo presenta acidez (pH ${ph.toFixed(1)}). Recomendable aplicar encalado.`);
-        else if (ph > 7.5) consejos.push(`El suelo es ligeramente alcalino (pH ${ph.toFixed(1)}).`);
-        else consejos.push(`El pH (${ph.toFixed(1)}) está en rango adecuado para cultivos del departamento del Huila.`);
+        if (tienePreferencia) {
+            consejos.push(`Cultivo de interés evaluado: "${inputCultivoVal}${inputVariedadVal ? ' (Variedad ' + inputVariedadVal + ')' : ''}".`);
+        }
 
-        if (n > 0 && p > 0 && k > 0) consejos.push(`Lecturas NPK registradas: N=${Math.round(n)}, P=${Math.round(p)}, K=${Math.round(k)} mg/kg.`);
-        consejos.push("Diagnóstico agronómico calculado 100% en modo offline local.");
+        if (esSueloCritico) {
+            consejos.push("ALERTA AGRONÓMICA: El suelo evaluado NO ES APTO para ningún cultivo en su estado actual. Las mediciones indican ausencia total de macronutrientes primarios (N: 0, P: 0, K: 0 mg/kg), nula conductividad eléctrica (0 us/cm) y baja humedad (13.1%). Ninguna planta podrá germinar ni desarrollarse sin una recuperación previa mediante enmienda orgánica profunda, fertilización NPK intensiva y corrección de pH.");
+        } else {
+            if (ph > 0 && ph < 5.5) consejos.push(`El suelo presenta acidez (pH ${ph.toFixed(1)}). Recomendable aplicar encalado.`);
+            else if (ph > 7.5) consejos.push(`El suelo es ligeramente alcalino (pH ${ph.toFixed(1)}).`);
+            else consejos.push(`El pH (${ph.toFixed(1)}) está en rango adecuado para cultivos del departamento del Huila.`);
+
+            if (n > 0 && p > 0 && k > 0) consejos.push(`Lecturas NPK registradas: N=${Math.round(n)}, P=${Math.round(p)}, K=${Math.round(k)} mg/kg.`);
+        }
+        consejos.push("Diagnóstico agronómico calculado 100% en modo offline local (Motor Huila).");
 
         const diagnosticoOffline = {
             recomendaciones: topRecs,
             consejo_general: consejos.join(" "),
+            es_critico: esSueloCritico,
             modo: "offline"
         };
 
@@ -871,27 +1136,83 @@
         const content = document.getElementById('diagnosticoContent');
         const icon = document.getElementById('diagnosticoIcon');
         const sub = document.getElementById('diagnosticoSub');
+        const title = document.getElementById('diagnosticoTitle');
         
-        if (modo === 'ia') {
+        const esCritico = diagnostico.es_critico || (diagnostico.recomendaciones && diagnostico.recomendaciones.every(r => r.compatibilidad < 25));
+
+        if (esCritico) {
+            icon.className = "w-16 h-16 bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm";
+            icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            if (title) title.innerText = "Diagnóstico: Suelo No Apto";
+            sub.innerHTML = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 border border-red-200 dark:border-red-800"><i class="fa-solid fa-circle-exclamation"></i> Condición Inviable en Estado Actual (Motor Huila)</span>';
+        } else if (modo === 'ia') {
             icon.className = "w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm";
             icon.innerHTML = '<i class="fa-solid fa-brain"></i>';
+            if (title) title.innerText = "Resultados del Diagnóstico";
             sub.innerHTML = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700"><i class="fa-solid fa-wifi"></i> Inteligencia Artificial Gemini (Modo Online)</span>';
         } else {
             icon.className = "w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm";
             icon.innerHTML = '<i class="fa-solid fa-database"></i>';
+            if (title) title.innerText = "Resultados del Diagnóstico";
             sub.innerHTML = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700"><i class="fa-solid fa-hard-drive"></i> Motor Agronómico Edafológico (Modo Offline - Huila)</span>';
         }
 
         let html = '';
-        (diagnostico.recomendaciones || []).forEach(rec => {
-            let color = rec.compatibilidad >= 75 ? 'bg-green-500' : (rec.compatibilidad >= 50 ? 'bg-yellow-500' : 'bg-red-500');
-            let viabilidadBadge = rec.viabilidad ? `<span class="text-xs px-2.5 py-0.5 rounded-md font-bold bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">Viabilidad ${rec.viabilidad}</span>` : '';
-            
+
+        // Si el suelo es crítico (NPK en 0 / no apto), mostrar tarjeta de alerta destacada
+        if (esCritico) {
             html += `
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:border-gray-200">
-                <div class="flex justify-between items-center mb-2">
-                    <div class="flex items-center gap-2">
+            <div class="bg-red-50/90 dark:bg-red-950/50 border-2 border-red-300 dark:border-red-700 rounded-2xl p-4 mb-4 shadow-sm">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/60 text-red-600 dark:text-red-400 flex items-center justify-center text-lg shrink-0">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-red-600 text-white shadow-xs">
+                                Condición Inviable
+                            </span>
+                            <h4 class="font-extrabold text-red-950 dark:text-red-200 text-sm">
+                                Suelo No Apto para Siembra en Estado Actual
+                            </h4>
+                        </div>
+                        <p class="text-xs text-red-800 dark:text-red-300 leading-relaxed font-medium">
+                            Los parámetros del suelo registran <strong>agotamiento total de macronutrientes (N: 0, P: 0, K: 0 mg/kg)</strong> y <strong>conductividad en 0 µS/cm</strong>. Bajo estas condiciones edafológicas, <strong>ninguna planta es capaz de germinar ni prosperar</strong> sin antes ejecutar un plan intensivo de recuperación de suelo, incorporación de materia orgánica y fertilización correctiva integral de fondo.
+                        </p>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        (diagnostico.recomendaciones || []).forEach(rec => {
+            let color = rec.compatibilidad >= 75 ? 'bg-emerald-600' : (rec.compatibilidad >= 50 ? 'bg-amber-500' : 'bg-red-600');
+            let viabilidadBadge = '';
+            if (rec.viabilidad === 'No Apto') {
+                viabilidadBadge = `<span class="text-xs px-2.5 py-0.5 rounded-full font-extrabold bg-red-100 dark:bg-red-950/70 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">No Apto</span>`;
+            } else if (rec.viabilidad === 'Alta') {
+                viabilidadBadge = `<span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200">Viabilidad Alta</span>`;
+            } else {
+                viabilidadBadge = `<span class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-200">Viabilidad ${rec.viabilidad}</span>`;
+            }
+            
+            let cardBorder = rec.compatibilidad < 25 ? 'border-red-200 dark:border-red-900/60 bg-red-50/20 dark:bg-red-950/20' : 'border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800';
+            if (rec.es_preferido) {
+                cardBorder = rec.compatibilidad < 25 
+                    ? 'border-blue-300 dark:border-blue-700 bg-blue-50/30 dark:bg-blue-950/20 ring-2 ring-blue-500/30' 
+                    : 'border-blue-300 dark:border-blue-700 bg-blue-50/30 dark:bg-blue-950/20 ring-2 ring-blue-500/30';
+            }
+
+            const badgePreferido = rec.es_preferido ? `
+            <span class="text-[11px] px-2.5 py-0.5 rounded-full font-extrabold bg-blue-100 dark:bg-blue-900/70 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-700 flex items-center gap-1 shadow-2xs">
+                <i class="fa-solid fa-star text-[10px] text-amber-500"></i> Tu Cultivo de Interés
+            </span>` : '';
+
+            html += `
+            <div class="${cardBorder} rounded-2xl p-4 border shadow-sm transition-all hover:border-gray-300 dark:hover:border-gray-600 mb-3">
+                <div class="flex justify-between items-center mb-2 flex-wrap gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
                         <h4 class="font-bold text-lg text-gray-900 dark:text-white">${rec.cultivo}</h4>
+                        ${badgePreferido}
                         ${viabilidadBadge}
                     </div>
                     <span class="${color} text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">${rec.compatibilidad}% Ideal</span>
@@ -899,20 +1220,27 @@
                 <p class="text-gray-600 dark:text-gray-300 text-sm mb-3">${rec.descripcion}</p>
                 ${rec.plan_fertilizacion ? `
                 <div class="bg-white dark:bg-gray-700/60 p-3 rounded-xl border border-gray-200 dark:border-gray-600 text-xs">
-                    <div class="font-bold text-green-700 dark:text-green-400 mb-1 flex items-center gap-1.5">
-                        <i class="fa-solid fa-leaf"></i> Plan Agronómico Sugerido:
+                    <div class="font-bold ${rec.compatibilidad < 25 ? 'text-red-700 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-400'} mb-1 flex items-center gap-1.5">
+                        <i class="fa-solid ${rec.compatibilidad < 25 ? 'fa-triangle-exclamation' : 'fa-leaf'}"></i> ${rec.compatibilidad < 25 ? 'Plan de Recuperación Exigido:' : 'Plan Agronómico Sugerido:'}
                     </div>
-                    <p class="text-gray-600 dark:text-gray-300">${rec.plan_fertilizacion}</p>
+                    <p class="text-gray-600 dark:text-gray-300 leading-relaxed">${rec.plan_fertilizacion}</p>
                 </div>
                 ` : ''}
             </div>`;
         });
 
         if (diagnostico.consejo_general) {
+            const consejoBg = esCritico ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800' : 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800';
+            const consejoText = esCritico ? 'text-red-900 dark:text-red-200' : 'text-amber-900 dark:text-amber-200';
+            const consejoHeader = esCritico ? 'text-red-800 dark:text-red-300' : 'text-amber-800 dark:text-amber-300';
+            const consejoIcon = esCritico ? 'fa-triangle-exclamation' : 'fa-lightbulb';
+
             html += `
-            <div class="mt-4 bg-amber-50 dark:bg-amber-950/30 p-4 rounded-2xl border border-amber-200 dark:border-amber-800">
-                <h4 class="text-amber-800 dark:text-amber-300 font-bold mb-1 flex items-center gap-1.5"><i class="fa-solid fa-lightbulb"></i> Recomendación General del Lote</h4>
-                <p class="text-sm text-amber-900 dark:text-amber-200">${diagnostico.consejo_general}</p>
+            <div class="mt-4 ${consejoBg} p-4 rounded-2xl border">
+                <h4 class="${consejoHeader} font-bold mb-1 flex items-center gap-1.5">
+                    <i class="fa-solid ${consejoIcon}"></i> Recomendación General del Lote
+                </h4>
+                <p class="text-sm ${consejoText} leading-relaxed">${diagnostico.consejo_general}</p>
             </div>`;
         }
 
