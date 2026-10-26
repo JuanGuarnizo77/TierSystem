@@ -746,49 +746,94 @@ void loop()
 
 ---
 
-## 4. Código Backend Django de Recepción (`api/lecturas/`)
+## 4. Código Backend Django de Recepción y Estabilización
 
 ### En `apps/sensores/views.py`:
 ```python
 import json
+import statistics
+from datetime import timedelta
+from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+from .models import LecturaSensor
 
 @csrf_exempt
 def recibir_datos_sensor(request):
+    """Endpoint HTTP: POST /sensores/lecturas/ (o /api/lecturas/)"""
     if request.method != "POST":
         return JsonResponse({"error": "Solo se permiten peticiones POST"}, status=405)
 
+    # Autenticación opcional en producción
+    api_key = request.headers.get('X-API-Key', '')
+    if not settings.DEBUG and api_key != getattr(settings, 'SENSOR_API_KEY', ''):
+        return JsonResponse({'error': 'No autorizado'}, status=401)
+
     try:
         datos = json.loads(request.body)
-        humedad = datos.get("humedad")
-        temperatura = datos.get("temperatura")
-        conductividad = datos.get("conductividad")
-        ph = datos.get("ph")
-        nitrogeno = datos.get("nitrogeno")
-        fosforo = datos.get("fosforo")
-        potasio = datos.get("potasio")
 
-        print("====================================")
-        print("      DATOS RECIBIDOS DEL SENSOR")
-        print("====================================")
-        print(f"Humedad:        {humedad}")
-        print(f"Temperatura:    {temperatura}")
-        print(f"Conductividad:  {conductividad}")
-        print(f"pH:             {ph}")
-        print(f"Nitrógeno:      {nitrogeno}")
-        print(f"Fósforo:        {fosforo}")
-        print(f"Potasio:        {potasio}")
-        print("====================================")
+        # Desescalado de registros enteros Modbus RTU a unidades agronómicas
+        humedad = float(datos.get("humedad", 0)) / 10.0
+        temperatura = float(datos.get("temperatura", 0)) / 10.0
+        conductividad = float(datos.get("conductividad", 0))
+        ph = float(datos.get("ph", 0)) / 10.0
+        nitrogeno = float(datos.get("nitrogeno", 0))
+        fosforo = float(datos.get("fosforo", 0))
+        potasio = float(datos.get("potasio", 0))
 
-        return JsonResponse({
-            "estado": "ok",
-            "mensaje": "Datos recibidos correctamente",
-            "datos": datos
-        })
+        # Almacenamiento en buffer temporal de telemetría
+        LecturaSensor.objects.create(
+            humedad=humedad,
+            temperatura=temperatura,
+            conductividad=conductividad,
+            ph=ph,
+            nitrogeno=nitrogeno,
+            fosforo=fosforo,
+            potasio=potasio
+        )
+
+        return JsonResponse({"estado": "ok", "mensaje": "Datos recibidos correctamente"})
 
     except json.JSONDecodeError:
-        return JsonResponse({"estado": "error", "mensaje": "El JSON recibido no es válido"}, status=400)
+        return JsonResponse({"estado": "error", "mensaje": "JSON inválido"}, status=400)
     except Exception as e:
         return JsonResponse({"estado": "error", "mensaje": str(e)}, status=500)
+
+
+def captura_estable(request):
+    """
+    Endpoint HTTP: GET /sensores/captura-estable/ (o /api/captura-estable/)
+    Calcula la Moda o Mediana estadística de las lecturas de los últimos 15 segundos
+    para filtrar el ruido transitorio de inserción de electrodos en el terreno.
+    """
+    tiempo_limite = timezone.now() - timedelta(seconds=15)
+    lecturas = LecturaSensor.objects.filter(timestamp__gte=tiempo_limite)
+
+    if not lecturas.exists():
+        return JsonResponse({
+            "estado": "error",
+            "mensaje": "No se recibieron datos del sensor en los últimos 15 segundos."
+        })
+
+    def obtener_moda(datos):
+        try:
+            return statistics.mode(datos)
+        except statistics.StatisticsError:
+            return statistics.median(datos)
+
+    return JsonResponse({
+        "estado": "ok",
+        "mensaje": "Datos estabilizados correctamente",
+        "datos": {
+            "humedad": obtener_moda([l.humedad for l in lecturas]),
+            "temperatura": obtener_moda([l.temperatura for l in lecturas]),
+            "conductividad": obtener_moda([l.conductividad for l in lecturas]),
+            "ph": obtener_moda([l.ph for l in lecturas]),
+            "nitrogeno": obtener_moda([l.nitrogeno for l in lecturas]),
+            "fosforo": obtener_moda([l.fosforo for l in lecturas]),
+            "potasio": obtener_moda([l.potasio for l in lecturas]),
+            "muestras_tomadas": len(lecturas)
+        }
+    })
 ```

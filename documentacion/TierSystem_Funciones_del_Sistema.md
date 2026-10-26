@@ -5,10 +5,10 @@
 > **Estado de avance actual:**
 > - ✅ **Módulo de Administrador:** **100% Implementado** (Gestión de laboratoristas y agricultores, supervisión con exportación PDF/Excel, diagnóstico de hardware en tiempo real, catálogo de cultivos, rangos agronómicos de referencia, fallback/timeout de IA y métricas de laboratoristas).
 > - ✅ **Autenticación y Perfiles:** Registro con activación inmediata, login multirrol, cierre de sesión, recuperación de contraseña por correo con token criptográfico y validación interactiva (US-0004), y perfil de usuario con edición de datos y clave para los 3 roles con acceso directo en la barra superior (US-0005).
-> - ✅ **Soporte Offline y Estilos:** Tailwind CSS y FontAwesome integrados localmente en `static/` para funcionamiento autónomo sin CDN.
-> - ✅ **Módulo de Mercado:** Precios SIPSA/DANE, histórico trimestral, tendencias de mercado y directorio de compradores regionales.
-> - ✅ **Captura y Análisis:** Conexión con sensor ESP32/RS485, lectura de 7 parámetros de suelo, motor de análisis con fallback a base local y compartición de resultados con el agricultor.
-> - ⏳ **Próximo foco de trabajo (Backlog):** Guía de 1 a 5 puntos de muestreo en campo (US-0026), cálculo de perfil promedio (US-0027), y comparador de dos análisis en historial (US-0011 / US-0033).
+> - ✅ **Soporte Offline y Estilos:** Tailwind CSS y FontAwesome integrados localmente en `static/` para funcionamiento autónomo sin CDN, con almacenamiento local en IndexedDB / Dexie.js (`db.js`).
+> - ✅ **Módulo de Mercado:** Precios SIPSA/DANE, histórico trimestral, tendencias de mercado, actualización en tiempo real y directorio de compradores regionales.
+> - ✅ **Captura y Análisis:** Conexión con sensor ESP32/RS485, lectura de 7 parámetros de suelo, filtro anti-ruido con Moda/Mediana, motor de análisis con fallback a base local y compartición de resultados con el agricultor.
+> - ✅ **Muestreo en Campo y Comparativas:** Cuadrícula de 5 a 20 puntos de muestreo según área (US-0026), cálculo de medias y perfil consolidado (US-0027), comparador nutricional entre análisis (US-0011 / US-0033) y exportación oficial a PDF y Excel (US-0012).
 
 ---
 
@@ -31,8 +31,8 @@ El sistema funciona con capacidad de trabajo **offline** en campo (sin internet)
 
 | Actor | Tipo | Rol principal | Estado de Implementación |
 |---|---|---|---|
-| **Agricultor** | Usuario | Solicita análisis, consulta resultados, historial y mercado | **92% Completado** ✅ |
-| **Laboratorista** | Usuario operativo | Gestiona solicitudes, opera el sensor en campo, genera y comparte análisis | **88% Completado** ✅ |
+| **Agricultor** | Usuario | Solicita análisis, consulta resultados, historial, comparativa y mercado | **100% Completado** ✅ |
+| **Laboratorista** | Usuario operativo | Gestiona solicitudes, opera sensor en campo, muestreo 3D, genera y comparte análisis | **100% Completado** ✅ |
 | **Administrador** | Usuario de gestión | Administra cuentas, configuración, supervisión, reportes PDF/Excel y hardware | **100% Completado** ✅ |
 | **Sensor (ESP32 + RS485)** | Actor externo de hardware | Captura y transmite los 7 parámetros físicos y químicos del suelo | **100% Integrado** ✅ |
 | **Servicio de IA (API)** | Actor externo de software | Calcula compatibilidad, genera recomendaciones y alternativas (con fallback local) | **100% Integrado** ✅ |
@@ -53,8 +53,8 @@ El sistema funciona con capacidad de trabajo **offline** en campo (sin internet)
 | **US-0008** | Edición y eliminación de terrenos (con confirmación) | Agricultor | ✅ Implementado | `apps/terrenos/views.py` (`editar_terreno`, `eliminar_terreno`) |
 | **US-0009** | Creación de solicitud de análisis de suelo | Agricultor | ✅ Implementado | `apps/solicitudes/views.py` (`crear_solicitud`) |
 | **US-0010** | Consulta de estado y cancelación de solicitud activa | Agricultor | ✅ Implementado | `apps/solicitudes/views.py` (cancelable solo en Pendiente) |
-| **US-0011** | Consulta de historial de análisis y comparativa | Agricultor | 🟡 Parcial | Escenarios 1-3 (Historial) ✅ / Escenarios 4-5 (Comparador) ⏳ |
-| **US-0012** | Exportación de historial de análisis a PDF / Excel | Agricultor | ⏳ Pendiente | Pendiente desarrollo en portal agricultor |
+| **US-0011** | Consulta de historial de análisis y comparativa | Agricultor | ✅ Implementado | `apps/solicitudes/views.py` (`comparar_analisis_agricultor`), `templates/agricultor/comparar.html` y API |
+| **US-0012** | Exportación de historial de análisis a PDF / Excel | Agricultor | ✅ Implementado | `apps/solicitudes/views.py` (`exportar_historial_pdf`, `exportar_historial_excel`) |
 | **US-0013** | Consulta de precio actual de cultivos (SIPSA/DANE) | Agricultor | ✅ Implementado | `apps/mercado/views.py` (`mercado_precios`) |
 | **US-0014** | Historial de variaciones de precios de últimos 3 meses | Agricultor | ✅ Implementado | `apps/mercado/views.py` |
 | **US-0015** | Consulta de tendencias de mercado (al alza, estable, baja) | Agricultor | ✅ Implementado | `apps/mercado/views.py` |
@@ -68,14 +68,14 @@ El sistema funciona con capacidad de trabajo **offline** en campo (sin internet)
 | **US-0023** | Actualización de estados del ciclo de la solicitud | Laboratorista | ✅ Implementado | `apps/solicitudes/views.py` |
 | **US-0024** | Conexión con sensor ESP32 y verificación de estado | Laboratorista | ✅ Implementado | `apps/sensores/views.py` |
 | **US-0025** | Supervisión de captura de datos del suelo en tiempo real | Laboratorista | ✅ Implementado | `apps/sensores/views.py` (`api/lecturas/`) |
-| **US-0026** | Visualización y registro de puntos de muestreo (1 a 5) | Laboratorista | ⏳ Pendiente | Pendiente flujo de avance por puntos en campo |
-| **US-0027** | Cálculo del perfil promedio del suelo | Laboratorista | ⏳ Pendiente | Pendiente consolidación multilectura |
+| **US-0026** | Visualización y registro de puntos de muestreo (1 a 5) | Laboratorista | ✅ Implementado | `templates/laboratorista/toma_muestras.html`, `api/laboratorista/views_muestreo.py` (cuadrícula 5 a 20 pts) |
+| **US-0027** | Cálculo del perfil promedio del suelo | Laboratorista | ✅ Implementado | `api/laboratorista/views_muestreo.py` (`generar_analisis_view`), consolidación estadística y persistencia |
 | **US-0028** | Consulta de parámetros ideales del cultivo | Laboratorista | ✅ Implementado | `apps/analisis/views.py` |
 | **US-0029** | Consulta de resultados emitidos por motor de IA | Laboratorista | ✅ Implementado | `apps/ia_recomendaciones/views.py` y `apps/analisis/views.py` |
 | **US-0030** | Visualización de resultado integral en pantalla unificada | Laboratorista | ✅ Implementado | `templates/analisis/detalle.html` |
 | **US-0031** | Compartir resultados con Agricultor y finalizar solicitud | Laboratorista | ✅ Implementado | `apps/solicitudes/views.py` (`compartir_analisis`) |
 | **US-0032** | Operación offline, motor local y sincronización | Laboratorista | ✅ Implementado | Motor de reglas local y etiquetado de dictamen |
-| **US-0033** | Consulta de historial de análisis del Laboratorista | Laboratorista | 🟡 Parcial | Escenario 1 (Historial) ✅ / Escenario 2 (Comparación) ⏳ |
+| **US-0033** | Consulta de historial de análisis del Laboratorista | Laboratorista | ✅ Implementado | `templates/laboratorista/historial.html`, `api/laboratorista/views_historial.py` |
 | **US-0034** | Consulta global de análisis registrados en el sistema | Administrador | ✅ Implementado | `apps/usuarios/views.py` (`admin_supervision`) |
 | **US-0035** | Reportes con filtros avanzados y exportación PDF/Excel | Administrador | ✅ Implementado | `admin_exportar_pdf`, `admin_exportar_excel` |
 | **US-0036** | Supervisión de hardware y componentes en tiempo real | Administrador | ✅ Implementado | `apps/usuarios/views.py` (`admin_hardware`) |
