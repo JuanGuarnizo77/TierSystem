@@ -526,10 +526,14 @@ def _evaluar_parametros_agronomicos(analisis_obj, cultivo_nombre):
 
     # Catálogo referencial de cultivos alternativos adaptados al Huila
     cultivos_alternativos = [
-        {"nombre": "Yuca", "variedad": "Manihot esculenta · Tubérculo", "compatibilidad": 91, "icono": "fa-carrot", "color": "green"},
-        {"nombre": "Plátano", "variedad": "Musa paradisiaca · Frutal", "compatibilidad": 87, "icono": "fa-tree", "color": "green"},
-        {"nombre": "Cacao", "variedad": "Theobroma cacao · Grano", "compatibilidad": 81, "icono": "fa-seedling", "color": "green"},
-        {"nombre": "Tomate", "variedad": "Solanum lycopersicum · Hortaliza", "compatibilidad": 68, "icono": "fa-apple-whole", "color": "amber"}
+        {
+            'nombre': c.nombre,
+            'variedad': (c.nombre_cientifico or c.categoria) + ' · ' + c.categoria,
+            'compatibilidad': 75,
+            'icono': c.icono,
+            'color': 'green',
+        }
+        for c in Cultivo.objects.filter(activo=True).order_by('nombre')[:4]
     ]
 
     return {

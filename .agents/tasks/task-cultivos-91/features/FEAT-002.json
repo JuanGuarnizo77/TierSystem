@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Synchronize all views/modules to use the same 91 crops from DB. Depends on FEAT-001 (crops and prices must be in DB first). Changes: (a) apps/mercado/views.py — replace static DATOS_MERCADO_HUILA key iteration with Cultivo.objects query + PrecioSemanal price lookup; (b) apps/sipsa/views.py — replace semana_label with real date strings in chart and dashboard; (c) apps/solicitudes/views.py — replace 4 hardcoded cultivos_alternativos with a dynamic DB query.",
+  "status": "completed",
+  "steps": [
+    "1. In apps/mercado/views.py, add a helper function _listado_cultivos_dinamico() that returns a list of dicts for ALL active Cultivo objects with prices, structured identically to precios_tabla items. For each cultivo: get latest PrecioSemanal with cultivo.precios_semanales.order_by('-fecha_semana').first(); if found use its precio_kg and precio_local; else fall back to DATOS_MERCADO_HUILA.get(cultivo.nombre, {}).get('precio_promedio', 0). For historial: fetch last 10 PrecioSemanal ordered by fecha_semana, map to {'mes': p.fecha_semana.strftime('%d/%m'), 'precio': float(p.precio_kg)}; fallback to DATOS_MERCADO_HUILA entry historial.",
+    "2. In apps/mercado/views.py function precios_sipsa(): replace the line 'cultivos_disponibles = list(DATOS_MERCADO_HUILA.keys())' with 'cultivos_disponibles = [c.nombre for c in Cultivo.objects.filter(activo=True).order_by(\"nombre\")]'. Replace the precios_tabla construction loop to call _listado_cultivos_dinamico() instead of iterating DATOS_MERCADO_HUILA. Add 'from apps.cultivos.models import Cultivo' import if not already present (it is not — add it). Also add 'from apps.sipsa.prediccion import calcular_prediccion' and compute inline prediction for each item in precios_tabla using the historial prices.",
+    "3. In apps/sipsa/views.py function detalle_cultivo(): replace 'labels = [p.semana_label for p in precios_list]' with 'labels = [p.fecha_semana.strftime(\"%d/%m/%Y\") for p in precios_list]'. In function dashboard(): add 'ultima_fecha': precios_hist[-1].fecha_semana.strftime('%d/%m/%Y') if precios_hist else '—' to each tabla dict entry.",
+    "4. In templates/sipsa/dashboard.html: find the column that shows fila.ultimo_precio.semana_label and replace with {{ fila.ultima_fecha }}. Do not modify any other template logic.",
+    "5. In apps/solicitudes/views.py, find the _evaluar_parametros_agronomicos function (~line 527). Replace the hardcoded cultivos_alternativos list with a dynamic query: from apps.cultivos.models import Cultivo; cultivos_alternativos = [{'nombre': c.nombre, 'variedad': (c.nombre_cientifico or c.categoria) + ' · ' + c.categoria, 'compatibilidad': 75, 'icono': c.icono, 'color': 'green'} for c in Cultivo.objects.filter(activo=True).order_by('nombre')[:4]]. The Cultivo import is already at top of file.",
+    "6. Run python manage.py check to confirm no import errors. Start server and do a quick smoke test."
+  ],
+  "acceptance_criteria": [
+    "Visiting /mercado/ as an agricultor shows a table with >= 91 rows (all active crops)",
+    "Visiting /sipsa/ (Reportes SIPSA/DANE) shows the same >= 91 crops in the dashboard table",
+    "Clicking any crop in /sipsa/<id>/ shows the chart X-axis with real dates like '03/11/2026', not 'Sem 42-2026'",
+    "The dashboard table column for last update shows a real date (dd/mm/YYYY), not 'Sem N-YYYY'",
+    "Creating a solicitud as agricultor shows >= 91 options in the cultivo dropdown",
+    "python manage.py check exits with no errors"
+  ],
+  "verification": [
+    "cd 'c:\\Users\\punto\\Desktop\\tyersistem clon'; python manage.py check",
+    "cd 'c:\\Users\\punto\\Desktop\\tyersistem clon'; python manage.py shell -c \"from apps.cultivos.models import Cultivo; print('Cultivos activos:', Cultivo.objects.filter(activo=True).count())\"",
+    "cd 'c:\\Users\\punto\\Desktop\\tyersistem clon'; python manage.py runserver"
+  ],
+  "blocked_reason": null,
+  "findings": "All 4 code changes applied successfully. python manage.py check: 0 issues. (a) apps/mercado/views.py: added Cultivo + calcular_prediccion imports; added _listado_cultivos_dinamico() helper; precios_sipsa() now uses DB for cultivos_disponibles and precios_tabla. (b) apps/sipsa/views.py: detalle_cultivo() uses p.fecha_semana.strftime('%d/%m/%Y') for chart labels; dashboard() adds ultima_fecha field. (c) templates/sipsa/dashboard.html: Semana column now renders {{ fila.ultima_fecha }}. (d) apps/solicitudes/views.py: cultivos_alternativos now queries Cultivo.objects.filter(activo=True).order_by('nombre')[:4]."
+}
