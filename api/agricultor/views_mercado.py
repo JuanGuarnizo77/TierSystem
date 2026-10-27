@@ -1,3 +1,14 @@
+"""
+Módulo de Vistas de Mercado Agropecuario y Sincronización SIPSA para Agricultores.
+==================================================================================
+Gestiona las cotizaciones de mercado agropecuario para el departamento del Huila,
+evaluando la frescura y disponibilidad de los datos respecto a los boletines
+semanales del SIPSA/DANE.
+
+Permite consultar el estado de conexión del servicio de precios y ejecutar
+la sincronización bajo demanda mediante el comando de gestión `actualizar_sipsa`.
+"""
+
 from datetime import timedelta
 from io import StringIO
 
@@ -18,15 +29,34 @@ from apps.mercado.views import (
 @api_view(['GET'])
 @permission_classes([IsAgricultor])
 def precios_sipsa_view(request):
-    """GET /api/v1/agricultor/mercado/precios/ -> precios SIPSA por cultivo + estado de conexión."""
+    """
+    GET /api/v1/agricultor/mercado/precios/
+    ---------------------------------------
+    Retorna la lista de precios de mercado agropecuario para los cultivos principales
+    del Huila, acompañada del estado de actualización de la información.
+
+    Diagnóstico de frescura temporal:
+      - 'online': Información con menos de 24 horas de antigüedad.
+      - 'reciente': Datos registrados entre 24 y 72 horas atrás.
+      - 'desactualizado': Más de 72 horas sin ingesta de nuevos boletines oficiales.
+
+    Estructura de cada cultivo:
+      - Precios promedio nacional y regional Huila.
+      - Tendencia de mercado ('Alza', 'Baja', 'Estable').
+      - Variación porcentual inter-período.
+      - Directorio de compradores y centros de acopio autorizados en la región.
+    """
     ahora = timezone.now()
 
+    # Inspección de la última fecha de sincronización registrada en la tabla de precios
     ps_reciente = PrecioSemanal.objects.order_by('-fecha_registro').first()
     ultima_global = None
     if ps_reciente and ps_reciente.fecha_registro:
         ts = ps_reciente.fecha_registro
         dias = (ahora - ts).days
         ultima_global = timezone.localtime(ts).strftime("%d/%m/%Y %H:%M")
+
+        # Clasificación del estado de frescura de los datos según umbrales de tiempo
         if ts >= ahora - timedelta(hours=24):
             estado = 'online'
             mensaje = f"Precios actualizados al {ultima_global} desde SIPSA/DANE."
@@ -40,6 +70,7 @@ def precios_sipsa_view(request):
         estado = 'reciente'
         mensaje = "Mostrando precios oficiales y de referencia regional Huila."
 
+    # Ensamblado de cotizaciones combinando datos de mercado con compradores locales
     nombres = list(DATOS_MERCADO_HUILA.keys())
     tabla = []
     for nombre in nombres:
@@ -73,10 +104,24 @@ def precios_sipsa_view(request):
 @api_view(['POST'])
 @permission_classes([IsAgricultor])
 def actualizar_precios_view(request):
-    """POST /api/v1/agricultor/mercado/actualizar/ -> ejecuta el comando actualizar_sipsa."""
+    """
+    POST /api/v1/agricultor/mercado/actualizar/
+    -------------------------------------------
+    Ejecuta sincrónicamente el comando de gestión Django `actualizar_sipsa`.
+
+    Descarga y parsea los boletines más recientes de SIPSA/DANE, actualizando
+    los registros de `PrecioSemanal` y disparando el reentrenamiento del modelo
+    predictivo de series temporales.
+
+    Respuestas:
+      - 200 OK: Proceso exitoso con captura del log de consola generado por el comando.
+      - 500 Internal Server Error: Si ocurre una excepción de red o parsing.
+    """
     out = StringIO()
     try:
+        # Invocación programática del management command de Django redirigiendo stdout
         call_command('actualizar_sipsa', stdout=out)
         return Response({'status': 'ok', 'output': out.getvalue()})
     except Exception as exc:
+        # Captura y notificación de errores durante la conexión o el parseo
         return Response({'status': 'error', 'error': str(exc)}, status=500)

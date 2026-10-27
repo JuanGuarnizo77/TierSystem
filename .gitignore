@@ -79,6 +79,10 @@ coverage.xml
 
 # --- Documentación interna o sensible ---
 documentacion/historias de usuario/
+documentacion/MANUAL_DE_ESTUDIO_COMPLETO_TIERSYSTEM.md
+documentacion/MANUAL_DE_ESTUDIO_COMPLETO_TIERSYSTEM_EN.md
+documentacion/FLUJOS_DEL_SISTEMA_TIERSYSTEM.md
+
 
 # --- Archivos temporales de esquemas/APIs ---
 tiersystem_schema.json

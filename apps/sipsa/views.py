@@ -1,3 +1,16 @@
+"""
+Controladores Web y API para Monitoreo de Precios SIPSA y Proyecciones de Mercado.
+==================================================================================
+Proporciona vistas de visualización de series de tiempo y endpoints JSON:
+  1. `dashboard`: Tablero principal con lista de cultivos, última cotización oficial
+     y proyección econométrica calculada en tiempo real.
+  2. `detalle_cultivo`: Ficha histórica detallada con gráfico interactivo (Chart.js)
+     y desglose estadístico.
+  3. `api_json`: Endpoint REST para clientes móviles y PWA con la serie de precios.
+  4. `actualizar_precios_view`: Disparador administrativo para ejecutar el comando
+     de sincronización `actualizar_sipsa`.
+"""
+
 import json
 from types import SimpleNamespace
 from django.shortcuts import render, get_object_or_404
@@ -12,11 +25,21 @@ from .prediccion import calcular_prediccion
 
 
 def _obtener_prediccion_cultivo(precios_hist):
-    """Calcula la predicción dinámica de tendencia a partir de la serie de precios."""
+    """
+    Función utilitaria que computa la regresión lineal sobre una serie histórica de precios.
+
+    Parámetros:
+        precios_hist (List[PrecioSemanal]): Registros ordenados cronológicamente.
+
+    Retorna:
+        SimpleNamespace|None: Objeto con atributos de tendencia, confianza, precio y variación.
+    """
     if not precios_hist or len(precios_hist) < 3:
         return None
+
     valores = [float(p.precio_kg) for p in precios_hist]
     pred = calcular_prediccion(valores)
+
     return SimpleNamespace(
         tendencia_predicha=pred.get('tendencia', 'Estable'),
         confianza_pct=pred.get('confianza_pct', 0.0),
@@ -28,7 +51,15 @@ def _obtener_prediccion_cultivo(precios_hist):
 
 @login_required
 def dashboard(request):
-    """Vista principal: tabla con todos los cultivos, último precio y predicción calculada al vuelo."""
+    """
+    Vista de panel principal de cotizaciones agropecuarias SIPSA.
+
+    Optimización:
+      - Aplica `prefetch_related('precios_semanales')` sobre cultivos activos para
+        cargar el histórico completo en una única consulta adicional.
+      - Itera sobre cada especie calculando la tendencia mediante `_obtener_prediccion_cultivo`.
+      - Identifica la marca temporal más reciente de actualización en el sistema.
+    """
     cultivos = Cultivo.objects.filter(activo=True).prefetch_related('precios_semanales')
 
     tabla = []
@@ -55,7 +86,12 @@ def dashboard(request):
 
 @login_required
 def detalle_cultivo(request, cultivo_id):
-    """Detalle: serie histórica completa + gráfica + predicción dinámica."""
+    """
+    Vista detallada de la serie histórica y proyección para un cultivo.
+
+    Prepara los datos estructurados en formato JSON para la renderización de la
+    curva temporal mediante librerías gráficas de frontend (Chart.js / ApexCharts).
+    """
     cultivo = get_object_or_404(Cultivo, pk=cultivo_id, activo=True)
     precios_qs = cultivo.precios_semanales.order_by('fecha_semana')
     precios_list = list(precios_qs)
@@ -76,8 +112,9 @@ def detalle_cultivo(request, cultivo_id):
 @login_required
 def api_json(request, cultivo_id):
     """
-    Devuelve JSON con la serie histórica de PrecioSemanal y la predicción dinámica
-    calculada del cultivo indicado.
+    Endpoint JSON: GET /sipsa/cultivo/<cultivo_id>/api/
+    --------------------------------------------------
+    Proporciona la serie temporal de precios y la predicción econométrica a clientes REST.
     """
     cultivo = get_object_or_404(Cultivo, pk=cultivo_id, activo=True)
     precios_qs = cultivo.precios_semanales.order_by('fecha_semana')
@@ -118,7 +155,12 @@ def api_json(request, cultivo_id):
 @login_required
 @user_passes_test(lambda u: u.is_superuser, login_url='/agricultor/sipsa/')
 def actualizar_precios_view(request):
-    """POST → solo superusuarios; llama actualizar_sipsa y devuelve JSON."""
+    """
+    Endpoint de gestión administrativa: POST /sipsa/actualizar/
+    -----------------------------------------------------------
+    Ejecuta el comando `actualizar_sipsa` bajo demanda.
+    Restringido exclusivamente a superusuarios (`is_superuser=True`).
+    """
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
     try:

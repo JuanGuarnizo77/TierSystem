@@ -1,3 +1,13 @@
+"""
+Conjunto de Datos de Referencia: Catálogo Agroclimático y Edafológico del Huila.
+================================================================================
+Define la matriz estática de especies vegetales adaptadas a las condiciones
+geomorfológicas, bioclimáticas y térmicas de los municipios del Huila.
+
+Suministra datos de fallback y parametrización de iconos FontAwesome para
+la visualización en cuadrículas de tarjetas de cultivo.
+"""
+
 CULTIVOS_HUILA = [
     # ── Frutales ────────────────────────────────────────────────────────────
     {"nombre": "Café", "categoria": "Industrial", "clima": "Templado", "ph": "5.0 - 6.0", "humedad": "60% - 80%", "img": "fa-mug-hot"},

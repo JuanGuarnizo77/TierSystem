@@ -1,3 +1,25 @@
+"""
+Controladores del Motor de Inteligencia Artificial y Recomendaciones Agronómicas.
+==================================================================================
+Implementa la arquitectura híbrida de inferencia agronómica de TierSystem:
+  1. Inferencia Online con Google Gemini Flash (`api_diagnosticar_ia`):
+     - Emite diagnósticos contextualizados como un ingeniero agrónomo de la región del Huila.
+     - Aplica una regla estricta anti-alucinación: Gemini redacta el análisis agronómico
+       cualitativo pero NO calcula los porcentajes; los porcentajes de compatibilidad
+       son inyectados determinísticamente desde los rangos oficiales de `Cultivo`.
+  2. Motor Edafológico Offline Heurístico (`calcular_diagnostico_edafologico`):
+     - Opera al 100% sin acceso a internet en zonas rurales.
+     - Pondera desviaciones de pH (25%), N-P-K (15% c/u), CE (10%), Humedad (10%),
+       Temperatura (10%) y Altitud (15%).
+  3. Desacople y Cálculo Canónico de Compatibilidad (`puntuar_cultivo`):
+     - Función matemática central que penaliza la distancia euclidiana/lineal
+       cuando una medición cae fuera del intervalo de tolerancia óptimo.
+  4. Sincronización Bidireccional Offline (`api_sincronizar_offline`):
+     - Ingesta masiva en MySQL de lecturas y diagnósticos tomados en la PWA (IndexedDB).
+  5. Agregación Espacial de Muestras (`api_promedio_puntos`):
+     - Promedia aritméticamente los puntos de la cuadrícula georreferenciada.
+"""
+
 import json
 import os
 import socket
@@ -6,7 +28,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from apps.cultivos.models import Cultivo
 
-# Intentar importar google.generativeai, manejando si aún no está instalado
+# Importación condicional del SDK de Google Gemini para prevenir caídas si falta la dependencia
 try:
     import google.generativeai as genai
 except ImportError:
@@ -27,24 +49,37 @@ def verificar_conexion_internet(timeout=0.8):
     return False
 
 def _guardar_recomendaciones_relacionales(registro, diagnostico):
-    """Guarda cada recomendación en la tabla relacional RecomendacionAnalisis en MySQL."""
+    """
+    Persiste cada recomendación de cultivo en la tabla relacional `RecomendacionAnalisis`.
+
+    Garantiza atomicidad lógica limpiando previamente recomendaciones antiguas asociadas
+    al mismo análisis para evitar duplicidades tras re-evaluaciones.
+
+    Parámetros:
+        registro (RegistroAnalisis): Instancia matriz del informe de laboratorio.
+        diagnostico (dict): Estructura con la clave 'recomendaciones' (lista de especies).
+    """
     if not diagnostico or not isinstance(diagnostico, dict):
         return
+
     from apps.analisis.models import RecomendacionAnalisis
     from apps.cultivos.models import Cultivo
-    
-    # Limpiar recomendaciones anteriores del mismo registro para evitar duplicados
+
+    # Eliminación preventiva de registros hijos para permitir re-análisis limpios
     registro.recomendaciones.all().delete()
-    
+
     recs = diagnostico.get("recomendaciones", [])
     for rec in recs:
         nombre = rec.get("cultivo", "Cultivo")
+        # Limpieza de posibles paréntesis descriptivos (ej. "Café (Castillo)" -> "Café")
         nombre_limpio = nombre.split('(')[0].strip()
         compat = float(rec.get("compatibilidad", 0.0))
         desc = rec.get("descripcion", "")
         plan = rec.get("plan_fertilizacion", "")
+
+        # Clasificación estándar de viabilidad según el porcentaje de afinidad
         viabilidad = "Alta" if compat >= 80 else ("Media" if compat >= 60 else "Baja")
-        
+
         cultivo_obj = Cultivo.objects.filter(nombre__icontains=nombre_limpio).first()
         RecomendacionAnalisis.objects.create(
             analisis=registro,
@@ -56,17 +91,30 @@ def _guardar_recomendaciones_relacionales(registro, diagnostico):
             plan_fertilizacion=plan
         )
 
+
 def _guardar_diagnostico_solicitud(solicitud_id, diagnostico, h, t, c, ph, n, p, k):
-    """Helper que centraliza el guardado de RegistroAnalisis y sus recomendaciones relacionales."""
+    """
+    Centraliza la creación o actualización del `RegistroAnalisis` y la transición de estado.
+
+    Flujo:
+      1. Recupera la entidad `SolicitudAnalisis`.
+      2. Ejecuta `update_or_create` sobre `RegistroAnalisis` registrando los 7 parámetros físicos y químicos.
+      3. Serializa el dictamen en el campo `diagnostico_ia`.
+      4. Transiciona la solicitud al estado terminal 'COMPLETADA'.
+      5. Invoca `_guardar_recomendaciones_relacionales` para poblar las recomendaciones individuales.
+    """
     if not solicitud_id:
         return None
+
     from apps.solicitudes.models import SolicitudAnalisis
     from apps.analisis.models import RegistroAnalisis
+
     try:
         sol = SolicitudAnalisis.objects.get(id=solicitud_id)
     except SolicitudAnalisis.DoesNotExist:
         return None
-        
+
+    # Persistencia o actualización atómica del informe consolidado
     registro, _ = RegistroAnalisis.objects.update_or_create(
         solicitud=sol,
         defaults={
@@ -80,32 +128,55 @@ def _guardar_diagnostico_solicitud(solicitud_id, diagnostico, h, t, c, ph, n, p,
             'diagnostico_ia': json.dumps(diagnostico) if isinstance(diagnostico, dict) else str(diagnostico),
         }
     )
+
+    # Transición definitiva del ciclo de atención
     sol.estado = 'COMPLETADA'
     sol.save()
-    
-    # Guardado relacional en base de datos
+
+    # Sincronización en tabla hija de recomendaciones
     _guardar_recomendaciones_relacionales(registro, diagnostico)
     return registro
 
 
 def obtener_modelo_gemini():
-    """Retorna un modelo Gemini activo con fallback a versiones vigentes."""
-    for nombre in ['gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-3.5-flash-lite', 'gemini-3.8-flash']:
+    """
+    Instancia el cliente del modelo generativo de Google Gemini con estrategia de fallback.
+
+    Prioriza versiones optimizadas para baja latencia (`gemini-flash-lite-latest` o
+    `gemini-flash-latest`) aptas para respuestas ágiles en entornos móviles.
+    """
+    for nombre in ['gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-2.5-flash', 'gemini-1.5-flash']:
         try:
             return genai.GenerativeModel(nombre)
         except Exception:
             continue
     return genai.GenerativeModel('gemini-flash-lite-latest')
 
+
 def calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia='', altitud=None):
     """
-    Motor Agronómico Edafológico Offline de TierSystem.
-    Evalúa matemáticamente los parámetros de suelo contra los rangos óptimos
-    de los cultivos del Huila registrados en la tabla cultivos_cultivo.
-    Funciona 100% offline sin depender de Google Gemini ni APIs externas.
+    Motor Agronómico Edafológico Determinista y Offline de TierSystem.
+
+    Evalúa matemáticamente las lecturas de suelo contra los umbrales fisiológicos de los
+    cultivos registrados en `cultivos_cultivo`. No depende de internet ni de modelos externos.
+
+    Ponderaciones del Algoritmo Heurístico:
+      - pH: 25% (determinante en absorción de fósforo y metales).
+      - Nitrógeno (N): 15% (síntesis de clorofila y proteínas).
+      - Fósforo (P): 15% (desarrollo radicular y floración).
+      - Potasio (K): 15% (balance hídrico, turgencia y llenado).
+      - Conductividad Eléctrica (CE): 10% (presión osmótica y salinidad).
+      - Humedad: 10% (disponibilidad de solución de suelo).
+      - Temperatura: 10% (actividad microbiana y tasa metabólica).
+      - Altitud: 15% (adaptación a pisos bioclimáticos del Huila, si está disponible).
+
+    Retorna:
+        dict: Top 3 cultivos más compatibles con viabilidad, justificación, planes
+              de enmienda locales y consejo agronómico integral.
     """
     cultivos = Cultivo.objects.filter(activo=True)
     if not cultivos.exists():
+        # Salvaguarda de emergencia si la base de datos de cultivos está vacía
         return {
             "recomendaciones": [
                 {
@@ -141,8 +212,9 @@ def calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia='', altit
 
     for cultivo in cultivos:
         puntajes = []
-        
-        # 1. Evaluación de pH (Ponderación 20%)
+        # ---------------------------------------------------------------------
+        # 1. Evaluación de pH (Ponderación: 25%)
+        # ---------------------------------------------------------------------
         ph_min = float(cultivo.ph_min)
         ph_max = float(cultivo.ph_max)
         if ph > 0:
@@ -154,9 +226,11 @@ def calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia='', altit
             else:
                 diff = ph - ph_max
                 score_ph = max(5.0, 100.0 - (diff / 1.5) * 80.0)
-            puntajes.append(('ph', score_ph, 0.20))
+            puntajes.append(('ph', score_ph, 0.25))
 
-        # 2. Evaluación de Nitrógeno (20%)
+        # ---------------------------------------------------------------------
+        # 2. Evaluación de Nitrógeno N (Ponderación: 15%)
+        # ---------------------------------------------------------------------
         n_min = float(cultivo.nitrogeno_min)
         n_max = float(cultivo.nitrogeno_max)
         if n == 0:
@@ -167,9 +241,11 @@ def calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia='', altit
             score_n = 100.0
         else:
             score_n = max(40.0, 100.0 - ((n - n_max) / max(n_max, 1)) * 40.0)
-        puntajes.append(('n', score_n, 0.20))
+        puntajes.append(('n', score_n, 0.15))
 
-        # 3. Evaluación de Fósforo (20%)
+        # ---------------------------------------------------------------------
+        # 3. Evaluación de Fósforo P (Ponderación: 15%)
+        # ---------------------------------------------------------------------
         p_min = float(cultivo.fosforo_min)
         p_max = float(cultivo.fosforo_max)
         if p == 0:
@@ -180,9 +256,11 @@ def calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia='', altit
             score_p = 100.0
         else:
             score_p = max(50.0, 100.0 - ((p - p_max) / max(p_max, 1)) * 40.0)
-        puntajes.append(('p', score_p, 0.20))
+        puntajes.append(('p', score_p, 0.15))
 
-        # 4. Evaluación de Potasio (20%)
+        # ---------------------------------------------------------------------
+        # 4. Evaluación de Potasio K (Ponderación: 15%)
+        # ---------------------------------------------------------------------
         k_min = float(cultivo.potasio_min)
         k_max = float(cultivo.potasio_max)
         if k == 0:
@@ -193,9 +271,11 @@ def calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia='', altit
             score_k = 100.0
         else:
             score_k = max(50.0, 100.0 - ((k - maxK_val if (maxK_val := max(k_max, 1)) else 1) / maxK_val) * 40.0)
-        puntajes.append(('k', score_k, 0.20))
+        puntajes.append(('k', score_k, 0.15))
 
-        # 5. Conductividad Eléctrica (10%)
+        # ---------------------------------------------------------------------
+        # 5. Conductividad Eléctrica CE (Ponderación: 10%)
+        # ---------------------------------------------------------------------
         c_min = float(cultivo.conductividad_min)
         c_max = float(cultivo.conductividad_max)
         if c == 0:
@@ -208,7 +288,9 @@ def calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia='', altit
             score_c = max(10.0, 100.0 - ((c - c_max) / max(c_max, 0.1)) * 80.0)
         puntajes.append(('c', score_c, 0.10))
 
-        # 6. Humedad y Temperatura (5% c/u)
+        # ---------------------------------------------------------------------
+        # 6. Humedad y Temperatura (Ponderación: 10% c/u)
+        # ---------------------------------------------------------------------
         h_min = float(cultivo.humedad_min)
         h_max = float(cultivo.humedad_max)
         if h > 0:
@@ -218,14 +300,28 @@ def calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia='', altit
                 score_h = 100.0
             else:
                 score_h = max(20.0, 100.0 - ((h - h_max) / max(h_max, 1)) * 50.0)
-            puntajes.append(('h', score_h, 0.05))
+            puntajes.append(('h', score_h, 0.10))
 
         t_min = float(cultivo.temperatura_min)
         t_max = float(cultivo.temperatura_max)
         if t > 0:
-            score_t = 100.0 if (t_min <= t <= t_max) else max(20.0, 60.0)
-            puntajes.append(('t', score_t, 0.05))
+            score_t = 100.0 if (t_min <= t <= t_max) else max(40.0, 80.0)
+            puntajes.append(('t', score_t, 0.10))
 
+        # ---------------------------------------------------------------------
+        # 7. Piso Altitudinal msnm (Ponderación: 15%)
+        # ---------------------------------------------------------------------
+        if altitud and altitud > 0:
+            alt_min = float(cultivo.altitud_min)
+            alt_max = float(cultivo.altitud_max)
+            if alt_min <= altitud <= alt_max:
+                score_alt = 100.0
+            else:
+                diff_alt = min(abs(altitud - alt_min), abs(altitud - alt_max))
+                score_alt = max(20.0, 100.0 - (diff_alt / 500.0) * 80.0)
+            puntajes.append(('alt', score_alt, 0.15))
+
+        # Ponderación compuesta
         if puntajes:
             peso_total = sum(p[2] for p in puntajes)
             compatibilidad = sum(p[1] * p[2] for p in puntajes) / peso_total
@@ -239,6 +335,7 @@ def calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia='', altit
 
         compat_final = round(float(compatibilidad), 1)
 
+        # Construcción de planes agronómicos de fertilización correctiva
         planes = []
         if es_suelo_critico:
             planes.append("Déficit nutricional crítico total: N, P y K en 0 mg/kg. Suelo no viable para siembra inmediata. Requiere acondicionamiento orgánico de fondo y fertilización compuesta NPK completa antes de cualquier siembra.")
@@ -289,9 +386,11 @@ def calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia='', altit
             "es_preferido": True
         })
 
+    # Priorización: cultivos preferidos por el usuario primero, luego mayor compatibilidad
     evaluaciones.sort(key=lambda x: (1 if x['es_preferido'] else 0, x['compatibilidad']), reverse=True)
     top_recomendaciones = evaluaciones[:3]
 
+    # Generación de síntesis técnica en lenguaje natural
     consejos = []
     if es_suelo_critico:
         consejos.append("ALERTA AGRONÓMICA: El suelo analizado NO ES APTO para ningún cultivo en su estado actual. Presenta un agotamiento severo con lecturas en 0 de Nitrógeno, Fósforo, Potasio y conductividad eléctrica nula (0 µS/cm). Ninguna planta podrá germinar ni desarrollarse sin una recuperación previa mediante enmienda orgánica profunda, fertilización NPK intensiva y corrección de pH.")
@@ -318,15 +417,17 @@ def calcular_diagnostico_edafologico(h, t, c, ph, n, p, k, preferencia='', altit
 
 def api_obtener_cultivos(request):
     """
-    Retorna la lista completa de cultivos con sus rangos ideales.
-    Esto permite a la PWA descargar el catálogo para el MODO OFFLINE.
+    Endpoint HTTP: GET /ia/cultivos/
+    --------------------------------
+    Retorna el catálogo agronómico completo para la hidratación inicial de la PWA.
+    Permite el almacenamiento en IndexedDB (Dexie.js) para operar sin red en campo.
     """
     if request.method != "GET":
         return JsonResponse({"error": "Solo GET permitido"}, status=405)
-    
+
     cultivos = Cultivo.objects.filter(activo=True)
     datos = [c.to_dict() for c in cultivos]
-    
+
     return JsonResponse({
         "estado": "ok",
         "cultivos": datos
@@ -336,7 +437,20 @@ def api_obtener_cultivos(request):
 @login_required(login_url='login')
 def api_diagnosticar_ia(request):
     """
-    Diagnóstico Agronómico Dual (ONLINE con Gemini o OFFLINE con Motor Edafológico).
+    Endpoint HTTP: POST /ia/diagnosticar/
+    -------------------------------------
+    Controlador central de inferencia agronómica dual (Gemini Online / Edafológico Offline).
+
+    Flujo de ejecución:
+      1. Extrae los 7 parámetros de suelo y la preferencia agronómica del usuario.
+      2. Si se fuerza `modo == 'offline'`, ejecuta inmediatamente `calcular_diagnostico_edafologico`.
+      3. Si `modo == 'auto'` y hay API Key de Gemini:
+           a. Construye el prompt agronómico con restricciones estrictas.
+           b. Invoca Google Gemini Flash con parsing JSON.
+           c. Inyecta los porcentajes reales calculados por `puntuar_cultivo`, asegurando que
+              la IA nunca invente o alucine porcentajes de compatibilidad.
+           d. Si Gemini falla o excede el timeout, conmuta automáticamente al motor offline.
+      4. Si se provee `solicitud_id`, persiste los resultados en base de datos.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Solo POST permitido"}, status=405)
@@ -352,7 +466,7 @@ def api_diagnosticar_ia(request):
         k = float(data.get("potasio", 0) or 0)
         solicitud_id = data.get("solicitud_id")
         preferencia = str(data.get("preferencia", "")).strip()
-        modo_solicitado = data.get("modo", "auto") # 'auto', 'online', 'offline'
+        modo_solicitado = data.get("modo", "auto")
 
         # 1. Si se solicita explícitamente modo offline:
         if modo_solicitado == 'offline':
@@ -402,7 +516,7 @@ def api_diagnosticar_ia(request):
         try:
             genai.configure(api_key=api_key)
             model = obtener_modelo_gemini()
-            
+
             prompt_preferencia = f"\n- IMPORTANTE: El usuario tiene un interés especial en cultivar: '{preferencia}'. DEBES evaluar la compatibilidad de ese cultivo y sus variedades. Si la compatibilidad es muy mala (<40%), dilo claramente y sugiere otra alternativa más viable, pero de todas formas DEBES mostrar la evaluación del cultivo solicitado." if preferencia else ""
 
             prompt = f"""
@@ -441,6 +555,29 @@ Reglas estrictas de respuesta:
             resultado_json = json.loads(text.strip())
             resultado_json["modo"] = "ia"
 
+            # Reemplazo de porcentajes alucinados por cálculos edafológicos reales
+            catalogo = list(Cultivo.objects.filter(activo=True))
+            recs_reales = []
+            for rec in resultado_json.get("recomendaciones", []):
+                base = _norm(str(rec.get("cultivo", "")).split('(')[0])
+                if len(base) < 3:
+                    continue
+                cult = next((x for x in catalogo if _norm(x.nombre) == base), None) \
+                    or next((x for x in catalogo if base in _norm(x.nombre)), None)
+                if not cult:
+                    continue
+                real, _det = puntuar_cultivo(cult, h, t, c, ph, n, p, k)
+                if real is None:
+                    continue
+                rec["cultivo"] = cult.nombre
+                rec["compatibilidad"] = real
+                recs_reales.append(rec)
+
+            if not recs_reales:
+                raise ValueError("Gemini no propuso cultivos reconocidos en el catálogo oficial del Huila")
+
+            resultado_json["recomendaciones"] = recs_reales
+
             if solicitud_id:
                 _guardar_diagnostico_solicitud(solicitud_id, resultado_json, h, t, c, ph, n, p, k)
 
@@ -468,21 +605,25 @@ Reglas estrictas de respuesta:
 @login_required(login_url='login')
 def api_promedio_puntos(request):
     """
-    Calcula el promedio de los puntos tomados para una solicitud de análisis.
-    Solo el laboratorista asignado puede consultar los promedios.
+    Endpoint HTTP: GET /ia/promedio_puntos/?solicitud_id=<id>
+    ---------------------------------------------------------
+    Calcula los promedios estadísticos de los puntos de muestreo tomados en un terreno.
+
+    Asegura autorización verificando que la solicitud esté asignada al laboratorista activo.
+    Aplica `Avg()` de Django ORM sobre los 7 parámetros físicos y químicos.
     """
     solicitud_id = request.GET.get('solicitud_id')
     if not solicitud_id:
         return JsonResponse({"estado": "error", "mensaje": "Falta solicitud_id"}, status=400)
-    
+
     from apps.analisis.models import PuntoMuestreo
     from apps.solicitudes.models import SolicitudAnalisis
     from django.db.models import Avg
-    
+
     try:
         sol = SolicitudAnalisis.objects.get(id=solicitud_id, laboratorista_asignado=request.user)
         puntos_tomados = PuntoMuestreo.objects.filter(solicitud=sol, estado='TOMADO')
-        
+
         if puntos_tomados.exists():
             prom = puntos_tomados.aggregate(
                 h=Avg('humedad'),
@@ -504,7 +645,7 @@ def api_promedio_puntos(request):
                 "muestras_tomadas": puntos_tomados.count()
             }
         else:
-            # Si no hay puntos tomados en mapa o es modalidad de muestra traída al laboratorio
+            # Fallback si el análisis se realiza por muestra traída al laboratorio (sin puntos en mapa)
             from apps.sensores.models import LecturaSensor
             ultima = LecturaSensor.objects.order_by('-timestamp').first()
             if ultima:
@@ -529,7 +670,7 @@ def api_promedio_puntos(request):
                     "potasio": 160.0,
                     "muestras_tomadas": 1
                 }
-                
+
         return JsonResponse({"estado": "ok", "promedio": promedio_datos})
     except Exception as e:
         return JsonResponse({"estado": "error", "mensaje": str(e)}, status=500)
@@ -539,30 +680,37 @@ def api_promedio_puntos(request):
 @csrf_exempt
 def api_compartir_resultado(request):
     """
-    HU-0031: Compartir los resultados del análisis con el agricultor.
-    Guarda o actualiza RegistroAnalisis y marca la Solicitud como COMPLETADA.
-    Solo el laboratorista asignado puede compartir el resultado.
+    Endpoint HTTP: POST /ia/compartir/
+    ----------------------------------
+    HU-0031: Cierre formal y entrega del análisis edafológico al agricultor.
+
+    Operación:
+      - Valida que el invocador sea el laboratorista asignado.
+      - Persiste el `RegistroAnalisis` con su dictamen completo.
+      - Transiciona la `SolicitudAnalisis` al estado 'COMPLETADA'.
+      - Notifica disponibilidad para consulta inmediata en el historial del agricultor.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Solo POST permitido"}, status=405)
-    
+
     try:
         data = json.loads(request.body)
         solicitud_id = data.get("solicitud_id")
         if not solicitud_id:
             return JsonResponse({"estado": "error", "mensaje": "solicitud_id es requerido"}, status=400)
-            
+
         from apps.solicitudes.models import SolicitudAnalisis
         from apps.analisis.models import RegistroAnalisis
-        
+
         sol = SolicitudAnalisis.objects.get(id=solicitud_id)
 
-        # Verificar que el laboratorista asignado es quien llama
+        # Control de autorización: únicamente el laboratorista a cargo puede cerrar el informe
         if sol.laboratorista_asignado != request.user:
             return JsonResponse({'error': 'No autorizado para compartir este análisis'}, status=403)
+
         datos = data.get("datos", {})
         diagnostico = data.get("diagnostico", {})
-        
+
         _guardar_diagnostico_solicitud(
             solicitud_id,
             diagnostico,
@@ -574,7 +722,7 @@ def api_compartir_resultado(request):
             datos.get('fosforo', 0),
             datos.get('potasio', 0),
         )
-        
+
         nombre_agri = sol.agricultor.get_full_name() or sol.agricultor.username
         return JsonResponse({
             "estado": "ok",
@@ -587,34 +735,41 @@ def api_compartir_resultado(request):
 @csrf_exempt
 def api_sincronizar_offline(request):
     """
-    HU-0032: Sincronización automática de análisis tomados en modo offline a MySQL.
+    Endpoint HTTP: POST /ia/sincronizar-offline/
+    -------------------------------------------
+    HU-0032: Sincronización masiva por lotes de muestreos y análisis recopilados sin conexión.
+
+    Recibe el array `items` desde la base de datos IndexedDB del cliente:
+      - Procesa cada solicitud verificando estados válidos ('ASIGNADA', 'EN_PROCESO', 'COMPLETADA').
+      - Consolida el diagnóstico final e inserta cada estación individual en `PuntoMuestreo`.
+      - Registra georreferenciación 3D (latitud, longitud, altitud) de las muestras tomadas en campo.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Solo POST permitido"}, status=405)
-        
+
     try:
         data = json.loads(request.body)
         items = data.get("items", [])
         if not items:
             return JsonResponse({"estado": "ok", "sincronizados": 0, "mensaje": "No hay elementos para sincronizar"})
-            
+
         from apps.solicitudes.models import SolicitudAnalisis
         from apps.analisis.models import PuntoMuestreo
-        
+
         sincronizados = 0
         for item in items:
             sol_id = item.get("solicitud_id")
             datos = item.get("datos", {})
             diagnostico = item.get("diagnostico", {})
             puntos = item.get("puntos", [])
-            
+
             if sol_id:
                 try:
                     sol = SolicitudAnalisis.objects.get(id=sol_id)
-                    # Solo completar solicitudes en estado válido para evitar modificaciones indebidas
                     if sol.estado not in ('ASIGNADA', 'EN_PROCESO', 'COMPLETADA'):
                         continue
-                        
+
+                    # Persistencia consolidada
                     _guardar_diagnostico_solicitud(
                         sol_id,
                         diagnostico,
@@ -626,8 +781,8 @@ def api_sincronizar_offline(request):
                         datos.get('fosforo', 0),
                         datos.get('potasio', 0),
                     )
-                    
-                    # Sincronizar también puntos individuales en la tabla PuntoMuestreo si vienen
+
+                    # Persistencia de puntos individuales georreferenciados
                     for p_data in puntos:
                         p_num = p_data.get("numero")
                         if p_num:
@@ -651,7 +806,7 @@ def api_sincronizar_offline(request):
                     sincronizados += 1
                 except SolicitudAnalisis.DoesNotExist:
                     continue
-                    
+
         return JsonResponse({
             "estado": "ok",
             "sincronizados": sincronizados,
@@ -661,88 +816,186 @@ def api_sincronizar_offline(request):
         return JsonResponse({"estado": "error", "mensaje": str(e)}, status=500)
 
 
+def _norm(texto):
+    """
+    Normaliza una cadena de texto para comparaciones botánicas y taxonómicas.
+
+    Aplica descomposición Unicode NFD para suprimir acentos diacríticos (á -> a),
+    convierte a minúsculas y elimina espacios circundantes.
+    """
+    import unicodedata
+    t = unicodedata.normalize('NFD', str(texto or '').lower())
+    return ''.join(ch for ch in t if unicodedata.category(ch) != 'Mn').strip()
+
+
+def puntuar_cultivo(cultivo, h, t, c, ph, n, p, k):
+    """
+    Cálculo matemático canónico del porcentaje de compatibilidad de un cultivo.
+
+    Compara las 7 variables edáficas contra los rangos ideales [min, max] del cultivo:
+      - Dentro del rango ideal: 100% de puntuación para esa variable.
+      - Fuera del rango: penalización proporcional lineal (`distancia / ancho_tolerancia`).
+      - Si una sonda no reportó lectura (valor <= 0), se omite de la ponderación
+        sin penalizar artificialmente el puntaje.
+
+    Ponderación por parámetro:
+      - pH: 25%
+      - Nitrógeno (N): 15%
+      - Fósforo (P): 15%
+      - Potasio (K): 15%
+      - Humedad: 10%
+      - Temperatura: 10%
+      - Conductividad Eléctrica: 10%
+
+    Retorna:
+        tuple: (porcentaje_entero_0_a_100 | None, lista_de_diagnósticos_por_variable)
+    """
+    params = [
+        ('pH', ph, cultivo.ph_min, cultivo.ph_max, 0.25, ''),
+        ('Nitrógeno', n, cultivo.nitrogeno_min, cultivo.nitrogeno_max, 0.15, ' mg/kg'),
+        ('Fósforo', p, cultivo.fosforo_min, cultivo.fosforo_max, 0.15, ' mg/kg'),
+        ('Potasio', k, cultivo.potasio_min, cultivo.potasio_max, 0.15, ' mg/kg'),
+        ('Humedad', h, cultivo.humedad_min, cultivo.humedad_max, 0.10, '%'),
+        ('Temperatura', t, cultivo.temperatura_min, cultivo.temperatura_max, 0.10, ' °C'),
+        ('Conductividad', c, cultivo.conductividad_min, cultivo.conductividad_max, 0.10, ' us/cm'),
+    ]
+
+    total, peso, detalle = 0.0, 0.0, []
+    for nombre, valor, lo, hi, w, unidad in params:
+        v = float(valor or 0)
+        if v <= 0:
+            continue  # Sin lectura de sensor: no se inventa valor
+        lo, hi = float(lo), float(hi)
+        ancho = max(hi - lo, 0.1 * max(abs(hi), 1.0))
+        dist = (lo - v) if v < lo else ((v - hi) if v > hi else 0.0)
+        score = max(0.0, 100.0 - 100.0 * dist / ancho)
+        total += score * w
+        peso += w
+        estado = 'dentro del rango' if dist == 0 else ('por debajo' if v < lo else 'por encima')
+        detalle.append(f"{nombre}: {v:g}{unidad} (ideal {lo:g}-{hi:g}{unidad}) -> {estado}")
+
+    if peso == 0:
+        return None, detalle
+
+    return int(round(total / peso)), detalle
+
+
 @login_required(login_url='login')
 @csrf_exempt
 def api_consultar_ia_agricultor(request):
     """
-    Permite al agricultor consultar compatibilidad de un cultivo específico
-    utilizando los parámetros de suelo registrados en su análisis completado.
-    Solo el agricultor dueño del análisis puede consultar.
+    Endpoint HTTP: POST /ia/consultar-agricultor/
+    --------------------------------------------
+    Asistente agronómico interactivo para responder dudas del productor sobre un cultivo específico.
+
+    Arquitectura de Responsabilidad Desacoplada:
+      1. El PORCENTAJE real es calculado por `puntuar_cultivo` contrastando con la base de datos MySQL.
+      2. El modelo generativo Gemini recibe el score precomputado y se le prohíbe explícitamente
+         modificarlo o inventar cifras.
+      3. Gemini redacta la explicación agronómica y las dosis de enmienda o fertilización adecuadas.
+      4. Si Gemini no está disponible, el sistema genera la explicación técnica mediante plantillas heurísticas.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Solo POST permitido"}, status=405)
-        
+
     try:
         data = json.loads(request.body)
         solicitud_id = data.get("solicitud_id")
         cultivo_busqueda = data.get("cultivo", "").strip()
-        
+
         if not solicitud_id or not cultivo_busqueda:
             return JsonResponse({"estado": "error", "mensaje": "Faltan datos de consulta"}, status=400)
-            
+
+        from django.db.models import Q
         from apps.analisis.models import RegistroAnalisis
-        # Verificar ownership — solo el agricultor dueño puede consultar su análisis
-        analisis = RegistroAnalisis.objects.get(
-            solicitud_id=solicitud_id,
-            solicitud__agricultor=request.user
-        )
-        
+
+        # Validación de seguridad: el análisis debe pertenecer al agricultor o al laboratorista asignado
+        try:
+            analisis = RegistroAnalisis.objects.get(
+                Q(solicitud__agricultor=request.user) |
+                Q(solicitud__laboratorista_asignado=request.user),
+                solicitud_id=solicitud_id,
+            )
+        except RegistroAnalisis.DoesNotExist:
+            return JsonResponse({"estado": "error", "mensaje": "Análisis no encontrado"}, status=404)
+
+        # 1) Búsqueda normalizada del cultivo en el catálogo
+        q = _norm(cultivo_busqueda)
+        catalogo = list(Cultivo.objects.filter(activo=True).order_by('nombre'))
+        cultivo = next((c for c in catalogo if _norm(c.nombre) == q), None) \
+            or next((c for c in catalogo if q in _norm(c.nombre)), None)
+
+        # 2) Puntuación cuantitativa exacta basada en base de datos
+        compat, detalle = (None, [])
+        if cultivo:
+            compat, detalle = puntuar_cultivo(
+                cultivo, analisis.humedad, analisis.temperatura, analisis.conductividad,
+                analisis.ph, analisis.nitrogeno, analisis.fosforo, analisis.potasio,
+            )
+        nombre_cultivo = cultivo.nombre if cultivo else cultivo_busqueda
+
+        # 3) Redacción cualitativa con Google Gemini (opcional)
+        texto = None
         api_key = os.getenv("GEMINI_API_KEY")
         if api_key and genai is not None:
             try:
                 genai.configure(api_key=api_key)
                 model = obtener_modelo_gemini()
-                prompt = f"""
-Eres un ingeniero agrónomo experto en suelos del departamento del Huila, Colombia.
-El agricultor desea consultar si su lote '{analisis.solicitud.terreno.nombre}' es apto para cultivar: '{cultivo_busqueda}'.
-Los parámetros reales medidos con sensor en su terreno son:
-- Humedad: {analisis.humedad}%
-- pH: {analisis.ph}
-- Nitrógeno: {analisis.nitrogeno} mg/kg
-- Fósforo: {analisis.fosforo} mg/kg
-- Potasio: {analisis.potasio} mg/kg
-- Conductividad Eléctrica: {analisis.conductividad} us/cm
-- Temperatura: {analisis.temperatura} °C
-
-Responde estrictamente en formato JSON válido (sin markdown ```json):
-{{
-  "cultivo": "{cultivo_busqueda}",
-  "compatibilidad": 80,
-  "descripcion": "Análisis agronómico detallado y real de viabilidad para esta zona andina/huilense considerando estos nutrientes y pH exactos.",
-  "recomendacion_suelo": "Qué enmienda orgánica o química (cal, materia orgánica), ajuste de riego o fertilización NPK específica requiere este suelo para alcanzar máxima producción de {cultivo_busqueda}."
-}}
-"""
-                res = model.generate_content(prompt)
-                raw_text = res.text.strip()
-                # Extraer JSON de forma segura
-                inicio = raw_text.find('{')
-                fin = raw_text.rfind('}')
-                if inicio != -1 and fin != -1:
-                    clean_text = raw_text[inicio:fin+1]
+                if compat is not None:
+                    contexto = (
+                        f"La compatibilidad ya fue calculada con rangos del catálogo: {compat}%. "
+                        "NO la cambies ni la menciones con otro valor.\n"
+                        "Comparación por parámetro:\n- " + "\n- ".join(detalle)
+                    )
                 else:
-                    clean_text = raw_text.replace("```json", "").replace("```", "").strip()
-                evaluacion = json.loads(clean_text)
+                    contexto = (
+                        "Este cultivo NO está en el catálogo de rangos, así que NO des ningún "
+                        "porcentaje ni número de compatibilidad. Da solo una orientación cualitativa.\n"
+                        f"Lecturas: pH {analisis.ph}, N {analisis.nitrogeno}, P {analisis.fosforo}, "
+                        f"K {analisis.potasio} mg/kg, humedad {analisis.humedad}%, "
+                        f"temperatura {analisis.temperatura} °C."
+                    )
+                prompt = (
+                    "Eres un ingeniero agrónomo experto en suelos del Huila, Colombia.\n"
+                    f"Lote: '{analisis.solicitud.terreno.nombre}'. Cultivo consultado: '{nombre_cultivo}'.\n"
+                    + contexto +
+                    "\nResponde SOLO con JSON válido (sin markdown) con estas dos claves:\n"
+                    '{"descripcion": "explicación breve de por qué este suelo sirve o no para el cultivo, '
+                    'citando los parámetros fuera de rango", '
+                    '"recomendacion_suelo": "enmiendas o fertilización concretas para corregir lo que falte"}'
+                )
+                res = model.generate_content(prompt)
+                raw = res.text.strip()
+                ini, fin = raw.find('{'), raw.rfind('}')
+                texto = json.loads(raw[ini:fin + 1] if ini != -1 and fin != -1 else raw)
             except Exception as ex:
-                import traceback
                 print(f"[GEMINI ERROR en consulta]: {ex}")
-                traceback.print_exc()
-                evaluacion = None
-        else:
-            evaluacion = None
+                texto = None
 
-        if not evaluacion:
-            # Fallback matemático inteligente basado en rangos
-            ph_val = float(analisis.ph)
-            n_val = float(analisis.nitrogeno)
-            compat = 85 if (5.5 <= ph_val <= 6.8 and n_val > 100) else (65 if (5.0 <= ph_val <= 7.2) else 45)
-            evaluacion = {
-                "cultivo": cultivo_busqueda,
-                "compatibilidad": compat,
-                "descripcion": f"Evaluado con los nutrientes registrados en tu predio (pH {analisis.ph}, N {analisis.nitrogeno}mg/kg, P {analisis.fosforo}mg/kg, K {analisis.potasio}mg/kg). Ofrece condiciones {'óptimas y de alto rendimiento' if compat >= 80 else ('favorables con plan de fertilización' if compat >= 60 else 'requiere acondicionamiento previo del pH')}.",
-                "recomendacion_suelo": f"Para {cultivo_busqueda}, mantén una humedad cercana al 60% y refuerza la materia orgánica para facilitar la absorción de N-P-K."
-            }
-            
+        # 4) Respaldo determinista sin IA
+        if not texto or not texto.get("descripcion"):
+            if compat is not None:
+                fuera = [d.split(' (')[0] for d in detalle if 'dentro' not in d]
+                texto = {
+                    "descripcion": f"Compatibilidad calculada con los rangos de {nombre_cultivo}. "
+                                   + ("Todos los parámetros medidos están en rango." if not fuera
+                                      else "Fuera de rango: " + ", ".join(fuera) + "."),
+                    "recomendacion_suelo": "; ".join(d for d in detalle if 'dentro' not in d)
+                                           or "Mantener el plan de fertilización estándar.",
+                }
+            else:
+                texto = {
+                    "descripcion": f"'{nombre_cultivo}' no está en el catálogo de cultivos, "
+                                   "por eso no se puede calcular un porcentaje real.",
+                    "recomendacion_suelo": "Pide al administrador que registre sus rangos de suelo.",
+                }
+
+        evaluacion = {
+            "cultivo": nombre_cultivo,
+            "compatibilidad": compat,
+            "descripcion": texto.get("descripcion", ""),
+            "recomendacion_suelo": texto.get("recomendacion_suelo", ""),
+        }
         return JsonResponse({"estado": "ok", "evaluacion": evaluacion})
     except Exception as e:
         return JsonResponse({"estado": "error", "mensaje": str(e)}, status=500)
-

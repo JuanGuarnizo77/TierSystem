@@ -36,7 +36,7 @@ graph TD
 ## 2. Mapa Detallado de Directorios
 
 ```text
-c:\laragon\www\TierSystem-Django\
+TierSystem/
 ├── manage.py                          # Gestor CLI de Django (configurado por defecto en 0.0.0.0:8000)
 ├── db.sqlite3                         # Base de datos relacional SQLite
 ├── requirements.txt                   # Librerías (Django, djangorestframework, PyJWT, reportlab, openpyxl, etc.)
@@ -56,6 +56,7 @@ c:\laragon\www\TierSystem-Django\
 ├── apps/                              # Módulos de Negocio Desacoplados
 │   ├── usuarios/                      # Modelo Perfil, login, registro, cambio y reseteo de contraseña
 │   ├── terrenos/                      # Fincas agrícolas, hectáreas y GeoJSON poligonal
+│   ├── cultivos/                      # Catálogo canónico de especies, rangos edáficos y API offline
 │   ├── solicitudes/                   # Ciclo de vida de solicitudes de análisis de suelo
 │   ├── analisis/                      # Mediciones de laboratorio, NPK, pH y puntos GPS
 │   ├── sensores/                      # Recepción de paquetes telemétricos del ESP32
@@ -101,7 +102,8 @@ c:\laragon\www\TierSystem-Django\
 │   ├── urls.py                        # /api/v1/
 │   ├── permissions.py                 # Permisos (IsAgricultor, IsLaboratorista, IsAdmin)
 │   ├── auth/                          # Endpoints JWT de autenticación (/api/v1/auth/)
-│   └── agricultor/                    # Endpoints móviles de fincas y solicitudes
+│   ├── agricultor/                    # Endpoints móviles de fincas, solicitudes y mercado
+│   └── laboratorista/                 # Endpoints móviles de muestreo, sensor y órdenes
 │
 └── static/                            # Recursos Estáticos Locales (Offline Ready)
     ├── css/styles.css                 # Estilos SaaS personalizados
@@ -124,6 +126,8 @@ erDiagram
     User ||--o{ SolicitudAnalisis : "crea (Agricultor)"
     User ||--o{ SolicitudAnalisis : "atiende (Laboratorista)"
     
+    Cultivo ||--o{ Terreno : "cultivo_ref"
+    Cultivo ||--o{ SolicitudAnalisis : "cultivo_deseado_ref"
     Terreno ||--o{ SolicitudAnalisis : "objeto de"
     
     SolicitudAnalisis ||--o{ PuntoMuestreo : "genera"
@@ -132,13 +136,17 @@ erDiagram
     CultivoSipsa ||--o{ PrecioSemanal : "registra precios"
     CultivoSipsa ||--|| PrediccionPrecio : "calcula proyección"
     
-    CultivoIdeal {
+    Cultivo {
         string nombre
+        string categoria
         float ph_min
         float ph_max
+        float altitud_min
+        float altitud_max
         float nitrogeno_min
         float fosforo_min
         float potasio_min
+        float conductividad_min
     }
     
     ConfiguracionGlobal {
@@ -165,11 +173,11 @@ El Agricultor es el usuario final de producción. Sus funciones abarcan la gesti
 | **Dashboard Principal** | `/agricultor/dashboard/` | `core.views.dashboard_agricultor` | `templates/agricultor/dashboard.html` |
 | **Gestión de Fincas** | `/agricultor/fincas/` | `apps.terrenos.views.mis_terrenos` | `templates/agricultor/terrenos.html` |
 | **Crear Terreno** | `/agricultor/fincas/crear/` | `apps.terrenos.views.crear_terreno` | Modal / Formulario en `terrenos.html` |
-| **Mis Solicitudes** | `/agricultor/solicitudes/` | `apps.solicitudes.views_agricultor.mis_solicitudes` | `templates/agricultor/solicitudes.html` |
-| **Crear Solicitud** | `/agricultor/solicitudes/crear/` | `apps.solicitudes.views_agricultor.crear_solicitud` | Modal / Formulario en `solicitudes.html` |
-| **Historial & Detalle** | `/agricultor/solicitudes/historial/` | `apps.solicitudes.views_agricultor.historial_solicitudes` | `templates/agricultor/historial.html` |
-| **Detalle de Resultado** | `/agricultor/solicitudes/resultado/<id>/` | `apps.solicitudes.views_agricultor.resultado_detalle` | `templates/agricultor/resultado_detalle.html` |
-| **Comparativa Nutrientes**| `/agricultor/solicitudes/comparar/` | `apps.solicitudes.views_agricultor.comparar_analisis` | `templates/agricultor/comparar.html` |
+| **Mis Solicitudes** | `/agricultor/solicitudes/` | `apps.solicitudes.views.solicitudes_agricultor` | `templates/agricultor/solicitudes.html` |
+| **Crear Solicitud** | `/agricultor/solicitudes/crear/` | `apps.solicitudes.views.crear_solicitud` | Modal / Formulario en `solicitudes.html` |
+| **Historial & Detalle** | `/agricultor/solicitudes/historial/` | `apps.solicitudes.views.historial_analisis_agricultor` | `templates/agricultor/historial.html` |
+| **Detalle de Resultado** | `/agricultor/solicitudes/resultado/<id>/` | `apps.solicitudes.views.resultado_detalle_agricultor` | `templates/agricultor/resultado_detalle.html` |
+| **Comparativa Nutrientes**| `/agricultor/solicitudes/comparar/` | `apps.solicitudes.views.comparar_analisis_agricultor` | `templates/agricultor/comparar.html` |
 | **Catálogo de Cultivos** | `/agricultor/cultivos/` | `core.views.catalogo_cultivos` | `templates/agricultor/cultivos.html` |
 | **Precios SIPSA** | `/mercado/precios/` | `apps.mercado.views.precios_sipsa` | `templates/agricultor/mercado.html` |
 | **Reportes DANE** | `/agricultor/sipsa/` | `apps.sipsa.views.dashboard_view` | `templates/agricultor/sipsa_dashboard.html` |
@@ -201,7 +209,8 @@ El Laboratorista es el operador técnico de campo o laboratorio. Es responsable 
 | **Mis Tareas Asignadas**| `/laboratorista/solicitudes/mis-tareas/` | `apps.solicitudes.views.solicitudes_asignadas` | `templates/laboratorista/mis_solicitudes.html` |
 | **Toma de Muestras / ESP32** | `/laboratorista/toma-muestras/` | `core.views.toma_muestras_laboratorista` | `templates/laboratorista/toma_muestras.html` |
 | **Historial de Análisis**| `/laboratorista/analisis/historial/` | `apps.analisis.views.historial_analisis` | `templates/laboratorista/historial.html` |
-| **API Sensor (Ingesta)**| `/api/sensor/lectura/` | `apps.sensores.views.registrar_lectura` | Respuesta JSON para el hardware ESP32 |
+| **API Sensor (Ingesta)**| `/api/lecturas/` | `apps.sensores.views.recibir_datos_sensor` | Ingesta HTTP POST telemetría ESP32 |
+| **API Sensor Estable** | `/api/captura-estable/` | `apps.sensores.views.captura_estable` | Filtro anti-ruido (Moda/Mediana 15s) |
 | **API Diagnóstico IA** | `/api/ia/generar-diagnostico/` | `apps.ia_recomendaciones.views.generar_diagnostico_view` | JSON con respuesta de Gemini |
 
 #### B. Modelos de Base de Datos Utilizados
@@ -274,7 +283,7 @@ stateDiagram-v2
 ## 6. Configuración de Ejecución y Entorno de Red
 
 * **Arranque del Servidor:**
-  En el archivo [manage.py](file:///c:/laragon/www/TierSystem-Django/manage.py), el comando `runserver` está configurado para enlazar por defecto a:
+  En el archivo `manage.py`, el comando `runserver` está configurado para enlazar por defecto a:
   ```python
   if len(sys.argv) == 2 and sys.argv[1] == 'runserver':
       sys.argv.append('0.0.0.0:8000')

@@ -25,17 +25,30 @@ TierSystem/
 │   │   ├── serializers.py             # Serializadores de usuario y perfil
 │   │   ├── views.py                   # LoginView, Registro, Me y Logout
 │   │   └── urls.py                    # Rutas bajo /api/v1/auth/
-│   └── agricultor/                    # Endpoints para el rol de Agricultor
-│       ├── serializers.py             # Serializadores de fincas y solicitudes
-│       ├── views_perfil.py            # Consulta y actualización de perfil del agricultor
-│       ├── views_terrenos.py          # CRUD de fincas / parcelas
-│       ├── views_solicitudes.py       # Flujo de solicitudes de análisis
-│       └── urls.py                    # Rutas bajo /api/v1/agricultor/
+│   ├── agricultor/                    # Endpoints para el rol de Agricultor
+│   │   ├── serializers.py             # Serializadores de fincas y solicitudes
+│   │   ├── views_perfil.py            # Consulta y actualización de perfil del agricultor
+│   │   ├── views_terrenos.py          # CRUD de fincas / parcelas
+│   │   ├── views_solicitudes.py       # Flujo de solicitudes de análisis
+│   │   ├── views_resultados.py        # Historial de análisis, detalle y comparativa
+│   │   ├── views_cultivos.py          # Catálogo maestro de cultivos del Huila
+│   │   ├── views_mercado.py           # Precios mayoristas SIPSA/DANE y actualización
+│   │   ├── views_reportes.py          # Reportes y comportamiento de precios
+│   │   └── urls.py                    # Rutas bajo /api/v1/agricultor/
+│   │
+│   └── laboratorista/                 # Endpoints para el rol de Laboratorista en campo
+│       ├── views_dashboard.py         # Métricas de tareas y análisis
+│       ├── views_solicitudes.py       # Banco de solicitudes, aceptación y rechazo
+│       ├── views_muestreo.py          # Sensor ESP32 en vivo, cuadrícula y toma 3D
+│       ├── views_historial.py         # Historial y resultados técnicos
+│       ├── views_consulta.py          # Consulta agronómica asistida por IA
+│       └── urls.py                    # Rutas bajo /api/v1/laboratorista/
 │
 ├── apps/                              # Aplicaciones modulares por dominio funcional (Web)
 │   ├── __init__.py
 │   ├── usuarios/                      # Login, registro, auth views, perfiles (Admin, Lab, Agri)
 │   ├── terrenos/                      # CRUD de predios y hectáreas del agricultor
+│   ├── cultivos/                      # Catálogo canónico de especies, rangos edáficos y API offline
 │   ├── solicitudes/                   # Ciclo de vida: Pendiente → Aceptada → En proceso → Finalizada
 │   ├── sensores/                      # API endpoint para ESP32 (/api/lecturas/), telemetría y hardware
 │   ├── analisis/                      # Rangos agronómicos, evaluación local y detalle técnico
@@ -108,8 +121,11 @@ TierSystem/
 │   └── manifest.json                  # Manifiesto PWA para instalación en móviles
 │
 └── documentacion/                     # Documentación técnica y de ingeniería de software
-    ├── TierSystem_Funciones_del_Sistema.md # Resumen funcional, arquitectura y backlog
+    ├── TierSystem_Funciones_del_Sistema.md # Resumen funcional, arquitectura y trazabilidad
     ├── funcionalidadesactores.md      # Matriz de trazabilidad US-0001 a US-0049 y detalle por rol
+    ├── FLUJOS_DEL_SISTEMA_TIERSYSTEM.md # Explicación completa de todos los flujos del sistema
+    ├── arquitectura_rutas_modelos_por_rol.md # Arquitectura técnica, rutas MVT/API y modelos
+    ├── esquema_base_de_datos_y_offline.md # Modelo relacional y sincronización IndexedDB PWA
     ├── estructura_de_carpetas.md      # Mapa de directorios y componentes del sistema
     ├── api_movil.md                   # Especificación técnica de la API REST para Flutter y JWT
     ├── conexion.md                    # Código C++ para ESP32, pines RS485 y Modbus RTU

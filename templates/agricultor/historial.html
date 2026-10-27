@@ -377,7 +377,7 @@
 
             if (data.estado === 'ok' && data.evaluacion) {
                 const ev = data.evaluacion;
-                const bgBadge = ev.compatibilidad >= 70 ? 'bg-green-500' : (ev.compatibilidad >= 40 ? 'bg-amber-500' : 'bg-red-500');
+                const bgBadge = ev.compatibilidad == null ? 'bg-gray-400' : ev.compatibilidad >= 70 ? 'bg-green-500' : (ev.compatibilidad >= 40 ? 'bg-amber-500' : 'bg-red-500');
                 
                 resBox.innerHTML = `
                     <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2">
@@ -385,7 +385,7 @@
                             <i class="fa-solid fa-seedling text-green-500"></i> ${ev.cultivo}
                         </h5>
                         <span class="${bgBadge} text-white font-bold px-2.5 py-0.5 rounded-full text-xs">
-                            ${ev.compatibilidad}% de Compatibilidad
+                            ${ev.compatibilidad == null ? "Sin rangos en catálogo" : ev.compatibilidad + "% de Compatibilidad"}
                         </span>
                     </div>
                     <div class="text-xs text-gray-600 dark:text-gray-300 space-y-2">

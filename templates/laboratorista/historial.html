@@ -731,9 +731,9 @@
 
             if (a.humedad >= r.humedad[0] && a.humedad <= r.humedad[1]) { aciertos++; } else { detalles.push(`Humedad actual ${a.humedad}% (Rango ideal: ${r.humedad[0]}-${r.humedad[1]}%)`); }
             if (a.ph >= r.ph[0] && a.ph <= r.ph[1]) { aciertos++; } else { detalles.push(`pH actual ${a.ph} (Rango ideal: ${r.ph[0]}-${r.ph[1]})`); }
-            if (a.nitrogeno >= r.nitrogeno[0] && a.nitrogeno <= r.nitrogeno[1]) { aciertos++; } else { detalles.push(`N actual ${a.nitrogeno} mg/kg (Rango ideal: ${r.nitrogeno[0]}-${r.nitrogeno[1]})`); }
-            if (a.fosforo >= r.fosforo[0] && a.fosforo <= r.fosforo[1]) { aciertos++; } else { detalles.push(`P actual ${a.fosforo} mg/kg (Rango ideal: ${r.fosforo[0]}-${r.fosforo[1]})`); }
-            if (a.potasio >= r.potasio[0] && a.potasio <= r.potasio[1]) { aciertos++; } else { detalles.push(`K actual ${a.potasio} mg/kg (Rango ideal: ${r.potasio[0]}-${r.potasio[1]})`); }
+            if (a.n >= r.nitrogeno[0] && a.n <= r.nitrogeno[1]) { aciertos++; } else { detalles.push(`N actual ${a.n} mg/kg (Rango ideal: ${r.nitrogeno[0]}-${r.nitrogeno[1]})`); }
+            if (a.p >= r.fosforo[0] && a.p <= r.fosforo[1]) { aciertos++; } else { detalles.push(`P actual ${a.p} mg/kg (Rango ideal: ${r.fosforo[0]}-${r.fosforo[1]})`); }
+            if (a.k >= r.potasio[0] && a.k <= r.potasio[1]) { aciertos++; } else { detalles.push(`K actual ${a.k} mg/kg (Rango ideal: ${r.potasio[0]}-${r.potasio[1]})`); }
             if (a.temperatura >= r.temperatura[0] && a.temperatura <= r.temperatura[1]) { aciertos++; }
 
             compat = Math.round((aciertos / total) * 100);
@@ -764,7 +764,7 @@
 
     function renderizarResultadoConsulta(ev, modo) {
         const resBox = document.getElementById('resultadoConsultaLab');
-        const bgBadge = ev.compatibilidad >= 70 ? 'bg-green-500' : (ev.compatibilidad >= 40 ? 'bg-amber-500' : 'bg-red-500');
+        const bgBadge = ev.compatibilidad == null ? 'bg-gray-400' : ev.compatibilidad >= 70 ? 'bg-green-500' : (ev.compatibilidad >= 40 ? 'bg-amber-500' : 'bg-red-500');
         const origenBadge = modo === 'online' 
             ? '<span class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/40 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800"><i class="fa-solid fa-brain mr-1"></i> Generado con IA Gemini (Online)</span>'
             : '<span class="text-[11px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/40 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800"><i class="fa-solid fa-database mr-1"></i> Base de Datos Agronómica Local (Offline)</span>';
@@ -778,7 +778,7 @@
                     ${origenBadge}
                 </div>
                 <span class="${bgBadge} text-white font-bold px-2.5 py-0.5 rounded-full text-xs shadow-xs">
-                    ${ev.compatibilidad}% de Compatibilidad
+                    ${ev.compatibilidad == null ? "Sin rangos en catálogo" : ev.compatibilidad + "% de Compatibilidad"}
                 </span>
             </div>
             <div class="text-xs text-gray-600 dark:text-gray-300 space-y-2">

@@ -1,48 +1,125 @@
+"""
+Modelo de Dominio: Catálogo Maestro de Cultivos del Departamento del Huila.
+============================================================================
+Define la entidad `Cultivo`, pieza fundamental del sistema agroecológico de
+TierSystem. Contiene la taxonomía, adaptación agroclimática (pisos altitudinales)
+y la parametrización fisicoquímica edafológica (pH, conductividad eléctrica,
+humedad, temperatura y macronutrientes N-P-K).
+
+Estos rangos alimentan:
+  1. El motor algorítmico de compatibilidad edáfica (`apps.ia_recomendaciones`).
+  2. Las reglas de validación en campo para muestreo sensorizado (`apps.sensores`).
+  3. La homologación de precios agrícolas con SIPSA/DANE (`apps.sipsa`).
+  4. La base de datos local en IndexedDB (Dexie.js) para funcionamiento offline.
+"""
+
 from django.db import models
+
 
 class Cultivo(models.Model):
     """
-    Catálogo Maestro Universal de Cultivos del Departamento del Huila.
-    Entidad canónica de la cual se desprenden los terrenos, solicitudes,
-    diagnósticos de IA, precios SIPSA y consultas offline.
+    Entidad canónica que representa una especie o variedad agrícola en el Huila.
+
+    Almacena los umbrales mínimos y máximos ideales para cada variable física
+    y química del suelo. Es utilizada por los evaluadores heurísticos y por los
+    prompts estructurados de los modelos de inteligencia artificial.
     """
-    # Identificación y Taxonomía
-    nombre = models.CharField(max_length=120, unique=True, help_text="Nombre común o variedad (ej. Café Castillo, Cacao, Cholupa)")
-    nombre_cientifico = models.CharField(max_length=150, blank=True, default='', help_text="Nombre científico botánico")
-    categoria = models.CharField(max_length=80, default='Frutal', help_text="Frutal, Cereal, Tubérculo, Leguminosa, Hortaliza, Industrial, etc.")
-    clima = models.CharField(max_length=80, default='Templado', help_text="Cálido, Templado, Frío, Tropical, etc.")
-    icono = models.CharField(max_length=60, default='fa-seedling', help_text="Clase FontAwesome (ej. fa-mug-hot, fa-lemon)")
-    descripcion = models.TextField(blank=True, default='', help_text="Descripción agronómica y aptitud productiva en el Huila")
-    
-    # Pisos Altitudinales Óptimos (msnm - metros sobre el nivel del mar)
-    altitud_min = models.DecimalField(max_digits=7, decimal_places=2, default=0, help_text="Altitud mínima recomendada en msnm")
-    altitud_max = models.DecimalField(max_digits=7, decimal_places=2, default=3000, help_text="Altitud máxima recomendada en msnm")
-    
-    # Rangos Edafológicos Óptimos (Calibración IA / Diagnóstico de Suelos)
+
+    # =========================================================================
+    # Identificación Botánica, Taxonómica y Agroecológica
+    # =========================================================================
+    nombre = models.CharField(
+        max_length=120,
+        unique=True,
+        help_text="Nombre común o variedad comercial (ej. Café Castillo, Cacao CCN-51, Cholupa del Huila)"
+    )
+    nombre_cientifico = models.CharField(
+        max_length=150,
+        blank=True,
+        default='',
+        help_text="Nombre científico botánico estandarizado (ej. Coffea arabica)"
+    )
+    categoria = models.CharField(
+        max_length=80,
+        default='Frutal',
+        help_text="Clasificación agroproductiva (Frutal, Cereal, Tubérculo, Leguminosa, Hortaliza, Industrial, etc.)"
+    )
+    clima = models.CharField(
+        max_length=80,
+        default='Templado',
+        help_text="Aptitud bioclimática predominante (Cálido, Templado, Frío, Tropical)"
+    )
+    icono = models.CharField(
+        max_length=60,
+        default='fa-seedling',
+        help_text="Clase CSS de FontAwesome para representación visual (ej. fa-mug-hot, fa-lemon, fa-apple-whole)"
+    )
+    descripcion = models.TextField(
+        blank=True,
+        default='',
+        help_text="Resumen agronómico, comportamiento fisiológico y condiciones óptimas en el Huila"
+    )
+
+    # =========================================================================
+    # Zonificación Altitudinal (msnm - Metros Sobre el Nivel del Mar)
+    # =========================================================================
+    altitud_min = models.DecimalField(
+        max_digits=7,
+        decimal_places=2,
+        default=0,
+        help_text="Piso altitudinal inferior recomendado en msnm"
+    )
+    altitud_max = models.DecimalField(
+        max_digits=7,
+        decimal_places=2,
+        default=3000,
+        help_text="Piso altitudinal superior recomendado en msnm"
+    )
+
+    # =========================================================================
+    # Rangos Fisicoquímicos y Nutricionales Óptimos del Suelo
+    # =========================================================================
+    # Potencial de Hidrógeno (pH) en escala estándar de 0 a 14
     ph_min = models.DecimalField(max_digits=4, decimal_places=2, default=5.5)
     ph_max = models.DecimalField(max_digits=4, decimal_places=2, default=6.8)
-    
+
+    # Humedad volumétrica del suelo en porcentaje (%)
     humedad_min = models.DecimalField(max_digits=5, decimal_places=2, default=60.0)
     humedad_max = models.DecimalField(max_digits=5, decimal_places=2, default=80.0)
-    
+
+    # Temperatura edáfica en grados Celsius (°C)
     temperatura_min = models.DecimalField(max_digits=5, decimal_places=2, default=18.0)
     temperatura_max = models.DecimalField(max_digits=5, decimal_places=2, default=26.0)
-    
+
+    # Conductividad Eléctrica (CE) en dS/m o mS/cm (salinidad del suelo)
     conductividad_min = models.DecimalField(max_digits=8, decimal_places=2, default=0.8)
     conductividad_max = models.DecimalField(max_digits=8, decimal_places=2, default=2.2)
-    
+
+    # Nitrógeno disponible (N) en miligramos por kilogramo (mg/kg o ppm)
     nitrogeno_min = models.DecimalField(max_digits=6, decimal_places=2, default=120.0, help_text="mg/kg")
     nitrogeno_max = models.DecimalField(max_digits=6, decimal_places=2, default=250.0, help_text="mg/kg")
-    
+
+    # Fósforo disponible (P) por método Bray II / Mehlich en mg/kg
     fosforo_min = models.DecimalField(max_digits=6, decimal_places=2, default=25.0, help_text="mg/kg")
     fosforo_max = models.DecimalField(max_digits=6, decimal_places=2, default=65.0, help_text="mg/kg")
-    
+
+    # Potasio intercambiable (K) en mg/kg
     potasio_min = models.DecimalField(max_digits=6, decimal_places=2, default=140.0, help_text="mg/kg")
     potasio_max = models.DecimalField(max_digits=6, decimal_places=2, default=280.0, help_text="mg/kg")
-    
-    # Enlace canónico SIPSA/DANE y estado operativo
-    nombre_dane = models.CharField(max_length=120, blank=True, default='', help_text="Nombre homologado en reportes DANE")
-    activo = models.BooleanField(default=True, help_text="Visible en catálogo y selección de diagnósticos")
+
+    # =========================================================================
+    # Homologación SIPSA/DANE y Ciclo de Vida
+    # =========================================================================
+    nombre_dane = models.CharField(
+        max_length=120,
+        blank=True,
+        default='',
+        help_text="Nombre oficial homologado en el boletín semanal SIPSA del DANE"
+    )
+    activo = models.BooleanField(
+        default=True,
+        help_text="Indica si el cultivo está disponible en catálogos y formularios de solicitud"
+    )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 
@@ -53,10 +130,19 @@ class Cultivo(models.Model):
         db_table = 'cultivos_cultivo'
 
     def __str__(self):
+        """Representación textual formal del cultivo y su categoría productiva."""
         return f"{self.nombre} ({self.categoria})"
 
     def to_dict(self):
-        """Retorna diccionario estructurado para consumo de APIs y motor de IA."""
+        """
+        Serializa el cultivo a un diccionario con tipos nativos de Python.
+
+        Especialmente formateado para la inyección de contexto en motores
+        heurísticos, árboles de decisión y sincronización offline en IndexedDB.
+
+        Retorna:
+            dict: Estructura jerárquica con metadatos y tuplas [min, max] de rangos.
+        """
         return {
             "id": self.id,
             "nombre": self.nombre,
@@ -77,7 +163,16 @@ class Cultivo(models.Model):
         }
 
     def to_catalogo_dict(self):
-        """Formato amigable para tarjetas en frontend web y PWA."""
+        """
+        Serializa el cultivo con cadenas de texto formateadas y unidades de medida.
+
+        Diseñado específicamente para el renderizado inmediato en tarjetas de UI
+        (interfaz web de escritorio y aplicación móvil PWA), evitando lógica de
+        formateo en los componentes de vista.
+
+        Retorna:
+            dict: Cadenas de presentación con unidades para cada parámetro edáfico.
+        """
         return {
             "id": self.id,
             "nombre": self.nombre,

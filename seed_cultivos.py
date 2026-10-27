@@ -1,6 +1,26 @@
+"""
+Script Autónomo de Sembrado del Catálogo Agronómico del Huila: TierSystem.
+===========================================================================
+Carga e inicializa en la base de datos relacional la totalidad del catálogo de especies,
+variedades y cultivos agrícolas adaptados a los pisos térmicos del departamento del Huila.
+
+Para cada especie vegetal se establecen con rigor edafológico los rangos óptimos de:
+  - Humedad del suelo (%).
+  - Temperatura ambiente / superficial (°C).
+  - Conductividad eléctrica (dS/m).
+  - Reacción del suelo (pH).
+  - Nitrógeno asimilable (mg/kg).
+  - Fósforo disponible (mg/kg).
+  - Potasio intercambiable (mg/kg).
+
+Uso:
+  python seed_cultivos.py
+"""
+
 import os
 import django
 
+# Inicialización del entorno de ejecución de Django para script independiente
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tiersystem.settings")
 django.setup()
 
@@ -8,6 +28,12 @@ from apps.cultivos.models import Cultivo
 
 
 def run():
+    """
+    Ejecuta el sembrado de cultivos en la base de datos relacional.
+
+    Utiliza `get_or_create` para garantizar la idempotencia de la operación,
+    evitando la duplicación de registros si el script se ejecuta en múltiples despliegues.
+    """
     cultivos = [
         # ── Café y variantes ────────────────────────────────────────────────
         {
@@ -1023,9 +1049,13 @@ def run():
         },
     ]
 
+    # Contadores de auditoría del proceso de sembrado
     creados = 0
     actualizados = 0
+
+    # Iteración e inserción idempotente en base de datos
     for data in cultivos:
+        # Recuperar o insertar según nombre único de la especie
         obj, created = Cultivo.objects.get_or_create(
             nombre=data['nombre'],
             defaults={k: v for k, v in data.items() if k != 'nombre'}
@@ -1037,8 +1067,10 @@ def run():
             actualizados += 1
             print(f'Ya existe: {data["nombre"]}')
 
+    # Impresión del balance general
     print(f'\nTotal: {creados} creados, {actualizados} ya existían')
 
 
+# Punto de ejecución directa desde consola
 if __name__ == "__main__":
     run()

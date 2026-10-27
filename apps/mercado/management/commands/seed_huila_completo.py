@@ -1,15 +1,19 @@
 """
-Management command: seed_huila_completo
-Delega a seed_sipsa para sembrar precios SIPSA en el catálogo maestro Cultivo.
+Comando de Gestión Django: `seed_huila_completo`.
+=================================================
+Comando proxy que delega el sembrado de precios históricos agropecuarios
+del Huila al comando maestro `seed_sipsa` (`apps.sipsa.management.commands.seed_sipsa`).
 
 Uso:
     python manage.py seed_huila_completo
 """
+
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
+    """Siembra precios SIPSA en el catálogo maestro Cultivo delegando a seed_sipsa."""
     help = 'Siembra precios SIPSA en el catálogo maestro Cultivo delegando a seed_sipsa.'
 
     def handle(self, *args, **options):
