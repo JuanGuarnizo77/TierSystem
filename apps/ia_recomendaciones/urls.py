@@ -27,4 +27,7 @@ urlpatterns = [
 
     # Asistente agronómico conversacional para consultas específicas del productor
     path('consultar-agricultor/', views.api_consultar_ia_agricultor, name='api_consultar_ia_agricultor'),
+
+    # Asesor edafológico y botánico abierto (con filtro estricto de dominio agrícola)
+    path('asesor-suelo/', views.api_asesor_agronomico, name='api_asesor_agronomico'),
 ]

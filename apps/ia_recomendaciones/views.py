@@ -1001,3 +1001,286 @@ def api_consultar_ia_agricultor(request):
         return JsonResponse({"estado": "ok", "evaluacion": evaluacion})
     except Exception as e:
         return JsonResponse({"estado": "error", "mensaje": str(e)}, status=500)
+
+
+
+# ==============================================================================
+# ASESOR AGRONÓMICO Y EDAFOLÓGICO CONVERSACIONAL (GUARDRAIL ESTRICTO AGRÍCOLA)
+# ==============================================================================
+
+PALABRAS_FUERA_DE_DOMINIO = {
+    'futbol', 'partido', 'mundial', 'messi', 'cristiano', 'gol', 'champions',
+    'pelicula', 'netflix', 'cine', 'actor', 'cancion', 'musica', 'reggaeton',
+    'videojuego', 'fortnite', 'minecraft', 'gta', 'playstation', 'xbox',
+    'programar', 'javascript', 'python', 'html', 'css', 'django', 'codigo fuente',
+    'criptomoneda', 'bitcoin', 'trading', 'bolsa de valores', 'apuesta', 'casino',
+    'horoscopo', 'tarot', 'astrologia', 'chiste', 'broma', 'adivinanza',
+    'presidente', 'elecciones', 'politica', 'congreso', 'famosos', 'farandula',
+    'pizza', 'hamburguesa', 'receta de cocina', 'postre', 'pasteleria',
+}
+
+PALABRAS_DOMINIO_AGRICOLA = {
+    'suelo', 'tierra', 'terreno', 'lote', 'finca', 'parcela', 'maceta', 'jardin',
+    'huerta', 'huerto', 'campo', 'sembrar', 'plantar', 'cultivar', 'cultivo',
+    'planta', 'arbol', 'brote', 'semilla', 'raiz', 'raices', 'hoja', 'tallo',
+    'flor', 'fruto', 'cosecha', 'botanica', 'agronomia', 'agricola', 'agricultura',
+    'agricultor', 'campesino', 'abono', 'abonar', 'fertilizante', 'fertilizar',
+    'fertilizacion', 'enmienda', 'compost', 'compostaje', 'humus', 'lombriz',
+    'materia organica', 'cal', 'dolomita', 'encalar', 'encalado', 'urea', 'dap',
+    'npk', 'nitrogeno', 'fosforo', 'potasio', 'nutriente', 'nutrientes',
+    'macronutriente', 'micronutriente', 'ph', 'acidez', 'acido', 'alcalino',
+    'salinidad', 'conductividad', 'humedad', 'agua', 'riego', 'regar', 'drenaje',
+    'encharcamiento', 'seco', 'seca', 'temperatura', 'clima', 'sol', 'sombra',
+    'sombrio', 'sonda', 'sensor', 'esp32', 'lectura', 'analisis', 'muestra',
+    'diagnostico', 'plaga', 'hongo', 'maleza', 'poda', 'podar', 'germinar',
+    'germinacion', 'vivero', 'sustrato', 'arena', 'arcilla', 'limo', 'franco',
+    'erosion', 'arar', 'labranza', 'cafe', 'cacao', 'maiz', 'arroz', 'platano',
+    'aguacate', 'tomate', 'frijol', 'yuca', 'papa', 'citrico', 'limon', 'naranja',
+    'fruta', 'hortaliza', 'leguminosa', 'pasto', 'forraje', 'iniciar', 'mejorar',
+    'recuperar', 'preparar', 'corregir', 'ion', 'iones', 'mineral', 'minerales',
+}
+
+
+def _es_consulta_agricola_valida(pregunta):
+    """
+    Verifica si la consulta del usuario pertenece al dominio agronómico,
+    edafológico, botánico o de interpretación del análisis de suelo.
+    """
+    texto_norm = _norm(pregunta)
+    if not texto_norm or len(texto_norm) < 3:
+        return False
+
+    # Si contiene términos explícitamente ajenos al agro y ningún término agrícola fuerte
+    for palabra_prohibida in PALABRAS_FUERA_DE_DOMINIO:
+        if palabra_prohibida in texto_norm:
+            tiene_contexto_agro = any(p in texto_norm for p in ('suelo', 'tierra', 'cultivo', 'planta', 'sembrar', 'abono', 'ph', 'npk'))
+            if not tiene_contexto_agro:
+                return False
+
+    # Comprobar presencia de al menos un concepto vinculado al agro, suelo, plantas o análisis
+    for palabra_agro in PALABRAS_DOMINIO_AGRICOLA:
+        if palabra_agro in texto_norm:
+            return True
+
+    return False
+
+
+def _generar_asesoria_offline(pregunta, h, t, c, ph, n, p, k, nombre_terreno):
+    """
+    Motor experto local para responder dudas sobre suelos, botánica, inicio de siembra
+    y funcionamiento del análisis cuando no hay conexión a internet.
+    """
+    q = _norm(pregunta)
+    pasos = []
+
+    # Evaluación del estado actual de la muestra para personalizar el consejo
+    diagnostico_suelo = []
+    if ph > 0:
+        if ph < 5.5:
+            diagnostico_suelo.append(f"pH ácido ({ph}): aplicar cal dolomita o agrícola (150-250 g/m² o 1.5-2.5 t/ha) antes de abonar")
+        elif ph > 7.3:
+            diagnostico_suelo.append(f"pH alcalino ({ph}): incorporar compost maduro o azufre elemental para mejorar la disponibilidad de micronutrientes")
+        else:
+            diagnostico_suelo.append(f"pH balanceado ({ph}): rango ideal para la asimilación de nutrientes")
+
+    if n < 50 or p < 20 or k < 80:
+        diagnostico_suelo.append(f"Nutrientes NPK bajos (N:{n:g}, P:{p:g}, K:{k:g} mg/kg): el suelo requiere enriquecimiento con humus de lombriz o fertilizante compuesto NPK")
+    else:
+        diagnostico_suelo.append(f"Reserva NPK activa (N:{n:g}, P:{p:g}, K:{k:g} mg/kg): buena base nutricional para el desarrollo vegetativo")
+
+    if h > 0 and h < 35:
+        diagnostico_suelo.append(f"Humedad baja ({h}%): regar hasta capacidad de campo (50%-65%) para activar la solución del suelo")
+    elif h > 80:
+        diagnostico_suelo.append(f"Humedad alta ({h}%): mejorar el drenaje para evitar asfixia radicular")
+
+    resumen_muestra = "; ".join(diagnostico_suelo) if diagnostico_suelo else "Parámetros listos para evaluación agronómica."
+
+    # Caso 1: Dudas sobre conductividad, humedad, sensor o por qué salen datos bajos
+    if any(w in q for w in ('conductividad', 'sensor', 'sonda', 'por que', 'bajo', 'cero', 'funciona', 'analisis', 'lectura', 'ion')):
+        titulo = "Explicación Técnica del Análisis de Suelo y Sonda Edafológica"
+        respuesta = (
+            f"En el lote '{nombre_terreno}', los resultados reflejan la física y química real de la solución del suelo. "
+            "Los macronutrientes Nitrógeno, Fósforo y Potasio (NPK) existen en forma de iones minerales disueltos. "
+            "Si la tierra está seca o tiene baja humedad, los iones permanecen cristalizados en estado sólido y no conducen electricidad, "
+            "haciendo que la conductividad eléctrica y las lecturas de NPK marquen valores bajos o cercanos a cero. "
+            "Además, una planta ya establecida puede verse viva porque consume reservas acumuladas en sus tejidos, aunque el suelo ya esté agotado."
+        )
+        pasos = [
+            "Humedecer la muestra de suelo con agua limpia hasta alcanzar un 50% - 60% de humedad (capacidad de campo, húmeda pero sin escurrir).",
+            "Esperar entre 5 y 10 minutos antes de medir para permitir que el agua disuelva las sales minerales y libere los iones NPK.",
+            "Compactar ligeramente la tierra alrededor de las varillas de acero de la sonda para eliminar bolsas de aire.",
+            "Verificar que la sonda reciba su alimentación estable de 12V DC para polarizar correctamente los electrodos."
+        ]
+
+    # Caso 2: Cómo iniciar desde cero en jardín, huerta, botánica o campo
+    elif any(w in q for w in ('iniciar', 'empezar', 'comenzar', 'jardin', 'huerta', 'huerto', 'botanica', 'primera vez', 'principiante', 'maceta')):
+        titulo = "Guía Paso a Paso para Iniciar tu Proyecto Botánico o Agrícola"
+        respuesta = (
+            f"Para iniciar con éxito en '{nombre_terreno}' (ya sea en jardín, huerta casera o lote de campo), el secreto agronómico "
+            "es preparar primero la 'casa de las raíces' antes de poner la semilla o plántula. Un suelo suelto, aireado, con buen drenaje "
+            "y rico en materia orgánica garantiza que cualquier planta prenda vigorosamente desde la primera semana."
+        )
+        pasos = [
+            "Preparación física (Descompactación): Afloja la tierra a una profundidad de 20 a 30 cm retirando piedras, terrones duros y restos de raíces viejas.",
+            "Acondicionamiento orgánico: Mezcla un 30% de abono orgánico estabilizado (humus de lombriz o compost maduro) con el 70% de tu tierra para mejorar textura y retención de agua.",
+            f"Corrección química según tu muestra (pH {ph}): " + ("Aplica una cucharada de cal dolomita por litro de sustrato (o 200 g/m²) para suavizar la acidez." if ph < 5.5 else "Tu pH actual permite sembrar directamente sin necesidad de encalar."),
+            "Riego de asiento y siembra: Humedece el sustrato un día antes de sembrar, ubica la planta sin enterrar el cuello del tallo y mantén sombra parcial los primeros 8 días."
+        ]
+
+    # Caso 3: Cómo mejorar o recuperar el suelo
+    else:
+        titulo = "Plan Integral de Mejoramiento y Recuperación de Suelo"
+        respuesta = (
+            f"Analizando las condiciones actuales de '{nombre_terreno}' (pH {ph}, Humedad {h}%, CE {c} µS/cm, "
+            f"N:{n:g} - P:{p:g} - K:{k:g} mg/kg), el mejoramiento del suelo debe enfocarse en activar la microbiología edáfica, "
+            "equilibrar la acidez y restituir los macronutrientes esenciales para que las raíces puedan absorberlos sin bloqueos químicos."
+        )
+        pasos = [
+            "Incorporación de Materia Orgánica: Aplica de 2 a 4 kg/m² de compost o lombricompost para aumentar la Capacidad de Intercambio Catiónico (CIC) y esponjosidad del suelo.",
+            "Regulación de pH y Calcio: " + ("Dado el pH ácido de la muestra, incorpora cal agrícola o dolomita al menos 15 días antes de aplicar fertilizantes granulados." if ph < 5.5 else "Mantén el pH estable mediante aportes periódicos de materia orgánica humificada."),
+            "Nutrición Balanceada NPK: Refuerza con fuentes ricas en Fósforo (DAP o roca fosfórica) para estimular raíces, Nitrógeno fraccionado para follaje y Potasio para resistencia hídrica.",
+            "Cobertura vegetal (Mulching): Cubre la superficie del suelo con hojarasca seca o restos vegetales para conservar la humedad entre 50%-65% y evitar el recalentamiento radicular."
+        ]
+
+    return {
+        "es_valido": True,
+        "titulo": titulo,
+        "respuesta_principal": respuesta,
+        "pasos_recomendados": pasos,
+        "consejo_suelo": resumen_muestra
+    }
+
+
+@login_required(login_url='login')
+@csrf_exempt
+def api_asesor_agronomico(request):
+    """
+    Endpoint HTTP: POST /api/ia/asesor-suelo/
+    -----------------------------------------
+    Asistente abierto para el laboratorista/agricultor en el Historial de Análisis.
+    Resuelve dudas sobre:
+      - Cómo mejorar o recuperar el suelo analizado.
+      - Cómo iniciar un proyecto botánico, jardín, huerta o cultivo en campo.
+      - Dudas técnicas sobre el análisis de suelo (conductividad, humedad, NPK, pH, sensores).
+    Aplica un filtro estricto (Guardrail) que rechaza cualquier pregunta ajena a la agricultura y suelos.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Solo POST permitido"}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        pregunta = (data.get("pregunta") or "").strip()
+        solicitud_id = data.get("solicitud_id")
+        datos_muestra = data.get("datos_muestra") or {}
+
+        if not pregunta:
+            return JsonResponse({"estado": "error", "mensaje": "Por favor escribe tu consulta agrícola o sobre el suelo."}, status=400)
+
+        # 1. Extraer parámetros de la muestra (desde BD o desde el payload del modal)
+        h = float(datos_muestra.get("humedad", 0) or 0)
+        t = float(datos_muestra.get("temperatura", 0) or 0)
+        c = float(datos_muestra.get("conductividad", 0) or 0)
+        ph = float(datos_muestra.get("ph", 0) or 0)
+        n = float(datos_muestra.get("n", 0) or 0)
+        p = float(datos_muestra.get("p", 0) or 0)
+        k = float(datos_muestra.get("k", 0) or 0)
+        nombre_terreno = datos_muestra.get("terreno") or "Lote Analizado"
+
+        if solicitud_id:
+            from apps.analisis.models import RegistroAnalisis
+            reg = RegistroAnalisis.objects.filter(solicitud_id=solicitud_id).select_related('solicitud__terreno').first()
+            if reg:
+                h = float(reg.humedad or h)
+                t = float(reg.temperatura or t)
+                c = float(reg.conductividad or c)
+                ph = float(reg.ph or ph)
+                n = float(reg.nitrogeno or n)
+                p = float(reg.fosforo or p)
+                k = float(reg.potasio or k)
+                if reg.solicitud and reg.solicitud.terreno:
+                    nombre_terreno = reg.solicitud.terreno.nombre
+
+        # 2. Intentar consulta con Google Gemini (con Guardrail estricto en el prompt)
+        api_key = os.getenv("GEMINI_API_KEY")
+        if api_key and genai is not None and verificar_internet_rapido():
+            try:
+                genai.configure(api_key=api_key)
+                model = obtener_modelo_gemini()
+
+                prompt = f"""
+Eres el Ingeniero Agrónomo, Edafólogo y Botánico Experto de la plataforma TierSystem en el Huila, Colombia.
+Un usuario está revisando el análisis de suelo del terreno '{nombre_terreno}' con las siguientes lecturas reales del sensor:
+- Humedad: {h}%
+- Temperatura: {t}°C
+- Conductividad Eléctrica: {c} µS/cm
+- pH del Suelo: {ph}
+- Nitrógeno (N): {n} mg/kg
+- Fósforo (P): {p} mg/kg
+- Potasio (K): {k} mg/kg
+
+El usuario realiza la siguiente consulta o petición:
+"{pregunta}"
+
+REGLA DE ORO ESTRICTA (GUARDRAIL DE DOMINIO):
+- SOLO puedes responder preguntas relacionadas con: agricultura, agronomía, suelos, tierra, abonos, fertilizantes, enmiendas, botánica, jardinería, huertas, cómo sembrar o iniciar un cultivo/planta, riego, drenaje, plagas agrícolas, o dudas técnicas sobre cómo funciona el análisis de suelo y sus parámetros (pH, NPK, conductividad eléctrica, humedad, temperatura, sondas de suelo).
+- Si la pregunta del usuario trata sobre CUALQUIER OTRO TEMA ajeno a suelos, plantas o agricultura (por ejemplo: deportes, fútbol, política, programación, matemáticas generales, recetas de cocina, chistes, películas, videojuegos, historia general, etc.), DEBES rechazarla amablemente devolviendo `"es_valido": false`.
+
+Devuelve ESTRICTAMENTE un objeto JSON válido (sin bloques markdown ```json) con esta estructura exacta:
+{{
+  "es_valido": true,
+  "titulo": "Título claro y amigable de la respuesta",
+  "respuesta_principal": "Explicación clara, empática, pedagógica y completa a la duda del usuario, integrando los valores actuales de su suelo si aplica.",
+  "pasos_recomendados": [
+    "Paso 1 práctico y detallado...",
+    "Paso 2 práctico y detallado...",
+    "Paso 3 práctico y detallado..."
+  ],
+  "consejo_suelo": "Diagnóstico breve sobre qué hacer con los valores actuales de pH ({ph}), humedad ({h}%), conductividad ({c} µS/cm) y NPK ({n}-{p}-{k} mg/kg) de esta muestra."
+}}
+
+Si la pregunta NO es de agricultura, suelos, botánica o análisis edafológico, devuelve:
+{{
+  "es_valido": false,
+  "titulo": "Consulta Fuera del Ámbito Agrícola y de Suelos",
+  "respuesta_principal": "Lo siento, soy el Asistente Especializado en Suelos y Agricultura de TierSystem. Solo estoy autorizado para resolver dudas sobre manejo y mejora de suelos, interpretación de análisis edafológicos (NPK, pH, humedad, conductividad), botánica, jardinería y cultivos. Por favor, realiza una pregunta relacionada con el campo o tu suelo.",
+  "pasos_recomendados": [],
+  "consejo_suelo": ""
+}}
+"""
+                res = model.generate_content(prompt, request_options={"timeout": 8.0})
+                raw = res.text.replace("```json", "").replace("```", "").strip()
+                ini, fin = raw.find('{'), raw.rfind('}')
+                json_str = raw[ini:fin + 1] if (ini != -1 and fin != -1) else raw
+                asesoria = json.loads(json_str)
+
+                return JsonResponse({
+                    "estado": "ok",
+                    "asesoria": asesoria,
+                    "modo": "online"
+                })
+            except Exception as ex:
+                print(f"[GEMINI ERROR en api_asesor_agronomico]: {ex}")
+
+        # 3. Fallback determinista Offline con validación estricta de dominio agrícola
+        if not _es_consulta_agricola_valida(pregunta):
+            return JsonResponse({
+                "estado": "ok",
+                "asesoria": {
+                    "es_valido": False,
+                    "titulo": "Consulta Fuera del Ámbito Agrícola y de Suelos",
+                    "respuesta_principal": "Lo siento, soy el Asistente Especializado en Suelos y Agricultura de TierSystem. Solo estoy autorizado para responder dudas sobre mejoramiento de tierras, interpretación de análisis fisicoquímicos (pH, NPK, humedad, conductividad), botánica, jardinería y manejo de cultivos. Por favor, formula una pregunta sobre suelos o agricultura.",
+                    "pasos_recomendados": [],
+                    "consejo_suelo": ""
+                },
+                "modo": "offline"
+            })
+
+        asesoria_offline = _generar_asesoria_offline(pregunta, h, t, c, ph, n, p, k, nombre_terreno)
+        return JsonResponse({
+            "estado": "ok",
+            "asesoria": asesoria_offline,
+            "modo": "offline"
+        })
+
+    except Exception as e:
+        return JsonResponse({"estado": "error", "mensaje": str(e)}, status=500)

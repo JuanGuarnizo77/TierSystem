@@ -227,6 +227,63 @@
                     <!-- Dinámico -->
                 </div>
             </div>
+
+            <!-- Nuevo Módulo: Asesor Agronómico, Mejoramiento de Suelo y Dudas del Análisis -->
+            <div class="p-6 bg-gradient-to-br from-emerald-50/80 via-teal-50/50 to-amber-50/60 dark:from-gray-800 dark:via-gray-800 dark:to-gray-800 rounded-3xl border-2 border-emerald-200/90 dark:border-gray-700 shadow-xs space-y-4">
+                <div class="flex items-start justify-between flex-wrap gap-3">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-base shadow-sm shrink-0 mt-0.5">
+                            <i class="fa-solid fa-comments"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h4 class="text-base font-bold text-gray-900 dark:text-white font-heading">Asesor Agronómico y de Suelos (Dudas y Peticiones)</h4>
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                    <i class="fa-solid fa-leaf mr-1"></i>Solo Agro y Suelos
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5 leading-relaxed">
+                                Expresa tus dudas sobre <strong>cómo mejorar o recuperar tu suelo</strong>, <strong>cómo iniciar desde cero</strong> en jardinería, botánica o campo, o <strong>cómo funcionan los parámetros de este análisis</strong> (humedad, conductividad, pH, NPK).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cuadro amplio para redactar la petición o duda agrícola -->
+                <div class="space-y-2.5">
+                    <textarea id="inputAsesorSueloLab" rows="3"
+                              placeholder="Escribe aquí tu petición o duda agrícola... Ej: 'Quiero sembrar cacao o café pero no sé cómo iniciar ni cómo preparar esta tierra', '¿Cómo puedo mejorar mi suelo si tiene nutrientes bajos?', '¿Por qué la conductividad y la humedad influyen en el NPK?'"
+                              class="w-full bg-white dark:bg-gray-900 border border-emerald-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-2xl p-4 focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-y leading-relaxed shadow-2xs"></textarea>
+                    
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <!-- Botones de preguntas frecuentes para facilitar pruebas y uso -->
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <span class="text-[11px] text-gray-500 dark:text-gray-400 font-semibold mr-1"><i class="fa-solid fa-bolt text-amber-500 mr-1"></i>Dudas rápidas:</span>
+                            <button type="button" onclick="seleccionarPreguntaRapidaLab('¿Cómo puedo mejorar y recuperar la fertilidad de este suelo paso a paso?')" class="text-[11px] bg-white dark:bg-gray-900 border border-emerald-200 dark:border-gray-700 px-2.5 py-1 rounded-xl text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-gray-700 transition-colors font-medium">
+                                ¿Cómo mejorar este suelo?
+                            </button>
+                            <button type="button" onclick="seleccionarPreguntaRapidaLab('Quiero empezar a sembrar en jardín o campo pero no sé cómo iniciar desde cero con esta tierra, ¿qué debo hacer?')" class="text-[11px] bg-white dark:bg-gray-900 border border-emerald-200 dark:border-gray-700 px-2.5 py-1 rounded-xl text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-gray-700 transition-colors font-medium">
+                                ¿Cómo iniciar a sembrar desde cero?
+                            </button>
+                            <button type="button" onclick="seleccionarPreguntaRapidaLab('¿Por qué la humedad y la conductividad eléctrica influyen tanto en los resultados de NPK del análisis?')" class="text-[11px] bg-white dark:bg-gray-900 border border-emerald-200 dark:border-gray-700 px-2.5 py-1 rounded-xl text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-gray-700 transition-colors font-medium">
+                                ¿Cómo funciona la conductividad y NPK?
+                            </button>
+                            <button type="button" onclick="seleccionarPreguntaRapidaLab('¿Cómo puedo corregir el pH de este suelo y qué abonos orgánicos me recomiendas aplicar?')" class="text-[11px] bg-white dark:bg-gray-900 border border-emerald-200 dark:border-gray-700 px-2.5 py-1 rounded-xl text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-gray-700 transition-colors font-medium">
+                                ¿Cómo regular el pH y abonar?
+                            </button>
+                        </div>
+
+                        <button onclick="consultarAsesorSueloLab()" id="btnAsesorSueloLab" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3 px-6 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer">
+                            <i class="fa-solid fa-paper-plane"></i> Consultar al Asesor Agrícola
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Contenedor de Respuesta del Asesor Agronómico -->
+                <div id="resultadoAsesorSueloLab" class="hidden p-5 bg-white dark:bg-gray-900 rounded-2xl border border-emerald-200 dark:border-gray-700 space-y-3 shadow-xs">
+                    <!-- Dinámico -->
+                </div>
+            </div>
         </div>
         
         <div class="pt-4 border-t border-gray-100 dark:border-gray-800 flex justify-end">
@@ -744,6 +801,13 @@
         const resBox = document.getElementById('resultadoConsultaLab');
         resBox.classList.add('hidden');
         resBox.innerHTML = '';
+        const inputAsesor = document.getElementById('inputAsesorSueloLab');
+        if (inputAsesor) inputAsesor.value = '';
+        const resAsesor = document.getElementById('resultadoAsesorSueloLab');
+        if (resAsesor) {
+            resAsesor.classList.add('hidden');
+            resAsesor.innerHTML = '';
+        }
         actualizarBadgeModoLab();
 
         let data = null;
@@ -1024,6 +1088,220 @@
                 <div class="p-2.5 bg-green-50/70 dark:bg-green-950/20 border border-green-200 dark:border-green-900/40 rounded-xl">
                     <strong class="text-green-800 dark:text-green-300 block mb-0.5"><i class="fa-solid fa-screwdriver-wrench mr-1"></i> Manejo y Enmienda Sugerida:</strong>
                     <span class="text-green-700 dark:text-green-400 font-medium">${ev.recomendacion_suelo}</span>
+                </div>` : ''}
+            </div>
+        `;
+    }
+
+    // =========================================================================
+    // ASESOR AGRONÓMICO Y DE SUELOS (CON FILTRO ESTRICTO DE DOMINIO AGRÍCOLA)
+    // =========================================================================
+
+    function seleccionarPreguntaRapidaLab(pregunta) {
+        const input = document.getElementById('inputAsesorSueloLab');
+        if (input) {
+            input.value = pregunta;
+            input.focus();
+        }
+    }
+
+    async function consultarAsesorSueloLab() {
+        const input = document.getElementById('inputAsesorSueloLab');
+        const pregunta = (input ? input.value : '').trim();
+        const resBox = document.getElementById('resultadoAsesorSueloLab');
+        const btn = document.getElementById('btnAsesorSueloLab');
+
+        if (!pregunta) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Escribe tu consulta',
+                    text: 'Por favor escribe una pregunta sobre cómo mejorar tu suelo, cómo iniciar a sembrar o dudas sobre el análisis.',
+                    confirmButtonColor: '#059669'
+                });
+            } else {
+                alert('Por favor escribe tu consulta agrícola o sobre el suelo.');
+            }
+            return;
+        }
+
+        if (!analisisReporteActivo) {
+            alert('No hay una muestra activa seleccionada.');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analizando consulta...';
+        resBox.classList.remove('hidden');
+        resBox.innerHTML = `
+            <div class="text-center py-4 text-xs text-gray-500">
+                <i class="fa-solid fa-seedling fa-bounce text-emerald-600 text-xl mb-2"></i>
+                <p>El Asesor Agronómico está evaluando tu consulta con los parámetros del suelo...</p>
+            </div>
+        `;
+
+        try {
+            const resp = await fetch('/api/ia/asesor-suelo/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    solicitud_id: analisisReporteActivo.solicitud,
+                    pregunta: pregunta,
+                    datos_muestra: {
+                        terreno: analisisReporteActivo.terreno,
+                        humedad: analisisReporteActivo.humedad,
+                        temperatura: analisisReporteActivo.temperatura,
+                        conductividad: analisisReporteActivo.conductividad,
+                        ph: analisisReporteActivo.ph,
+                        n: analisisReporteActivo.n,
+                        p: analisisReporteActivo.p,
+                        k: analisisReporteActivo.k
+                    }
+                })
+            });
+            const data = await resp.json();
+            if (data.estado === 'ok' && data.asesoria) {
+                renderizarResultadoAsesorSuelo(data.asesoria, data.modo || 'online');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Consultar al Asesor Agrícola';
+                return;
+            }
+        } catch (err) {
+            console.warn('Servidor o red no disponible, ejecutando asesor local offline...', err);
+        }
+
+        // Fallback 100% en navegador si no hay conexión al servidor
+        const asesoriaLocal = generarAsesoriaLocalOffline(pregunta, analisisReporteActivo);
+        renderizarResultadoAsesorSuelo(asesoriaLocal, 'offline');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Consultar al Asesor Agrícola';
+    }
+
+    function generarAsesoriaLocalOffline(pregunta, a) {
+        const q = normTexto(pregunta);
+        const palabrasFuera = ['futbol', 'partido', 'mundial', 'messi', 'pelicula', 'netflix', 'videojuego', 'fortnite', 'minecraft', 'programar', 'javascript', 'python', 'bitcoin', 'casino', 'horoscopo', 'chiste', 'politica', 'presidente', 'pizza', 'hamburguesa'];
+        const palabrasAgro = ['suelo', 'tierra', 'terreno', 'lote', 'finca', 'maceta', 'jardin', 'huerta', 'campo', 'sembrar', 'plantar', 'cultivar', 'cultivo', 'planta', 'arbol', 'brote', 'semilla', 'raiz', 'hoja', 'botanica', 'agronomia', 'agricola', 'agricultura', 'abono', 'abonar', 'fertilizante', 'enmienda', 'compost', 'humus', 'cal', 'dolomita', 'urea', 'npk', 'nitrogeno', 'fosforo', 'potasio', 'nutriente', 'ph', 'acidez', 'acido', 'alcalino', 'conductividad', 'humedad', 'agua', 'riego', 'regar', 'drenaje', 'seco', 'temperatura', 'clima', 'sonda', 'sensor', 'lectura', 'analisis', 'muestra', 'plaga', 'hongo', 'sustrato', 'cafe', 'cacao', 'maiz', 'arroz', 'platano', 'aguacate', 'tomate', 'frijol', 'yuca', 'papa', 'iniciar', 'mejorar', 'recuperar', 'preparar', 'corregir'];
+
+        const tieneFuera = palabrasFuera.some(w => q.includes(w));
+        const tieneAgro = palabrasAgro.some(w => q.includes(w));
+
+        if ((tieneFuera && !tieneAgro) || !tieneAgro) {
+            return {
+                es_valido: false,
+                titulo: "Consulta Fuera del Ámbito Agrícola y de Suelos",
+                respuesta_principal: "Lo siento, soy el Asistente Especializado en Suelos y Agricultura de TierSystem. Solo estoy autorizado para resolver dudas sobre mejoramiento de tierras, interpretación de análisis fisicoquímicos (NPK, pH, humedad, conductividad), botánica, jardinería y manejo de cultivos. Por favor, formula una pregunta relacionada con suelos o agricultura.",
+                pasos_recomendados: [],
+                consejo_suelo: ""
+            };
+        }
+
+        const diag = [];
+        if (a.ph > 0) {
+            diag.push(a.ph < 5.5 ? `pH ácido (${a.ph}): requiere cal agrícola o dolomita` : (a.ph > 7.3 ? `pH alcalino (${a.ph}): incorporar materia orgánica compostada` : `pH equilibrado (${a.ph})`));
+        }
+        diag.push((a.n < 50 || a.p < 20 || a.k < 80) ? `NPK bajo (${a.n}-${a.p}-${a.k} mg/kg): reforzar con abono orgánico y NPK` : `NPK activo (${a.n}-${a.p}-${a.k} mg/kg)`);
+        if (a.humedad > 0) {
+            diag.push(a.humedad < 35 ? `Humedad baja (${a.humedad}%): regar a capacidad de campo (50%-60%)` : (a.humedad > 80 ? `Humedad alta (${a.humedad}%): mejorar drenaje` : `Humedad adecuada (${a.humedad}%)`));
+        }
+
+        if (q.includes('conductividad') || q.includes('sensor') || q.includes('sonda') || q.includes('bajo') || q.includes('funciona') || q.includes('analisis')) {
+            return {
+                es_valido: true,
+                titulo: "Explicación del Análisis Edafológico y Conductividad",
+                respuesta_principal: "Los nutrientes Nitrógeno, Fósforo y Potasio (NPK) son sales minerales que necesitan estar disueltas en el agua del suelo (solución edáfica) para conducir corriente iónica. Si la tierra está seca o con poca humedad, los iones no se movilizan, haciendo que la conductividad eléctrica y el NPK marquen valores bajos.",
+                pasos_recomendados: [
+                    "Humedece la tierra hasta un 50% - 60% (capacidad de campo: tierra húmeda al tacto pero sin escurrir agua).",
+                    "Espera de 5 a 10 minutos para que el agua disuelva los minerales antes de insertar la sonda.",
+                    "Presiona suavemente la tierra alrededor de las puntas metálicas para asegurar buen contacto eléctrico.",
+                    "Asegura una alimentación estable de 12V DC en la sonda para una medición óptima."
+                ],
+                consejo_suelo: diag.join(" | ")
+            };
+        } else if (q.includes('iniciar') || q.includes('empezar') || q.includes('jardin') || q.includes('huerta') || q.includes('botanica') || q.includes('cero')) {
+            return {
+                es_valido: true,
+                titulo: "Guía Práctica para Iniciar tu Siembra desde Cero",
+                respuesta_principal: `Para comenzar un proyecto botánico, jardín o cultivo en '${a.terreno}', lo más importante es acondicionar la estructura física y biológica de la tierra antes de sembrar la planta o semilla.`,
+                pasos_recomendados: [
+                    "Afloja y airea la tierra a 20-30 cm de profundidad retirando piedras y terrones compactos.",
+                    "Mezcla un 30% de humus de lombriz o compost maduro con tu tierra para activar microorganismos benéficos.",
+                    a.ph < 5.5 ? `Corrige la acidez (pH ${a.ph}) aplicando cal dolomita 15 días antes de sembrar.` : `Mantén el pH actual (${a.ph}) que ya es favorable para el enraizamiento.`,
+                    "Riega uniformemente hasta humedecer el sustrato sin encharcar y protege la plántula del sol intenso los primeros días."
+                ],
+                consejo_suelo: diag.join(" | ")
+            };
+        }
+
+        return {
+            es_valido: true,
+            titulo: "Plan de Mejoramiento y Recuperación de Suelo",
+            respuesta_principal: `Para mejorar la calidad del suelo en '${a.terreno}', debemos equilibrar su acidez, mejorar la retención de humedad y enriquecer la reserva de macronutrientes N-P-K.`,
+            pasos_recomendados: [
+                "Incorpora materia orgánica compostada o humus de lombriz (2 a 4 kg/m²) para mejorar la estructura del suelo.",
+                a.ph < 5.5 ? `Aplica enmienda calcárea (cal agrícola o dolomita) para subir el pH de ${a.ph} hacia 5.8 - 6.5.` : "Conserva el balance de pH mediante coberturas vegetales secas (mulching).",
+                "Suple los macronutrientes deficitarios aplicando fósforo para raíces (DAP/roca fosfórica) y potasio/nitrógeno según el cultivo.",
+                "Mantén la humedad entre 50% y 65% evitando tanto la sequía extrema como el encharcamiento."
+            ],
+            consejo_suelo: diag.join(" | ")
+        };
+    }
+
+    function renderizarResultadoAsesorSuelo(asesoria, modo) {
+        const resBox = document.getElementById('resultadoAsesorSueloLab');
+        if (!resBox) return;
+
+        if (asesoria.es_valido === false) {
+            resBox.innerHTML = `
+                <div class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 flex items-start gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-base shrink-0">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <h5 class="font-bold text-sm text-amber-900 dark:text-amber-200">${asesoria.titulo || 'Consulta Fuera del Ámbito Agrícola'}</h5>
+                        <p class="text-xs text-amber-800 dark:text-amber-300 mt-1 leading-relaxed">${asesoria.respuesta_principal}</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        const origenBadge = modo === 'online'
+            ? '<span class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/40 px-2.5 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800"><i class="fa-solid fa-brain mr-1"></i> Asesor IA Gemini (Online)</span>'
+            : '<span class="text-[11px] font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/40 px-2.5 py-0.5 rounded-md border border-amber-200 dark:border-amber-800"><i class="fa-solid fa-book-atlas mr-1"></i> Motor Experto Agrícola (Offline)</span>';
+
+        let pasosHtml = '';
+        if (Array.isArray(asesoria.pasos_recomendados) && asesoria.pasos_recomendados.length > 0) {
+            pasosHtml = `
+                <div class="space-y-1.5 pt-1">
+                    <strong class="text-xs text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
+                        <i class="fa-solid fa-list-ol text-emerald-600"></i> Pasos Prácticos Recomendados:
+                    </strong>
+                    <ul class="space-y-1.5">
+                        ${asesoria.pasos_recomendados.map((paso, idx) => `
+                            <li class="text-xs text-gray-700 dark:text-gray-300 flex items-start gap-2 bg-gray-50 dark:bg-gray-800/70 p-2.5 rounded-xl border border-gray-100 dark:border-gray-700/70">
+                                <span class="w-5 h-5 rounded-full bg-emerald-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">${idx + 1}</span>
+                                <span class="leading-relaxed">${paso}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        resBox.innerHTML = `
+            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5 flex-wrap gap-2">
+                <h5 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-seedling text-emerald-600"></i> ${asesoria.titulo || 'Recomendación del Asesor Agronómico'}
+                </h5>
+                ${origenBadge}
+            </div>
+            <div class="text-xs text-gray-700 dark:text-gray-300 space-y-3 leading-relaxed">
+                <p>${asesoria.respuesta_principal}</p>
+                ${pasosHtml}
+                ${asesoria.consejo_suelo ? `
+                <div class="p-3 bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-xl">
+                    <strong class="text-emerald-900 dark:text-emerald-300 block mb-0.5"><i class="fa-solid fa-microscope mr-1"></i> Diagnóstico Aplicado a tu Muestra Actual:</strong>
+                    <span class="text-emerald-800 dark:text-emerald-400 font-medium">${asesoria.consejo_suelo}</span>
                 </div>` : ''}
             </div>
         `;
