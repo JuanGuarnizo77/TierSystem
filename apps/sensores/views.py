@@ -13,6 +13,7 @@ Gestiona la comunicación con el hardware de campo (ESP32 + RS485 + Sensor NPK):
 
 import json
 import statistics
+from collections import Counter
 from datetime import timedelta
 from django.utils import timezone
 from django.http import JsonResponse
@@ -95,9 +96,9 @@ def captura_estable(request):
     Solución algorítmica:
       1. Extrae todas las lecturas registradas en una ventana móvil de los últimos 15 segundos.
       2. Si el búfer está vacío, notifica que el sensor está apagado o fuera de cobertura.
-      3. Para cada variable física/química calcula la MODA estadística (`statistics.mode`).
+      3. Para cada variable física/química usa la MODA: el valor que más se repite.
          En señales Modbus digitales, la moda aísla el valor real repetitivo frente a picos atípicos.
-      4. Si no existe moda única debido a dispersión continua, conmuta a la MEDIANA (`statistics.median`).
+      4. Si no hay moda clara (ningún valor se repite, o hay empate), usa la MEDIANA.
     """
     # Ventana móvil de tiempo de 15 segundos para asegurar estabilización
     tiempo_limite = timezone.now() - timedelta(seconds=15)
@@ -106,7 +107,7 @@ def captura_estable(request):
     if not lecturas.exists():
         return JsonResponse({
             "estado": "error",
-            "mensaje": "No se recibieron datos del sensor en los últimos 10 segundos. Asegúrate de que el ESP32 esté encendido y conectado."
+            "mensaje": "No se recibieron datos del sensor en los últimos 15 segundos. Asegúrate de que el ESP32 esté encendido y conectado."
         })
 
     # Extracción de series temporales independientes por parámetro
@@ -119,11 +120,12 @@ def captura_estable(request):
     k_list = [l.potasio for l in lecturas]
 
     def obtener_moda(datos):
-        """Calcula la moda estadística con degradación elegante a la mediana."""
-        try:
-            return statistics.mode(datos)
-        except statistics.StatisticsError:
-            return statistics.median(datos)
+        """Devuelve la moda si es clara; si no, la mediana."""
+        conteo = Counter(datos).most_common()
+        # Moda clara: el valor más repetido, repetido más de una vez y sin empate.
+        if conteo[0][1] > 1 and (len(conteo) == 1 or conteo[0][1] > conteo[1][1]):
+            return conteo[0][0]
+        return statistics.median(datos)
 
     # Estructura de datos limpia y filtrada
     datos_estables = {
