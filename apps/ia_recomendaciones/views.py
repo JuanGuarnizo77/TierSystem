@@ -547,13 +547,15 @@ Reglas estrictas de respuesta:
     }}
   ],
   "consejo_general": "Consejo agronómico general del lote y plan correctivo.",
-  "es_critico": true
+  "es_critico": false
 }}
 """
             response = model.generate_content(prompt, request_options={"timeout": 6.0})
             text = response.text.replace("```json", "").replace("```", "").strip()
             resultado_json = json.loads(text.strip())
             resultado_json["modo"] = "ia"
+            # Rigor agronómico: es_critico solo es True si los macronutrientes NPK están agotados en niveles críticos (<= 5 mg/kg)
+            resultado_json["es_critico"] = bool(n <= 5 and p <= 5 and k <= 5)
 
             # Reemplazo de porcentajes alucinados por cálculos edafológicos reales
             catalogo = list(Cultivo.objects.filter(activo=True))

@@ -261,6 +261,20 @@
     })();
 
     let activeSolicitudId = null;
+    let activeReporteData = null;
+
+    const catalogoCultivosOfflineAgri = [
+        { nombre: "Café Castillo", descripcion: "Variedad de alta productividad y resistencia a roya en Colombia.", rangos: { humedad: [50, 75], temperatura: [18, 25], ph: [5.2, 6.2], nitrogeno: [120, 240], fosforo: [35, 65], potasio: [150, 300], conductividad: [0.8, 2.0] } },
+        { nombre: "Aguacate Hass", descripcion: "Frutal de exportación, sensible al exceso de humedad radicular.", rangos: { humedad: [45, 65], temperatura: [17, 24], ph: [5.5, 6.8], nitrogeno: [100, 200], fosforo: [30, 60], potasio: [140, 280], conductividad: [0.6, 1.8] } },
+        { nombre: "Cacao CCN-51", descripcion: "Cultivo perenne agroforestal con buen requerimiento de potasio.", rangos: { humedad: [55, 80], temperatura: [22, 30], ph: [5.5, 7.0], nitrogeno: [110, 220], fosforo: [40, 80], potasio: [160, 320], conductividad: [0.8, 2.2] } },
+        { nombre: "Plátano Hartón", descripcion: "Gramínea de alta demanda nutricional de potasio y nitrógeno.", rangos: { humedad: [60, 85], temperatura: [20, 30], ph: [5.5, 6.8], nitrogeno: [140, 280], fosforo: [35, 70], potasio: [180, 350], conductividad: [0.9, 2.4] } },
+        { nombre: "Maíz Amarillo", descripcion: "Cereal de rotación rápida con alta respuesta al nitrógeno.", rangos: { humedad: [45, 75], temperatura: [18, 30], ph: [5.6, 7.2], nitrogeno: [140, 300], fosforo: [40, 85], potasio: [120, 250], conductividad: [0.8, 2.5] } },
+        { nombre: "Frijol Cargamanto", descripcion: "Leguminosa fijadora de nitrógeno que enriquece el suelo.", rangos: { humedad: [45, 70], temperatura: [16, 26], ph: [5.8, 7.0], nitrogeno: [60, 150], fosforo: [45, 95], potasio: [90, 200], conductividad: [0.6, 1.6] } },
+        { nombre: "Tomate Chonto", descripcion: "Hortaliza de fruto que requiere buen balance de calcio, fósforo y potasio.", rangos: { humedad: [50, 70], temperatura: [18, 28], ph: [5.8, 6.8], nitrogeno: [130, 260], fosforo: [50, 100], potasio: [160, 310], conductividad: [1.0, 2.5] } },
+        { nombre: "Cítricos", descripcion: "Frutales perennes que requieren suelos bien drenados y pH ligeramente ácido.", rangos: { humedad: [45, 70], temperatura: [19, 29], ph: [5.5, 6.5], nitrogeno: [110, 210], fosforo: [30, 60], potasio: [130, 260], conductividad: [0.7, 2.0] } },
+        { nombre: "Yuca", descripcion: "Cultivo adaptado a clima Cálido en el departamento del Huila. Rango altitudinal recomendado: 0-1200 msnm.", rangos: { humedad: [50.0, 70.0], temperatura: [15.0, 28.0], ph: [5.5, 7.5], nitrogeno: [100.0, 200.0], fosforo: [30.0, 70.0], potasio: [180.0, 350.0], conductividad: [0.8, 2.2] } },
+        { nombre: "Papa", descripcion: "Tubérculo de clima frío, cultivado en zonas altas del Huila.", rangos: { humedad: [65.0, 85.0], temperatura: [8.0, 18.0], ph: [4.8, 6.5], nitrogeno: [150.0, 300.0], fosforo: [50.0, 100.0], potasio: [180.0, 350.0], conductividad: [0.8, 2.5] } }
+    ];
 
     function seleccionarChip(cultivo) {
         document.getElementById('inputCultivoIA').value = cultivo;
@@ -269,11 +283,13 @@
     function cerrarReporte() {
         document.getElementById('modalReporte').classList.add('hidden');
         activeSolicitudId = null;
+        activeReporteData = null;
     }
 
     function verReporteCompleto(source) {
         const data = (source instanceof HTMLElement) ? source.dataset : source;
         activeSolicitudId = data.solicitudId;
+        activeReporteData = data;
         const modal = document.getElementById('modalReporte');
         
         document.getElementById('modalTerrenoNombre').innerText = `Resultados: ${data.terreno}`;
@@ -364,49 +380,134 @@
             </div>
         `;
 
-        try {
-            const resp = await fetch('/api/ia/consultar-agricultor/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    solicitud_id: activeSolicitudId,
-                    cultivo: cultivo
-                })
-            });
-            const data = await resp.json();
+        function normTextoAgri(str) {
+            return (str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+        }
 
-            if (data.estado === 'ok' && data.evaluacion) {
-                const ev = data.evaluacion;
-                const bgBadge = ev.compatibilidad == null ? 'bg-gray-400' : ev.compatibilidad >= 70 ? 'bg-green-500' : (ev.compatibilidad >= 40 ? 'bg-amber-500' : 'bg-red-500');
-                
-                resBox.innerHTML = `
-                    <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2">
-                        <h5 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
-                            <i class="fa-solid fa-seedling text-green-500"></i> ${ev.cultivo}
-                        </h5>
-                        <span class="${bgBadge} text-white font-bold px-2.5 py-0.5 rounded-full text-xs">
-                            ${ev.compatibilidad == null ? "Sin rangos en catálogo" : ev.compatibilidad + "% de Compatibilidad"}
-                        </span>
-                    </div>
-                    <div class="text-xs text-gray-600 dark:text-gray-300 space-y-2">
-                        <p><strong class="text-gray-800 dark:text-gray-200">Diagnóstico:</strong> ${ev.descripcion}</p>
-                        ${ev.recomendacion_suelo ? `
-                        <div class="p-2.5 bg-green-50/70 dark:bg-green-950/20 border border-green-200 dark:border-green-900/40 rounded-xl">
-                            <strong class="text-green-800 dark:text-green-300 block mb-0.5"><i class="fa-solid fa-screwdriver-wrench mr-1"></i> Manejo Recomendado:</strong>
-                            <span class="text-green-700 dark:text-green-400 font-medium">${ev.recomendacion_suelo}</span>
-                        </div>` : ''}
-                    </div>
-                `;
-            } else {
-                resBox.innerHTML = `<p class="text-xs text-red-500 font-bold">${data.mensaje || 'No se pudo obtener recomendación.'}</p>`;
+        function evaluarOfflineAgri(cultivoBuscado) {
+            if (!activeReporteData) return null;
+            const a = {
+                ph: parseFloat(activeReporteData.ph) || 0,
+                n: parseFloat(activeReporteData.n) || 0,
+                p: parseFloat(activeReporteData.p) || 0,
+                k: parseFloat(activeReporteData.k) || 0,
+                humedad: parseFloat(activeReporteData.humedad) || 0,
+                temperatura: parseFloat(activeReporteData.temperatura) || 0,
+                conductividad: parseFloat(activeReporteData.conductividad) || 0,
+                terreno: activeReporteData.terreno || 'Terreno'
+            };
+
+            let lista = catalogoCultivosOfflineAgri;
+            try {
+                const cached = localStorage.getItem('tier_cultivos_catalogo');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (parsed.length > 0) lista = parsed;
+                }
+            } catch(e) {}
+
+            const q = normTextoAgri(cultivoBuscado);
+            const match = lista.find(c => normTextoAgri(c.nombre) === q)
+                       || lista.find(c => normTextoAgri(c.nombre).includes(q) || q.includes(normTextoAgri(c.nombre)));
+
+            if (!match || !match.rangos) return null;
+            const r = match.rangos;
+            const params = [
+                { nombre: 'pH', valor: a.ph, lo: r.ph[0], hi: r.ph[1], w: 0.25, unidad: '' },
+                { nombre: 'Nitrógeno', valor: a.n, lo: r.nitrogeno[0], hi: r.nitrogeno[1], w: 0.15, unidad: ' mg/kg' },
+                { nombre: 'Fósforo', valor: a.p, lo: r.fosforo[0], hi: r.fosforo[1], w: 0.15, unidad: ' mg/kg' },
+                { nombre: 'Potasio', valor: a.k, lo: r.potasio[0], hi: r.potasio[1], w: 0.15, unidad: ' mg/kg' },
+                { nombre: 'Humedad', valor: a.humedad, lo: r.humedad[0], hi: r.humedad[1], w: 0.10, unidad: '%' },
+                { nombre: 'Temperatura', valor: a.temperatura, lo: r.temperatura[0], hi: r.temperatura[1], w: 0.10, unidad: ' °C' },
+                { nombre: 'Conductividad', valor: a.conductividad, lo: r.conductividad[0], hi: r.conductividad[1], w: 0.10, unidad: ' µS/cm' }
+            ];
+
+            let total = 0.0, peso = 0.0, limitantes = [];
+            params.forEach(p => {
+                const v = parseFloat(p.valor || 0);
+                if (v <= 0) return;
+                const lo = parseFloat(p.lo), hi = parseFloat(p.hi);
+                const ancho = Math.max(hi - lo, 0.1 * Math.max(Math.abs(hi), 1.0));
+                const dist = v < lo ? (lo - v) : (v > hi ? (v - hi) : 0.0);
+                const score = Math.max(0.0, 100.0 - (100.0 * dist / ancho));
+                total += score * p.w;
+                peso += p.w;
+                if (dist > 0) limitantes.push({ nombre: p.nombre, valor: v, lo, hi, unidad: p.unidad, estado: v < lo ? 'por debajo' : 'por encima' });
+            });
+
+            if (peso === 0) return null;
+            const compat = Math.round(total / peso);
+            const nivelComp = compat >= 75 ? 'alta' : (compat >= 40 ? 'moderada' : 'baja');
+            const descLimitantes = limitantes.map(l => `${l.nombre.toLowerCase()} ${l.estado} (${l.valor}${l.unidad})`).join(', ');
+
+            const enmiendas = [];
+            limitantes.forEach(l => {
+                if (l.nombre === 'pH' && l.estado === 'por debajo') enmiendas.push(`aplicar cal agrícola o dolomita para elevar el pH hacia el rango ideal de ${l.lo} a ${l.hi}`);
+                else if (l.nombre === 'Potasio' && l.estado === 'por debajo') enmiendas.push(`incorporar fertilizantes ricos en potasio (como cloruro de potasio)`);
+                else if (l.nombre === 'Humedad' && l.estado === 'por debajo') enmiendas.push(`implementar riego tecnificado para optimizar la humedad del suelo (${l.lo}-${l.hi}%)`);
+                else if (l.nombre === 'Conductividad' && l.estado === 'por encima') enmiendas.push(`realizar lavado de sales y drenajes para reducir la conductividad eléctrica`);
+            });
+
+            return {
+                cultivo: match.nombre,
+                compatibilidad: compat,
+                descripcion: `El lote presenta una ${nivelComp} compatibilidad (${compat}%) para el cultivo de ${match.nombre}. ${descLimitantes ? 'Limitaciones detectadas: ' + descLimitantes + '.' : 'Condiciones del suelo idóneas.'} ${match.descripcion || ''}`,
+                recomendacion_suelo: enmiendas.length > 0 ? `Recomendación técnica: ${enmiendas.join(', y ')}.` : 'Mantener el plan de nutrición estándar.'
+            };
+        }
+
+        try {
+            if (navigator.onLine) {
+                const resp = await fetch('/api/ia/consultar-agricultor/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        solicitud_id: activeSolicitudId,
+                        cultivo: cultivo
+                    })
+                });
+                const data = await resp.json();
+
+                if (data.estado === 'ok' && data.evaluacion) {
+                    renderizarResultadoAgri(data.evaluacion);
+                    return;
+                }
             }
+            throw new Error("Fallback offline");
         } catch (err) {
-            console.error(err);
-            resBox.innerHTML = '<p class="text-xs text-red-500 font-bold">Error al conectar con el servicio de recomendaciones.</p>';
+            const evOffline = evaluarOfflineAgri(cultivo);
+            if (evOffline) {
+                renderizarResultadoAgri(evOffline);
+            } else {
+                resBox.innerHTML = '<p class="text-xs text-amber-600 font-bold p-2 bg-amber-50 rounded-xl">Sin conexión al servidor. Cultivo no encontrado en la base de datos local para cálculo offline.</p>';
+            }
         } finally {
             btn.disabled = false;
             btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Consultar IA';
         }
+    }
+
+    function renderizarResultadoAgri(ev) {
+        const resBox = document.getElementById('resultadoConsultaIA');
+        const bgBadge = ev.compatibilidad == null ? 'bg-gray-400' : ev.compatibilidad >= 70 ? 'bg-green-500' : (ev.compatibilidad >= 40 ? 'bg-amber-500' : 'bg-red-500');
+        resBox.innerHTML = `
+            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2">
+                <h5 class="font-bold text-sm text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-seedling text-green-500"></i> ${ev.cultivo}
+                </h5>
+                <span class="${bgBadge} text-white font-bold px-2.5 py-0.5 rounded-full text-xs">
+                    ${ev.compatibilidad == null ? "Sin rangos en catálogo" : ev.compatibilidad + "% de Compatibilidad"}
+                </span>
+            </div>
+            <div class="text-xs text-gray-600 dark:text-gray-300 space-y-2">
+                <p><strong class="text-gray-800 dark:text-gray-200">Diagnóstico:</strong> ${ev.descripcion}</p>
+                ${ev.recomendacion_suelo ? `
+                <div class="p-2.5 bg-green-50/70 dark:bg-green-950/20 border border-green-200 dark:border-green-900/40 rounded-xl">
+                    <strong class="text-green-800 dark:text-green-300 block mb-0.5"><i class="fa-solid fa-screwdriver-wrench mr-1"></i> Manejo Recomendado:</strong>
+                    <span class="text-green-700 dark:text-green-400 font-medium">${ev.recomendacion_suelo}</span>
+                </div>` : ''}
+            </div>
+        `;
     }
 </script>
 {% endblock %}

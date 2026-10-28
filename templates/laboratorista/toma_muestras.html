@@ -1138,13 +1138,14 @@
         const sub = document.getElementById('diagnosticoSub');
         const title = document.getElementById('diagnosticoTitle');
         
-        const esCritico = diagnostico.es_critico || (diagnostico.recomendaciones && diagnostico.recomendaciones.every(r => r.compatibilidad < 25));
+        const esCritico = Boolean(diagnostico.es_critico);
 
         if (esCritico) {
             icon.className = "w-16 h-16 bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm";
             icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
             if (title) title.innerText = "Diagnóstico: Suelo No Apto";
-            sub.innerHTML = '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 border border-red-200 dark:border-red-800"><i class="fa-solid fa-circle-exclamation"></i> Condición Inviable en Estado Actual (Motor Huila)</span>';
+            const motorNombre = (modo === 'ia') ? 'Inteligencia Artificial Gemini' : 'Motor Huila';
+            sub.innerHTML = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 border border-red-200 dark:border-red-800"><i class="fa-solid fa-circle-exclamation"></i> Condición Inviable en Estado Actual (${motorNombre})</span>`;
         } else if (modo === 'ia') {
             icon.className = "w-16 h-16 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm";
             icon.innerHTML = '<i class="fa-solid fa-brain"></i>';

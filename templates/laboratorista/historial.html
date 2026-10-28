@@ -61,11 +61,13 @@
                         data-search="{{ a.solicitud.terreno.nombre|lower }} {{ a.solicitud.cultivo_deseado|lower }} {{ a.solicitud.agricultor.get_full_name|lower|default:a.solicitud.agricultor.username|lower }}">
                         <td class="p-4 text-center">
                             <input type="checkbox" 
-                                   class="analisis-checkbox w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
+                                   class="analisis-checkbox w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary dark:bg-gray-700 dark:border-gray-600 cursor-pointer transition-all"
                                    data-id="{{ a.id }}"
                                    data-solicitud="{{ a.solicitud.id }}"
+                                   data-terreno-id="{{ a.solicitud.terreno.id }}"
                                    data-terreno="{{ a.solicitud.terreno.nombre }}"
                                    data-tipo-suelo="{{ a.solicitud.terreno.tipo_suelo|default:'Franco' }}"
+                                   data-agricultor-id="{{ a.solicitud.agricultor.id }}"
                                    data-agricultor="{{ a.solicitud.agricultor.get_full_name|default:a.solicitud.agricultor.username }}"
                                    data-cultivo="{{ a.solicitud.cultivo_deseado }}"
                                    data-modalidad="{{ a.solicitud.get_modalidad_display }}"
@@ -364,11 +366,15 @@
 
     function actualizarSeleccionComparar(checkbox) {
         const id = checkbox.getAttribute('data-id');
+        const terrenoId = checkbox.getAttribute('data-terreno-id') || checkbox.getAttribute('data-terreno');
+        const agricultorId = checkbox.getAttribute('data-agricultor-id') || checkbox.getAttribute('data-agricultor');
         const data = {
             id: id,
             solicitud: checkbox.getAttribute('data-solicitud'),
+            terrenoId: terrenoId,
             terreno: checkbox.getAttribute('data-terreno'),
             tipoSuelo: checkbox.getAttribute('data-tipo-suelo'),
+            agricultorId: agricultorId,
             agricultor: checkbox.getAttribute('data-agricultor'),
             cultivo: checkbox.getAttribute('data-cultivo'),
             modalidad: checkbox.getAttribute('data-modalidad'),
@@ -386,36 +392,151 @@
         if (checkbox.checked) {
             if (seleccionados.length >= 2) {
                 checkbox.checked = false;
-                alert('Solo puedes seleccionar 2 análisis para comparar simultáneamente.');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Límite alcanzado',
+                        text: 'Solo puedes seleccionar 2 análisis para comparar simultáneamente.',
+                        confirmButtonColor: '#10b981'
+                    });
+                } else {
+                    alert('Solo puedes seleccionar 2 análisis para comparar simultáneamente.');
+                }
                 return;
             }
+
+            // REGLA ESTRICTA: La comparativa solo es agronómicamente válida entre el mismo agricultor y mismo terreno
+            if (seleccionados.length === 1) {
+                const primero = seleccionados[0];
+                if (primero.terrenoId !== data.terrenoId || primero.agricultorId !== data.agricultorId) {
+                    checkbox.checked = false;
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Comparación no permitida',
+                            html: `
+                                <p class="text-xs text-gray-600 dark:text-gray-300 mb-3">
+                                    Para una comparativa agronómica coherente, ambos análisis deben pertenecer al <b>mismo agricultor</b> y al <b>mismo terreno</b>.
+                                </p>
+                                <div class="text-xs bg-gray-50 dark:bg-gray-800 p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-left space-y-1.5">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0"></span>
+                                        <span><b>Muestra seleccionada:</b> ${primero.terreno} (Agricultor: ${primero.agricultor})</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+                                        <span><b>Intento de selección:</b> ${data.terreno} (Agricultor: ${data.agricultor})</span>
+                                    </div>
+                                </div>
+                            `,
+                            confirmButtonColor: '#10b981',
+                            confirmButtonText: 'Entendido'
+                        });
+                    } else {
+                        alert(`Solo se pueden comparar análisis del mismo agricultor (${primero.agricultor}) y del mismo terreno (${primero.terreno}).`);
+                    }
+                    return;
+                }
+            }
+
             seleccionados.push(data);
         } else {
             seleccionados = seleccionados.filter(item => item.id !== id);
         }
 
+        actualizarEstadoCheckboxes();
+    }
+
+    function actualizarEstadoCheckboxes() {
         const count = seleccionados.length;
         const contadorElem = document.getElementById('contadorSeleccion');
         const btnComparar = document.getElementById('btnComparar');
+        const todos = document.querySelectorAll('.analisis-checkbox');
 
-        contadorElem.innerText = `${count} de 2 seleccionados`;
-
-        if (count === 2) {
-            btnComparar.disabled = false;
-            btnComparar.classList.remove('opacity-40');
-        } else {
+        if (count === 0) {
+            contadorElem.innerText = `0 de 2 seleccionados`;
             btnComparar.disabled = true;
             btnComparar.classList.add('opacity-40');
+
+            todos.forEach(cb => {
+                cb.disabled = false;
+                cb.classList.remove('opacity-30', 'cursor-not-allowed');
+                cb.title = "Seleccionar para comparar";
+                const row = document.getElementById('row-analisis-' + cb.getAttribute('data-id'));
+                if (row) {
+                    row.classList.remove('opacity-40', 'bg-blue-50/40', 'dark:bg-blue-950/20');
+                }
+            });
+        } else if (count === 1) {
+            const primero = seleccionados[0];
+            btnComparar.disabled = true;
+            btnComparar.classList.add('opacity-40');
+
+            let disponibles = 0;
+            todos.forEach(cb => {
+                const tId = cb.getAttribute('data-terreno-id') || cb.getAttribute('data-terreno');
+                const aId = cb.getAttribute('data-agricultor-id') || cb.getAttribute('data-agricultor');
+                const id = cb.getAttribute('data-id');
+                const row = document.getElementById('row-analisis-' + id);
+
+                if (tId === primero.terrenoId && aId === primero.agricultorId) {
+                    cb.disabled = false;
+                    cb.classList.remove('opacity-30', 'cursor-not-allowed');
+                    cb.title = cb.checked ? "Muestra seleccionada" : "Seleccionar para comparar este terreno";
+                    if (row) {
+                        row.classList.remove('opacity-40');
+                        row.classList.add('bg-blue-50/40', 'dark:bg-blue-950/20');
+                    }
+                    if (!cb.checked) disponibles++;
+                } else {
+                    cb.disabled = true;
+                    cb.classList.add('opacity-30', 'cursor-not-allowed');
+                    cb.title = `Bloqueado: Solo se puede comparar con análisis de "${primero.terreno}" (${primero.agricultor})`;
+                    if (row) {
+                        row.classList.add('opacity-40');
+                        row.classList.remove('bg-blue-50/40', 'dark:bg-blue-950/20');
+                    }
+                }
+            });
+
+            if (disponibles > 0) {
+                contadorElem.innerHTML = `<span class="text-blue-600 dark:text-blue-400 font-bold">1 de 2:</span> ${primero.terreno} (${primero.agricultor})`;
+            } else {
+                contadorElem.innerHTML = `<span class="text-amber-600 dark:text-amber-400 font-bold">1 de 2:</span> ${primero.terreno} <span class="text-[10px] text-gray-400">(Sin más análisis para comparar)</span>`;
+            }
+        } else if (count === 2) {
+            const primero = seleccionados[0];
+            contadorElem.innerHTML = `<span class="text-emerald-600 dark:text-emerald-400 font-bold"><i class="fa-solid fa-check"></i> 2 de 2:</span> ${primero.terreno}`;
+            btnComparar.disabled = false;
+            btnComparar.classList.remove('opacity-40');
+
+            todos.forEach(cb => {
+                const id = cb.getAttribute('data-id');
+                const row = document.getElementById('row-analisis-' + id);
+                if (!cb.checked) {
+                    cb.disabled = true;
+                    cb.classList.add('opacity-30', 'cursor-not-allowed');
+                    cb.title = "Máximo 2 análisis seleccionados para comparar";
+                    if (row) {
+                        row.classList.add('opacity-40');
+                        row.classList.remove('bg-blue-50/40', 'dark:bg-blue-950/20');
+                    }
+                } else {
+                    cb.disabled = false;
+                    cb.classList.remove('opacity-30', 'cursor-not-allowed');
+                    if (row) {
+                        row.classList.remove('opacity-40');
+                        row.classList.add('bg-blue-50/40', 'dark:bg-blue-950/20');
+                    }
+                }
+            });
         }
     }
 
     function desmarcarTodos() {
         document.querySelectorAll('.analisis-checkbox').forEach(cb => cb.checked = false);
         seleccionados = [];
-        document.getElementById('contadorSeleccion').innerText = `0 de 2 seleccionados`;
-        const btn = document.getElementById('btnComparar');
-        btn.disabled = true;
-        btn.classList.add('opacity-40');
+        actualizarEstadoCheckboxes();
     }
 
     function abrirModalComparativa() {
@@ -423,6 +544,20 @@
         
         const a = seleccionados[0];
         const b = seleccionados[1];
+
+        if (a.terrenoId !== b.terrenoId || a.agricultorId !== b.agricultorId) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Comparativa no válida',
+                    text: 'Ambos análisis deben ser del mismo agricultor y terreno.',
+                    confirmButtonColor: '#10b981'
+                });
+            } else {
+                alert('Ambos análisis deben ser del mismo agricultor y terreno.');
+            }
+            return;
+        }
 
         // Rellenar tarjetas informativas
         document.getElementById('fechaA').innerText = a.fecha;
@@ -518,7 +653,9 @@
         { nombre: "Maíz Amarillo", descripcion: "Cereal de rotación rápida con alta respuesta al nitrógeno.", rangos: { humedad: [45, 75], temperatura: [18, 30], ph: [5.6, 7.2], nitrogeno: [140, 300], fosforo: [40, 85], potasio: [120, 250], conductividad: [0.8, 2.5] } },
         { nombre: "Frijol Cargamanto", descripcion: "Leguminosa fijadora de nitrógeno que enriquece el suelo.", rangos: { humedad: [45, 70], temperatura: [16, 26], ph: [5.8, 7.0], nitrogeno: [60, 150], fosforo: [45, 95], potasio: [90, 200], conductividad: [0.6, 1.6] } },
         { nombre: "Tomate Chonto", descripcion: "Hortaliza de fruto que requiere buen balance de calcio, fósforo y potasio.", rangos: { humedad: [50, 70], temperatura: [18, 28], ph: [5.8, 6.8], nitrogeno: [130, 260], fosforo: [50, 100], potasio: [160, 310], conductividad: [1.0, 2.5] } },
-        { nombre: "Cítricos", descripcion: "Frutales perennes que requieren suelos bien drenados y pH ligeramente ácido.", rangos: { humedad: [45, 70], temperatura: [19, 29], ph: [5.5, 6.5], nitrogeno: [110, 210], fosforo: [30, 60], potasio: [130, 260], conductividad: [0.7, 2.0] } }
+        { nombre: "Cítricos", descripcion: "Frutales perennes que requieren suelos bien drenados y pH ligeramente ácido.", rangos: { humedad: [45, 70], temperatura: [19, 29], ph: [5.5, 6.5], nitrogeno: [110, 210], fosforo: [30, 60], potasio: [130, 260], conductividad: [0.7, 2.0] } },
+        { nombre: "Yuca", descripcion: "Cultivo adaptado a clima Cálido en el departamento del Huila. Rango altitudinal recomendado: 0-1200 msnm.", rangos: { humedad: [50.0, 70.0], temperatura: [15.0, 28.0], ph: [5.5, 7.5], nitrogeno: [100.0, 200.0], fosforo: [30.0, 70.0], potasio: [180.0, 350.0], conductividad: [0.8, 2.2] } },
+        { nombre: "Papa", descripcion: "Tubérculo de clima frío, cultivado en zonas altas del Huila.", rangos: { humedad: [65.0, 85.0], temperatura: [8.0, 18.0], ph: [4.8, 6.5], nitrogeno: [150.0, 300.0], fosforo: [50.0, 100.0], potasio: [180.0, 350.0], conductividad: [0.8, 2.5] } }
     ];
 
     // Cargar catálogo de backend a localStorage si hay red
@@ -706,6 +843,65 @@
         btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Consultar Cultivo';
     }
 
+    function normTexto(str) {
+        return (str || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+    }
+
+    /**
+     * Motor Edafológico Canónico Offline:
+     * Réplica exacta de la función puntuar_cultivo() de apps/ia_recomendaciones/views.py.
+     * Calcula penalizaciones continuas según distancia euclidiana al rango ideal y pondera parámetros.
+     */
+    function puntuarCultivoOffline(match, a) {
+        const r = match.rangos;
+        if (!r) return { compat: null, detalle: [], limitantes: [] };
+
+        const params = [
+            { nombre: 'pH', valor: a.ph, lo: r.ph[0], hi: r.ph[1], w: 0.25, unidad: '' },
+            { nombre: 'Nitrógeno', valor: a.n, lo: r.nitrogeno[0], hi: r.nitrogeno[1], w: 0.15, unidad: ' mg/kg' },
+            { nombre: 'Fósforo', valor: a.p, lo: r.fosforo[0], hi: r.fosforo[1], w: 0.15, unidad: ' mg/kg' },
+            { nombre: 'Potasio', valor: a.k, lo: r.potasio[0], hi: r.potasio[1], w: 0.15, unidad: ' mg/kg' },
+            { nombre: 'Humedad', valor: a.humedad, lo: r.humedad[0], hi: r.humedad[1], w: 0.10, unidad: '%' },
+            { nombre: 'Temperatura', valor: a.temperatura, lo: r.temperatura[0], hi: r.temperatura[1], w: 0.10, unidad: ' °C' },
+            { nombre: 'Conductividad', valor: a.conductividad, lo: r.conductividad[0], hi: r.conductividad[1], w: 0.10, unidad: ' µS/cm' }
+        ];
+
+        let total = 0.0;
+        let peso = 0.0;
+        let detalle = [];
+        let limitantes = [];
+
+        params.forEach(p => {
+            const v = parseFloat(p.valor || 0);
+            if (v <= 0) {
+                // Sin lectura de sensor: no se inventa valor ni se penaliza artificialmente el puntaje
+                return;
+            }
+            const lo = parseFloat(p.lo);
+            const hi = parseFloat(p.hi);
+            const ancho = Math.max(hi - lo, 0.1 * Math.max(Math.abs(hi), 1.0));
+            const dist = v < lo ? (lo - v) : (v > hi ? (v - hi) : 0.0);
+            const score = Math.max(0.0, 100.0 - (100.0 * dist / ancho));
+            total += score * p.w;
+            peso += p.w;
+
+            const estado = dist === 0 ? 'dentro del rango' : (v < lo ? 'por debajo' : 'por encima');
+            detalle.push(`${p.nombre}: ${v}${p.unidad} (ideal ${lo}-${hi}${p.unidad}) -> ${estado}`);
+            if (dist > 0) {
+                limitantes.push({ nombre: p.nombre, valor: v, lo, hi, unidad: p.unidad, estado });
+            }
+        });
+
+        if (peso === 0) return { compat: null, detalle, limitantes };
+
+        const compat = Math.round(total / peso);
+        return { compat, detalle, limitantes };
+    }
+
     function calcularCultivoModoOffline(cultivoBuscado) {
         let lista = catalogoCultivosOfflineDefault;
         try {
@@ -716,42 +912,83 @@
             }
         } catch(e) {}
 
-        const match = lista.find(c => c.nombre.toLowerCase().includes(cultivoBuscado.toLowerCase()) || cultivoBuscado.toLowerCase().includes(c.nombre.toLowerCase()));
+        const q = normTexto(cultivoBuscado);
+        const match = lista.find(c => normTexto(c.nombre) === q)
+                   || lista.find(c => normTexto(c.nombre).includes(q) || q.includes(normTexto(c.nombre)));
         
         const a = analisisReporteActivo;
-        let compat = 50;
+        let compat = null;
         let descripcion = "";
         let manejo = "";
 
         if (match && match.rangos) {
-            const r = match.rangos;
-            let aciertos = 0;
-            let total = 6;
-            let detalles = [];
+            const evaluacion = puntuarCultivoOffline(match, a);
+            compat = evaluacion.compat;
+            const limitantes = evaluacion.limitantes;
+            const loteNom = (a && a.terreno) ? a.terreno : 'analizado';
 
-            if (a.humedad >= r.humedad[0] && a.humedad <= r.humedad[1]) { aciertos++; } else { detalles.push(`Humedad actual ${a.humedad}% (Rango ideal: ${r.humedad[0]}-${r.humedad[1]}%)`); }
-            if (a.ph >= r.ph[0] && a.ph <= r.ph[1]) { aciertos++; } else { detalles.push(`pH actual ${a.ph} (Rango ideal: ${r.ph[0]}-${r.ph[1]})`); }
-            if (a.n >= r.nitrogeno[0] && a.n <= r.nitrogeno[1]) { aciertos++; } else { detalles.push(`N actual ${a.n} mg/kg (Rango ideal: ${r.nitrogeno[0]}-${r.nitrogeno[1]})`); }
-            if (a.p >= r.fosforo[0] && a.p <= r.fosforo[1]) { aciertos++; } else { detalles.push(`P actual ${a.p} mg/kg (Rango ideal: ${r.fosforo[0]}-${r.fosforo[1]})`); }
-            if (a.k >= r.potasio[0] && a.k <= r.potasio[1]) { aciertos++; } else { detalles.push(`K actual ${a.k} mg/kg (Rango ideal: ${r.potasio[0]}-${r.potasio[1]})`); }
-            if (a.temperatura >= r.temperatura[0] && a.temperatura <= r.temperatura[1]) { aciertos++; }
+            if (limitantes.length === 0) {
+                descripcion = `El lote ${loteNom} presenta una excelente compatibilidad (${compat}%) para el cultivo de ${match.nombre}. Todos los parámetros fisicoquímicos medidos se encuentran en equilibrio ideal de desarrollo. ${match.descripcion || ''}`;
+                manejo = `Las condiciones del suelo son idóneas para ${match.nombre}. Mantener el plan de nutrición estándar y monitoreo preventivo de humedad.`;
+            } else {
+                const nivelComp = compat >= 75 ? 'alta' : (compat >= 40 ? 'moderada' : 'baja');
+                const descLimitantes = limitantes.map(l => {
+                    if (l.nombre === 'pH') {
+                        return `el pH se encuentra ${l.estado === 'por debajo' ? 'ácido' : 'alcalino'} (${l.valor})`;
+                    } else if (l.nombre === 'Potasio') {
+                        return `el potasio está ${l.valor <= 15 ? 'extremadamente bajo' : (l.estado === 'por debajo' ? 'deficiente' : 'excesivo')} (${l.valor}${l.unidad})`;
+                    } else if (l.nombre === 'Humedad') {
+                        return `la humedad es ${l.estado === 'por debajo' ? 'deficiente' : 'excesiva'} (${l.valor}%)`;
+                    } else if (l.nombre === 'Temperatura') {
+                        return `la temperatura es ${l.estado === 'por encima' ? 'elevada' : 'baja'} (${l.valor} °C)`;
+                    } else if (l.nombre === 'Conductividad') {
+                        return `la conductividad eléctrica es ${l.estado === 'por encima' ? 'excesiva' : 'baja'} (${l.valor} µS/cm)`;
+                    } else {
+                        return `${l.nombre.toLowerCase()} ${l.estado} (${l.valor}${l.unidad})`;
+                    }
+                }).join(', ');
 
-            compat = Math.round((aciertos / total) * 100);
-            descripcion = `Evaluado localmente con la base de datos de ${match.nombre}. Cumple con ${aciertos} de ${total} requerimientos ideales de suelo. ${match.descripcion || ''}`;
-            manejo = detalles.length > 0 ? `Recomendación técnica para acondicionamiento: Ajustar ${detalles.join(', ')} para alcanzar rendimiento óptimo.` : `Las condiciones químicas y nutricionales de este suelo son 100% idóneas para ${cultivoBuscado}.`;
+                descripcion = `El lote ${loteNom} presenta una ${nivelComp} compatibilidad (${compat}%) para el cultivo de ${match.nombre}, principalmente debido a limitaciones críticas en sus propiedades físico-químicas. ${descLimitantes.charAt(0).toUpperCase() + descLimitantes.slice(1)}. ${match.descripcion || ''}`;
+
+                // Construcción técnica de enmiendas agronómicas
+                const enmiendas = [];
+                limitantes.forEach(l => {
+                    if (l.nombre === 'pH' && l.estado === 'por debajo') {
+                        enmiendas.push(`aplicar cal agrícola o dolomita para elevar el pH hacia el rango ideal de ${l.lo} a ${l.hi}`);
+                    } else if (l.nombre === 'pH' && l.estado === 'por encima') {
+                        enmiendas.push(`incorporar materia orgánica compostada o azufre agrícola para regular el pH hacia ${l.lo} - ${l.hi}`);
+                    } else if (l.nombre === 'Potasio' && l.estado === 'por debajo') {
+                        enmiendas.push(`incorporar fertilizantes ricos en potasio (como cloruro o sulfato de potasio) para mitigar el déficit severo`);
+                    } else if (l.nombre === 'Nitrógeno' && l.estado === 'por debajo') {
+                        enmiendas.push(`aplicar fuentes nitrogenadas (como urea o abono orgánico estabilizado) para alcanzar el nivel óptimo (${l.lo}-${l.hi} mg/kg)`);
+                    } else if (l.nombre === 'Fósforo' && l.estado === 'por debajo') {
+                        enmiendas.push(`incorporar fuentes fosfatadas (DAP o roca fosfórica) para estimular el enraizamiento (${l.lo}-${l.hi} mg/kg)`);
+                    } else if (l.nombre === 'Humedad' && l.estado === 'por debajo') {
+                        enmiendas.push(`implementar un sistema de riego tecnificado para incrementar la humedad del suelo a niveles óptimos del ${l.lo}-${l.hi}%`);
+                    } else if (l.nombre === 'Humedad' && l.estado === 'por encima') {
+                        enmiendas.push(`mejorar los canales de drenaje para evitar anegamientos en el lote`);
+                    } else if (l.nombre === 'Conductividad' && l.estado === 'por encima') {
+                        enmiendas.push(`realizar un lavado de sales y adición de acondicionadores orgánicos para reducir la conductividad eléctrica`);
+                    } else if (l.nombre === 'Temperatura' && l.estado === 'por encima') {
+                        enmiendas.push(`establecer coberturas vegetales o sombrío temporal para amortiguar el estrés térmico`);
+                    }
+                });
+
+                manejo = enmiendas.length > 0
+                    ? `Para corregir las deficiencias, se recomienda ${enmiendas.join(', y ')}.`
+                    : `Se recomienda ajustar los parámetros nutricionales de acuerdo a la etapa fenológica del cultivo.`;
+            }
         } else {
-            // Evaluación matemática agronómica universal basada en nutrientes
+            // Evaluación heurística agronómica para cultivos fuera de catálogo
             const phVal = a.ph;
             const nVal = a.n;
-            const pVal = a.p;
             const kVal = a.k;
-            
             compat = (5.5 <= phVal && phVal <= 6.8) ? 80 : (5.0 <= phVal && phVal <= 7.3 ? 65 : 45);
             if (nVal > 110 && kVal > 120) compat += 10;
             if (compat > 95) compat = 95;
 
-            descripcion = `Análisis agronómico local con mediciones de este suelo (pH: ${a.ph}, N: ${a.n} mg/kg, P: ${a.p} mg/kg, K: ${a.k} mg/kg, Hum: ${a.humedad}%). ${compat >= 75 ? 'Excelente potencial de desarrollo vegetativo y producción.' : (compat >= 60 ? 'Potencial favorable con plan de fertilización dirigida.' : 'Requiere corrección previa de acidez o drenaje.')}`;
-            manejo = `Para ${cultivoBuscado}: incorporar materia orgánica compostada y balancear relación N-P-K de acuerdo a la etapa fenológica del cultivo.`;
+            descripcion = `'${cultivoBuscado}' no cuenta con rangos específicos en el catálogo de cultivos. Estimación preliminar según propiedades del suelo (pH: ${a.ph}, N: ${a.n} mg/kg, K: ${a.k} mg/kg, Hum: ${a.humedad}%).`;
+            manejo = `Para ${cultivoBuscado}: realizar prueba piloto de adaptación, incorporar materia orgánica compostada y balancear la fertilización N-P-K según el análisis foliar.`;
         }
 
         renderizarResultadoConsulta({

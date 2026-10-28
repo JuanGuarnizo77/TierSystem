@@ -442,6 +442,7 @@ def editar_usuario(request, user_id):
         return JsonResponse({'error': 'No autorizado'}, status=403)
 
     if request.method == 'POST':
+
         try:
             data = json.loads(request.body)
             first_name = data.get('first_name', '')
@@ -459,7 +460,7 @@ def editar_usuario(request, user_id):
         except User.DoesNotExist:
             return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+          return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
