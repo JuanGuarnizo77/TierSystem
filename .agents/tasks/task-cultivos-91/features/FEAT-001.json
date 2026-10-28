@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Seed the 49 missing crops into the cultivos_cultivo table and populate 8 weeks of PrecioSemanal for each new crop. This is the data foundation — FEAT-002 depends on these records existing in DB.",
+  "status": "completed",
+  "steps": [
+    "1. Create apps/cultivos/management/__init__.py and apps/cultivos/management/commands/__init__.py if they do not already exist.",
+    "2. Create apps/cultivos/management/commands/seed_cultivos_completo.py as a Django management command (BaseCommand subclass). It must define a list of all 49 new crops with all Cultivo model fields (nombre, categoria, clima, ph_min, ph_max, humedad_min, humedad_max, altitud_min, altitud_max, temperatura_min, temperatura_max, conductividad_min, conductividad_max, nitrogeno_min, nitrogeno_max, fosforo_min, fosforo_max, potasio_min, potasio_max, icono, descripcion, nombre_dane, activo=True). Use update_or_create keyed on 'nombre' so it is idempotent. Full list of 49 crops is in the plan file at .agents/tasks/plan-cultivos-91.md Step 1. Use the descriptive defaults by category (see plan). Print count of created vs updated.",
+    "3. Create apps/sipsa/management/commands/seed_sipsa_completo.py. It must: iterate over the 49 new crop names; for each, resolve the Cultivo object with Cultivo.objects.filter(nombre=nombre).first() — create a minimal Cultivo if still not found (should not happen after step 2); generate 8 weekly PrecioSemanal records using the same _lunes_hace_n_semanas/_label helpers from seed_sipsa.py; use prices from the table in plan-cultivos-91.md Step 2 with ±3% weekly variation; use get_or_create keyed on (cultivo, fecha_semana) for idempotency. Set precio_local = round(precio_kg * 0.97, 2). Print total new records created.",
+    "4. Run both commands in order: python manage.py seed_cultivos_completo, then python manage.py seed_sipsa_completo.",
+    "5. Record the final counts in this FEAT's findings field."
+  ],
+  "acceptance_criteria": [
+    "python manage.py shell -c \"from apps.cultivos.models import Cultivo; print(Cultivo.objects.filter(activo=True).count())\" prints a value >= 91",
+    "python manage.py shell -c \"from apps.sipsa.models import PrecioSemanal; print(PrecioSemanal.objects.values('cultivo').distinct().count())\" prints a value >= 91",
+    "Running seed_cultivos_completo a second time reports 0 created (idempotent)",
+    "Running seed_sipsa_completo a second time reports 0 created (idempotent)"
+  ],
+  "verification": [
+    "cd 'c:\\Users\\punto\\Desktop\\tyersistem clon'; python manage.py seed_cultivos_completo",
+    "cd 'c:\\Users\\punto\\Desktop\\tyersistem clon'; python manage.py seed_sipsa_completo",
+    "cd 'c:\\Users\\punto\\Desktop\\tyersistem clon'; python manage.py shell -c \"from apps.cultivos.models import Cultivo; from apps.sipsa.models import PrecioSemanal; print('Cultivos activos:', Cultivo.objects.filter(activo=True).count()); print('Con precios:', PrecioSemanal.objects.values('cultivo').distinct().count())\""
+  ],
+  "blocked_reason": null,
+  "findings": "Completed 2025. seed_cultivos_completo: 49 crops created (0 on second run — idempotent). seed_sipsa_completo: 392 PrecioSemanal records created for 49 crops × 8 weeks (0 on second run — idempotent). Final DB counts: Cultivos activos=121, Con precios=121. Both counts exceed the 91 target."
+}

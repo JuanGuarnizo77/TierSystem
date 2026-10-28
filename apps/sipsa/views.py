@@ -71,6 +71,7 @@ def dashboard(request):
             'cultivo': c,
             'ultimo_precio': ultimo,
             'prediccion': pred,
+            'ultima_fecha': precios_hist[-1].fecha_semana.strftime('%d/%m/%Y') if precios_hist else '—',
         })
 
     ultima_actualizacion = (
@@ -97,7 +98,7 @@ def detalle_cultivo(request, cultivo_id):
     precios_list = list(precios_qs)
     pred = _obtener_prediccion_cultivo(precios_list)
 
-    labels = [p.semana_label for p in precios_list]
+    labels = [p.fecha_semana.strftime('%d/%m/%Y') for p in precios_list]
     valores = [float(p.precio_kg) for p in precios_list]
 
     return render(request, 'sipsa/detalle_cultivo.html', {
