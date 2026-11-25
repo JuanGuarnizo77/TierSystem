@@ -88,7 +88,7 @@
                     </div>
                     
                     <div class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
-                        <script type="application/json" id="raw-reporte-agri-{{ s.id }}">{{ s.analisis_resultado.diagnostico_ia|safe }}</script>
+                        {# JSON seguro en data-diagnostico con autoescape HTML #}
                         <button type="button"
                             data-solicitud-id="{{ s.id }}"
                             data-terreno="{{ s.terreno.nombre }}"
@@ -100,7 +100,7 @@
                             data-p="{{ s.analisis_resultado.fosforo|default:'--' }}"
                             data-k="{{ s.analisis_resultado.potasio|default:'--' }}"
                             data-conductividad="{{ s.analisis_resultado.conductividad|default:'--' }}"
-                            data-temperatura="{{ s.analisis_resultado.temperatura|default:'--' }}"
+                            data-temperatura="{{ s.analisis_resultado.temperatura|default:'--' }}" data-diagnostico="{{ s.analisis_resultado.diagnostico_ia }}"
                             onclick="verReporteCompleto(this)"
                             class="w-full bg-primary hover:bg-secondary text-white font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm text-sm">
                             <i class="fa-solid fa-microchip"></i> Ver Resultados y Consultar IA
@@ -460,7 +460,7 @@
             if (navigator.onLine) {
                 const resp = await fetch('/api/ia/consultar-agricultor/', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]*)/) || [])[1] || '' },
                     body: JSON.stringify({
                         solicitud_id: activeSolicitudId,
                         cultivo: cultivo

@@ -1,0 +1,266 @@
+[
+  {
+    "id": "w0",
+    "text": "En",
+    "start": 0,
+    "end": 0.104
+  },
+  {
+    "id": "w1",
+    "text": "resumen,",
+    "start": 0.155,
+    "end": 0.643
+  },
+  {
+    "id": "w2",
+    "text": "TierSystem",
+    "start": 1.037,
+    "end": 1.576
+  },
+  {
+    "id": "w3",
+    "text": "le",
+    "start": 1.637,
+    "end": 1.7
+  },
+  {
+    "id": "w4",
+    "text": "da",
+    "start": 1.741,
+    "end": 1.804
+  },
+  {
+    "id": "w5",
+    "text": "al",
+    "start": 1.846,
+    "end": 1.907
+  },
+  {
+    "id": "w6",
+    "text": "agricultor",
+    "start": 1.959,
+    "end": 2.539
+  },
+  {
+    "id": "w7",
+    "text": "lo",
+    "start": 3.079,
+    "end": 3.172
+  },
+  {
+    "id": "w8",
+    "text": "que",
+    "start": 3.224,
+    "end": 3.296
+  },
+  {
+    "id": "w9",
+    "text": "antes",
+    "start": 3.337,
+    "end": 3.555
+  },
+  {
+    "id": "w10",
+    "text": "dependía",
+    "start": 3.576,
+    "end": 4.001
+  },
+  {
+    "id": "w11",
+    "text": "de",
+    "start": 4.054,
+    "end": 4.105
+  },
+  {
+    "id": "w12",
+    "text": "un",
+    "start": 4.146,
+    "end": 4.209
+  },
+  {
+    "id": "w13",
+    "text": "laboratorio",
+    "start": 4.25,
+    "end": 4.769
+  },
+  {
+    "id": "w14",
+    "text": "lejano:",
+    "start": 4.799,
+    "end": 5.318
+  },
+  {
+    "id": "w15",
+    "text": "conocer",
+    "start": 5.712,
+    "end": 6.054
+  },
+  {
+    "id": "w16",
+    "text": "su",
+    "start": 6.105,
+    "end": 6.179
+  },
+  {
+    "id": "w17",
+    "text": "suelo,",
+    "start": 6.23,
+    "end": 6.655
+  },
+  {
+    "id": "w18",
+    "text": "recibir",
+    "start": 7.194,
+    "end": 7.557
+  },
+  {
+    "id": "w19",
+    "text": "recomendaciones,",
+    "start": 7.588,
+    "end": 8.521
+  },
+  {
+    "id": "w20",
+    "text": "hacer",
+    "start": 8.863,
+    "end": 9.154
+  },
+  {
+    "id": "w21",
+    "text": "seguimiento",
+    "start": 9.215,
+    "end": 9.661
+  },
+  {
+    "id": "w22",
+    "text": "a",
+    "start": 9.682,
+    "end": 9.703
+  },
+  {
+    "id": "w23",
+    "text": "su",
+    "start": 9.723,
+    "end": 9.806
+  },
+  {
+    "id": "w24",
+    "text": "terreno",
+    "start": 9.858,
+    "end": 10.242
+  },
+  {
+    "id": "w25",
+    "text": "y",
+    "start": 10.636,
+    "end": 10.719
+  },
+  {
+    "id": "w26",
+    "text": "negociar",
+    "start": 10.791,
+    "end": 11.196
+  },
+  {
+    "id": "w27",
+    "text": "con",
+    "start": 11.247,
+    "end": 11.33
+  },
+  {
+    "id": "w28",
+    "text": "información",
+    "start": 11.371,
+    "end": 11.89
+  },
+  {
+    "id": "w29",
+    "text": "real.",
+    "start": 11.973,
+    "end": 12.356
+  },
+  {
+    "id": "w30",
+    "text": "No",
+    "start": 13.206,
+    "end": 13.341
+  },
+  {
+    "id": "w31",
+    "text": "reemplaza",
+    "start": 13.404,
+    "end": 13.807
+  },
+  {
+    "id": "w32",
+    "text": "su",
+    "start": 13.849,
+    "end": 13.921
+  },
+  {
+    "id": "w33",
+    "text": "criterio:",
+    "start": 13.963,
+    "end": 14.502
+  },
+  {
+    "id": "w34",
+    "text": "le",
+    "start": 14.958,
+    "end": 15.041
+  },
+  {
+    "id": "w35",
+    "text": "da",
+    "start": 15.093,
+    "end": 15.176
+  },
+  {
+    "id": "w36",
+    "text": "datos",
+    "start": 15.228,
+    "end": 15.497
+  },
+  {
+    "id": "w37",
+    "text": "para",
+    "start": 15.56,
+    "end": 15.715
+  },
+  {
+    "id": "w38",
+    "text": "decidir",
+    "start": 15.757,
+    "end": 16.161
+  },
+  {
+    "id": "w39",
+    "text": "mejor.",
+    "start": 16.212,
+    "end": 16.659
+  },
+  {
+    "id": "w40",
+    "text": "Gracias",
+    "start": 17.045,
+    "end": 17.397
+  },
+  {
+    "id": "w41",
+    "text": "por",
+    "start": 17.449,
+    "end": 17.543
+  },
+  {
+    "id": "w42",
+    "text": "su",
+    "start": 17.573,
+    "end": 17.636
+  },
+  {
+    "id": "w43",
+    "text": "atención.",
+    "start": 17.667,
+    "end": 18.403
+  }
+]

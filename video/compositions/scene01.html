@@ -1,0 +1,192 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      background: #FFFFFF;
+      background-image:
+        radial-gradient(circle at 15% 15%, rgba(22, 163, 74, 0.06) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(245, 158, 11, 0.06) 0%, transparent 45%),
+        linear-gradient(to right, rgba(226, 232, 240, 0.55) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(226, 232, 240, 0.55) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 64px 64px, 64px 64px;
+      font-family: "Inter", sans-serif;
+      color: #0F172A;
+      overflow: hidden;
+    }
+    .safe-stage {
+      position: absolute;
+      inset: 76px 80px 172px 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .scene-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .step-num {
+      background: #ECFDF5;
+      border: 2.5px solid #16A34A;
+      color: #15803D;
+      font-size: 28px;
+      font-weight: 900;
+      padding: 8px 20px;
+      border-radius: 16px;
+    }
+    .scene-title {
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      color: #0F172A;
+      line-height: 1.1;
+    }
+    .scene-title .accent-green { color: #16A34A; }
+    .scene-title .accent-orange { color: #D97706; }
+    .scene-title .accent-pink { color: #E11D48; }
+    .badge-pill {
+      font-size: 28px;
+      font-weight: 800;
+      padding: 10px 26px;
+      border-radius: 999px;
+      background: #FEF3C7;
+      border: 2.5px solid #D97706;
+      color: #92400E;
+      box-shadow: 0 6px 16px rgba(217, 119, 6, 0.12);
+    }
+    .badge-green {
+      font-size: 28px;
+      font-weight: 800;
+      padding: 10px 26px;
+      border-radius: 999px;
+      background: #DCFCE7;
+      border: 2.5px solid #16A34A;
+      color: #166534;
+      box-shadow: 0 6px 16px rgba(22, 163, 74, 0.12);
+    }
+    .illus-card {
+      width: 100%;
+      height: 700px;
+      background: #FFFFFF;
+      border: 2.5px solid #CBD5E1;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.07);
+      border-radius: 32px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+</style>
+  <div id="root" data-composition-id="scene01" data-width="1920" data-height="1080">
+    <div id="scene01-clip" class="clip" data-start="0" data-duration="20.167" data-track-index="0">
+      <div class="safe-stage">
+        <div id="scene01-hdr" class="scene-header">
+          <div class="title-group">
+            <span class="step-num">01</span>
+            <div class="scene-title">¿Sirve mi <span class="accent-green">suelo</span>?</div></div><div class="badge-green">Huila · Agricultura
+          </div>
+        </div>
+        <div id="scene01-stage" class="illus-card" data-layout-allow-overflow>
+          <div style="width:100%; height:100%; display:grid; grid-template-columns: 1fr 1.18fr 1fr; gap:30px; padding:34px 42px; align-items:stretch; background:linear-gradient(135deg, #F8FAFC 0%, #FFFFFF 55%, #F0FDF4 100%);">
+    <!-- Tarjeta Izquierda: Arroz (Tradición conocida) -->
+    <div id="s01-rice" style="background:#FFFFFF; border:3px solid #86EFAC; border-radius:26px; padding:30px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 16px 36px rgba(22,163,74,0.08);">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div style="width:68px; height:68px; border-radius:18px; background:#DCFCE7; display:flex; align-items:center; justify-content:center;">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22V8"/><path d="M12 12c-3.5 0-6-2.5-6-6 3.5 0 6 2.5 6 6Z"/><path d="M12 16c3.5 0 6-2.5 6-6-3.5 0-6 2.5-6 6Z"/>
+          </svg>
+        </div>
+        <span style="background:#DCFCE7; color:#166534; font-size:28px; font-weight:900; padding:6px 18px; border-radius:999px;">Tradición</span>
+      </div>
+      <div>
+        <div style="font-size:44px; font-weight:900; color:#0F172A; letter-spacing:-0.02em;">Arroz</div>
+        <div style="font-size:28px; font-weight:700; color:#475569; margin-top:6px;">Cultivo conocido en el valle</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; justify-content:space-between; font-size:28px; font-weight:800; color:#166534;"><span>Confianza</span><span>Alta</span></div>
+        <div style="width:100%; height:16px; background:#E2E8F0; border-radius:999px; overflow:hidden;">
+          <div id="s01-bar-rice" style="width:88%; height:100%; background:linear-gradient(90deg,#16A34A,#22C55E); border-radius:999px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjeta Central: El Dilema al Probar un Nuevo Cultivo -->
+    <div id="s01-question" style="background:#FFFFFF; border:3.5px solid #D97706; border-radius:28px; padding:32px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 22px 48px rgba(217,119,6,0.14); position:relative;">
+      <div style="display:flex; align-items:center; gap:18px;">
+        <div id="s01-qbadge" style="width:76px; height:76px; border-radius:22px; background:#FEF3C7; border:3px solid #D97706; display:flex; align-items:center; justify-content:center; font-size:44px; font-weight:900; color:#92400E;">?</div>
+        <div>
+          <div style="font-size:28px; font-weight:900; color:#B45309;">Al diversificar</div>
+          <div style="font-size:40px; font-weight:900; color:#0F172A; line-height:1.1;">¿Servirá mi suelo?</div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div id="s01-r1" style="background:#FFF1F2; border:2.5px solid #FDA4AF; border-radius:18px; padding:16px 22px; display:flex; align-items:center; justify-content:space-between;">
+          <span style="font-size:30px; font-weight:900; color:#0F172A;">Inversión y tiempo</span>
+          <span style="background:#E11D48; color:#FFFFFF; font-size:28px; font-weight:900; padding:6px 18px; border-radius:999px;">Alto riesgo</span>
+        </div>
+        <div id="s01-r2" style="background:#FFFBEB; border:2.5px solid #FCD34D; border-radius:18px; padding:16px 22px; display:flex; align-items:center; justify-content:space-between;">
+          <span style="font-size:30px; font-weight:900; color:#0F172A;">Respaldo técnico</span>
+          <span style="background:#D97706; color:#FFFFFF; font-size:28px; font-weight:900; padding:6px 18px; border-radius:999px;">Necesario</span>
+        </div>
+      </div>
+
+      <div id="s01-foot" style="background:#0F172A; color:#FFFFFF; border-radius:18px; padding:16px 22px; text-align:center; font-size:28px; font-weight:800;">
+        Experimentar sin datos cuesta dinero
+      </div>
+    </div>
+
+    <!-- Tarjeta Derecha: Café (Tradición de ladera) -->
+    <div id="s01-coffee" style="background:#FFFFFF; border:3px solid #FCD34D; border-radius:26px; padding:30px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 16px 36px rgba(217,119,6,0.08);">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div style="width:68px; height:68px; border-radius:18px; background:#FEF3C7; display:flex; align-items:center; justify-content:center;">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+          </svg>
+        </div>
+        <span style="background:#FEF3C7; color:#92400E; font-size:28px; font-weight:900; padding:6px 18px; border-radius:999px;">Tradición</span>
+      </div>
+      <div>
+        <div style="font-size:44px; font-weight:900; color:#0F172A; letter-spacing:-0.02em;">Café</div>
+        <div style="font-size:28px; font-weight:700; color:#475569; margin-top:6px;">Experiencia heredada en finca</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; justify-content:space-between; font-size:28px; font-weight:800; color:#92400E;"><span>Confianza</span><span>Alta</span></div>
+        <div style="width:100%; height:16px; background:#E2E8F0; border-radius:999px; overflow:hidden;">
+          <div id="s01-bar-coffee" style="width:92%; height:100%; background:linear-gradient(90deg,#D97706,#F59E0B); border-radius:999px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#scene01-clip", { opacity: 1 }, { opacity: 1, duration: 0.1 }, 0);
+    tl.fromTo("#scene01-hdr", { opacity: 1, y: 0 }, { opacity: 1, y: 0, duration: 0.1 }, 0);
+    tl.fromTo("#scene01-stage", { scale: 0.992 }, { scale: 1.008, duration: 19.77, ease: "none" }, 0);
+
+    tl.fromTo("#s01-rice", { opacity: 1, y: 0 }, { opacity: 1, y: 0, duration: 0.2 }, 0);
+    tl.fromTo("#s01-bar-rice", { scaleX: 0.2, transformOrigin: "left center" }, { scaleX: 1, duration: 1.2, ease: "power3.out" }, 0.2);
+    tl.fromTo("#s01-coffee", { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.65, ease: "power3.out" }, 1.6);
+    tl.fromTo("#s01-bar-coffee", { scaleX: 0.1, transformOrigin: "left center" }, { scaleX: 1, duration: 1.2, ease: "power3.out" }, 2.1);
+    tl.fromTo("#s01-question", { opacity: 0, y: 34, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: "power3.out" }, 7.5);
+    tl.fromTo("#s01-r1", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.55, ease: "power3.out" }, 12.2);
+    tl.fromTo("#s01-r2", { opacity: 0, x: 24 }, { opacity: 1, x: 0, duration: 0.55, ease: "power3.out" }, 14.5);
+    tl.fromTo("#s01-foot", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, 16.0);
+  
+    tl.to("#scene01-clip", { opacity: 0, duration: 0.3, ease: "power2.inOut" }, 19.867);
+    window.__timelines["scene01"] = tl;
+  </script>
+</template>

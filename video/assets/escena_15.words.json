@@ -1,0 +1,188 @@
+[
+  {
+    "id": "w0",
+    "text": "Los",
+    "start": 0,
+    "end": 0.197
+  },
+  {
+    "id": "w1",
+    "text": "datos",
+    "start": 0.238,
+    "end": 0.497
+  },
+  {
+    "id": "w2",
+    "text": "se",
+    "start": 0.518,
+    "end": 0.591
+  },
+  {
+    "id": "w3",
+    "text": "protegen",
+    "start": 0.643,
+    "end": 1.234
+  },
+  {
+    "id": "w4",
+    "text": "con",
+    "start": 1.576,
+    "end": 1.731
+  },
+  {
+    "id": "w5",
+    "text": "acceso",
+    "start": 1.772,
+    "end": 2.073
+  },
+  {
+    "id": "w6",
+    "text": "por",
+    "start": 2.125,
+    "end": 2.26
+  },
+  {
+    "id": "w7",
+    "text": "roles,",
+    "start": 2.322,
+    "end": 2.82
+  },
+  {
+    "id": "w8",
+    "text": "comunicación",
+    "start": 3.006,
+    "end": 3.524
+  },
+  {
+    "id": "w9",
+    "text": "cifrada",
+    "start": 3.555,
+    "end": 3.971
+  },
+  {
+    "id": "w10",
+    "text": "y",
+    "start": 4.261,
+    "end": 4.344
+  },
+  {
+    "id": "w11",
+    "text": "cumplimiento",
+    "start": 4.416,
+    "end": 4.945
+  },
+  {
+    "id": "w12",
+    "text": "de",
+    "start": 4.965,
+    "end": 5.007
+  },
+  {
+    "id": "w13",
+    "text": "la",
+    "start": 5.037,
+    "end": 5.089
+  },
+  {
+    "id": "w14",
+    "text": "Ley",
+    "start": 5.142,
+    "end": 5.246
+  },
+  {
+    "id": "w15",
+    "text": "1581",
+    "start": 5.318,
+    "end": 6.447
+  },
+  {
+    "id": "w16",
+    "text": "de",
+    "start": 6.842,
+    "end": 6.935
+  },
+  {
+    "id": "w17",
+    "text": "2012.",
+    "start": 7.018,
+    "end": 7.692
+  },
+  {
+    "id": "w18",
+    "text": "La",
+    "start": 8.23,
+    "end": 8.313
+  },
+  {
+    "id": "w19",
+    "text": "interfaz",
+    "start": 8.345,
+    "end": 8.842
+  },
+  {
+    "id": "w20",
+    "text": "se",
+    "start": 9.091,
+    "end": 9.205
+  },
+  {
+    "id": "w21",
+    "text": "adapta",
+    "start": 9.236,
+    "end": 9.527
+  },
+  {
+    "id": "w22",
+    "text": "desde",
+    "start": 9.568,
+    "end": 9.796
+  },
+  {
+    "id": "w23",
+    "text": "teléfonos",
+    "start": 9.847,
+    "end": 10.304
+  },
+  {
+    "id": "w24",
+    "text": "hasta",
+    "start": 10.346,
+    "end": 10.512
+  },
+  {
+    "id": "w25",
+    "text": "tabletas",
+    "start": 10.563,
+    "end": 11.04
+  },
+  {
+    "id": "w26",
+    "text": "y",
+    "start": 11.33,
+    "end": 11.413
+  },
+  {
+    "id": "w27",
+    "text": "puede",
+    "start": 11.486,
+    "end": 11.713
+  },
+  {
+    "id": "w28",
+    "text": "instalarse",
+    "start": 11.734,
+    "end": 12.294
+  },
+  {
+    "id": "w29",
+    "text": "como",
+    "start": 12.346,
+    "end": 12.522
+  },
+  {
+    "id": "w30",
+    "text": "aplicación.",
+    "start": 12.543,
+    "end": 13.352
+  }
+]

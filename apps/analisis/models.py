@@ -78,6 +78,21 @@ class RegistroAnalisis(models.Model):
         null=True,
         help_text="Cuerpo JSON serializado con el reporte agronómico y recomendaciones"
     )
+    origen_diagnostico = models.CharField(
+        max_length=20,
+        choices=[('IA', 'Inteligencia Artificial'), ('LOCAL', 'Motor Local Offline')],
+        default='IA',
+        help_text="Origen del dictamen agronómico (IA en nube o motor determinista local)"
+    )
+    pendiente_reenvio_ia = models.BooleanField(
+        default=False,
+        help_text="Indica si el análisis se procesó en modo local y está pendiente de reenvío a la IA"
+    )
+    compatibilidad_cultivo_deseado = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Porcentaje de compatibilidad congelado en el momento del análisis para el cultivo deseado"
+    )
 
     fecha_analisis = models.DateTimeField(
         auto_now_add=True,

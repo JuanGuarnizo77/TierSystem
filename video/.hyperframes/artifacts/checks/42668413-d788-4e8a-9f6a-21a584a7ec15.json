@@ -1,0 +1,350 @@
+{
+  "ok": true,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "filesScanned": 8
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 3,
+    "findings": [
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 13.181,
+        "selector": "#s2-probe",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 1349.39,
+          "top": 95,
+          "right": 1517.39,
+          "bottom": 523,
+          "width": 168,
+          "height": 428
+        },
+        "containerSelector": "div.probe-stage > svg:nth-of-type(1)",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 1113.39,
+          "top": 180,
+          "right": 1753.39,
+          "bottom": 800,
+          "width": 640,
+          "height": 620
+        },
+        "overflow": {
+          "top": 85
+        },
+        "dataAttributes": {
+          "data-svg-origin": "236 -40"
+        },
+        "sourceFile": "compositions/scene2.html",
+        "bbox": {
+          "x": 1349.39,
+          "y": 95,
+          "width": 168,
+          "height": 428
+        },
+        "firstSeen": 13.181,
+        "lastSeen": 13.181,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          13.181
+        ]
+      },
+      {
+        "code": "text_occluded",
+        "severity": "info",
+        "time": 34.269,
+        "selector": "div.pwa-tag",
+        "message": "Text is hidden beneath an opaque element.",
+        "rect": {
+          "left": 1476.34,
+          "top": 449,
+          "right": 1600.16,
+          "bottom": 483,
+          "width": 123.81,
+          "height": 34
+        },
+        "containerSelector": "#s4-pwa-vid",
+        "text": "3s · PWA",
+        "fixHint": "Give the text its own zone, raise its stacking order above the covering element, or mark intentional layering with data-layout-allow-occlusion.",
+        "coveredFraction": 1,
+        "lifetime": {
+          "start": 27.75,
+          "end": 35
+        },
+        "dataAttributes": {},
+        "sourceFile": "compositions/scene4.html",
+        "bbox": {
+          "x": 1476.34,
+          "y": 449,
+          "width": 123.81,
+          "height": 34
+        },
+        "firstSeen": 34.269,
+        "lastSeen": 34.269,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          34.269
+        ]
+      },
+      {
+        "code": "text_occluded",
+        "severity": "info",
+        "time": 34.269,
+        "selector": "div.pwa-path",
+        "message": "Text is hidden beneath an opaque element.",
+        "rect": {
+          "left": 1347.67,
+          "top": 505,
+          "right": 1728.83,
+          "bottom": 539,
+          "width": 381.16,
+          "height": 34
+        },
+        "containerSelector": "#s4-pwa-vid",
+        "text": "assets/pwa_resultado.mp4",
+        "fixHint": "Give the text its own zone, raise its stacking order above the covering element, or mark intentional layering with data-layout-allow-occlusion.",
+        "coveredFraction": 1,
+        "lifetime": {
+          "start": 27.75,
+          "end": 35
+        },
+        "dataAttributes": {},
+        "sourceFile": "compositions/scene4.html",
+        "bbox": {
+          "x": 1347.67,
+          "y": 505,
+          "width": 381.16,
+          "height": 34
+        },
+        "firstSeen": 34.269,
+        "lastSeen": 34.269,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          34.269
+        ]
+      }
+    ],
+    "duration": 47.45,
+    "samples": [
+      2.636,
+      7.908,
+      13.181,
+      18.453,
+      23.725,
+      28.997,
+      34.269,
+      39.542,
+      44.814
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 3,
+    "truncated": false,
+    "faceCheck": {
+      "ran": true,
+      "candidates": 1,
+      "faces": 0
+    }
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 5,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "contrast_aa_failure",
+        "severity": "warning",
+        "message": "Contrast is 1.05:1; WCAG AA requires 3:1.",
+        "text": "Decisiones",
+        "fg": "rgb(255,255,255)",
+        "bg": "rgb(244,251,247)",
+        "ratio": 1.05,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(144,144,144)",
+        "large": true,
+        "selector": "#s6_w1",
+        "dataAttributes": {},
+        "sourceFile": "compositions/captions.html",
+        "bbox": {
+          "x": 592.90625,
+          "y": 929.5,
+          "width": 202.40625,
+          "height": 45
+        },
+        "time": 44.814,
+        "times": [
+          44.814
+        ]
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "warning",
+        "message": "Contrast is 1.56:1; WCAG AA requires 3:1.",
+        "text": "agrícolas",
+        "fg": "rgb(150,218,158)",
+        "bg": "rgb(244,251,247)",
+        "ratio": 1.56,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(108,156,113)",
+        "large": true,
+        "selector": "#s6_w2",
+        "dataAttributes": {},
+        "sourceFile": "compositions/captions.html",
+        "bbox": {
+          "x": 803.84375,
+          "y": 929.5,
+          "width": 170.3125,
+          "height": 45
+        },
+        "time": 44.814,
+        "times": [
+          44.814
+        ]
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "warning",
+        "message": "Contrast is 1.04:1; WCAG AA requires 3:1.",
+        "text": "basadas",
+        "fg": "rgb(253,254,254)",
+        "bg": "rgb(244,251,247)",
+        "ratio": 1.04,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(144,144,144)",
+        "large": true,
+        "selector": "#s6_w3",
+        "dataAttributes": {},
+        "sourceFile": "compositions/captions.html",
+        "bbox": {
+          "x": 982.6875,
+          "y": 929.5,
+          "width": 156.765625,
+          "height": 45
+        },
+        "time": 44.814,
+        "times": [
+          44.814
+        ]
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "warning",
+        "message": "Contrast is 1.04:1; WCAG AA requires 3:1.",
+        "text": "en",
+        "fg": "rgb(253,254,254)",
+        "bg": "rgb(244,251,247)",
+        "ratio": 1.04,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(144,144,144)",
+        "large": true,
+        "selector": "#s6_w4",
+        "dataAttributes": {},
+        "sourceFile": "compositions/captions.html",
+        "bbox": {
+          "x": 1147.984375,
+          "y": 929.5,
+          "width": 51.859375,
+          "height": 45
+        },
+        "time": 44.814,
+        "times": [
+          44.814
+        ]
+      },
+      {
+        "code": "contrast_aa_failure",
+        "severity": "warning",
+        "message": "Contrast is 1.04:1; WCAG AA requires 3:1.",
+        "text": "datos.",
+        "fg": "rgb(253,254,254)",
+        "bg": "rgb(244,251,247)",
+        "ratio": 1.04,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(144,144,144)",
+        "large": true,
+        "selector": "#s6_w5",
+        "dataAttributes": {},
+        "sourceFile": "compositions/captions.html",
+        "bbox": {
+          "x": 1208.375,
+          "y": 929.5,
+          "width": 118.703125,
+          "height": 45
+        },
+        "time": 44.814,
+        "times": [
+          44.814
+        ]
+      }
+    ],
+    "enabled": true,
+    "samples": [
+      2.636,
+      13.181,
+      23.725,
+      34.269,
+      44.814
+    ],
+    "checked": 28,
+    "passed": 23
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "step": 0.125,
+    "samples": 380
+  },
+  "audio": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

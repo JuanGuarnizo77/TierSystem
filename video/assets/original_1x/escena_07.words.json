@@ -1,0 +1,278 @@
+[
+  {
+    "id": "w0",
+    "text": "En",
+    "start": 0,
+    "end": 0.128
+  },
+  {
+    "id": "w1",
+    "text": "campo,",
+    "start": 0.174,
+    "end": 0.708
+  },
+  {
+    "id": "w2",
+    "text": "el",
+    "start": 0.94,
+    "end": 1.045
+  },
+  {
+    "id": "w3",
+    "text": "laboratorista",
+    "start": 1.068,
+    "end": 1.637
+  },
+  {
+    "id": "w4",
+    "text": "conecta",
+    "start": 1.683,
+    "end": 2.009
+  },
+  {
+    "id": "w5",
+    "text": "el",
+    "start": 2.02,
+    "end": 2.078
+  },
+  {
+    "id": "w6",
+    "text": "sensor",
+    "start": 2.136,
+    "end": 2.496
+  },
+  {
+    "id": "w7",
+    "text": "por",
+    "start": 2.566,
+    "end": 2.694
+  },
+  {
+    "id": "w8",
+    "text": "WiFi",
+    "start": 2.81,
+    "end": 3.228
+  },
+  {
+    "id": "w9",
+    "text": "o",
+    "start": 3.367,
+    "end": 3.483
+  },
+  {
+    "id": "w10",
+    "text": "Bluetooth",
+    "start": 3.529,
+    "end": 4.029
+  },
+  {
+    "id": "w11",
+    "text": "y",
+    "start": 4.4,
+    "end": 4.481
+  },
+  {
+    "id": "w12",
+    "text": "verifica",
+    "start": 4.54,
+    "end": 4.946
+  },
+  {
+    "id": "w13",
+    "text": "su",
+    "start": 4.992,
+    "end": 5.062
+  },
+  {
+    "id": "w14",
+    "text": "estado.",
+    "start": 5.097,
+    "end": 5.561
+  },
+  {
+    "id": "w15",
+    "text": "Está",
+    "start": 5.933,
+    "end": 6.142
+  },
+  {
+    "id": "w16",
+    "text": "formado",
+    "start": 6.2,
+    "end": 6.548
+  },
+  {
+    "id": "w17",
+    "text": "por",
+    "start": 6.606,
+    "end": 6.745
+  },
+  {
+    "id": "w18",
+    "text": "un",
+    "start": 6.827,
+    "end": 6.873
+  },
+  {
+    "id": "w19",
+    "text": "microcontrolador",
+    "start": 6.908,
+    "end": 7.86
+  },
+  {
+    "id": "w20",
+    "text": "ESP32",
+    "start": 7.999,
+    "end": 9.253
+  },
+  {
+    "id": "w21",
+    "text": "y",
+    "start": 9.927,
+    "end": 9.996
+  },
+  {
+    "id": "w22",
+    "text": "una",
+    "start": 10.066,
+    "end": 10.17
+  },
+  {
+    "id": "w23",
+    "text": "sonda",
+    "start": 10.228,
+    "end": 10.53
+  },
+  {
+    "id": "w24",
+    "text": "RS485",
+    "start": 10.739,
+    "end": 12.376
+  },
+  {
+    "id": "w25",
+    "text": "que",
+    "start": 12.875,
+    "end": 12.992
+  },
+  {
+    "id": "w26",
+    "text": "mide",
+    "start": 13.073,
+    "end": 13.293
+  },
+  {
+    "id": "w27",
+    "text": "siete",
+    "start": 13.375,
+    "end": 13.711
+  },
+  {
+    "id": "w28",
+    "text": "parámetros:",
+    "start": 13.758,
+    "end": 14.489
+  },
+  {
+    "id": "w29",
+    "text": "pH,",
+    "start": 14.803,
+    "end": 15.441
+  },
+  {
+    "id": "w30",
+    "text": "nitrógeno,",
+    "start": 15.615,
+    "end": 16.324
+  },
+  {
+    "id": "w31",
+    "text": "fósforo,",
+    "start": 16.463,
+    "end": 17.055
+  },
+  {
+    "id": "w32",
+    "text": "potasio,",
+    "start": 17.171,
+    "end": 17.879
+  },
+  {
+    "id": "w33",
+    "text": "humedad,",
+    "start": 17.926,
+    "end": 18.692
+  },
+  {
+    "id": "w34",
+    "text": "conductividad",
+    "start": 19.005,
+    "end": 19.737
+  },
+  {
+    "id": "w35",
+    "text": "eléctrica",
+    "start": 19.783,
+    "end": 20.317
+  },
+  {
+    "id": "w36",
+    "text": "y",
+    "start": 20.515,
+    "end": 20.608
+  },
+  {
+    "id": "w37",
+    "text": "temperatura.",
+    "start": 20.689,
+    "end": 21.42
+  },
+  {
+    "id": "w38",
+    "text": "El",
+    "start": 21.931,
+    "end": 22.059
+  },
+  {
+    "id": "w39",
+    "text": "sensor",
+    "start": 22.105,
+    "end": 22.419
+  },
+  {
+    "id": "w40",
+    "text": "solo",
+    "start": 22.477,
+    "end": 22.628
+  },
+  {
+    "id": "w41",
+    "text": "entrega",
+    "start": 22.651,
+    "end": 22.953
+  },
+  {
+    "id": "w42",
+    "text": "lecturas;",
+    "start": 22.988,
+    "end": 23.603
+  },
+  {
+    "id": "w43",
+    "text": "no",
+    "start": 23.847,
+    "end": 23.963
+  },
+  {
+    "id": "w44",
+    "text": "las",
+    "start": 24.009,
+    "end": 24.114
+  },
+  {
+    "id": "w45",
+    "text": "interpreta.",
+    "start": 24.172,
+    "end": 24.985
+  }
+]

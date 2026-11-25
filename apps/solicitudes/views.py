@@ -30,7 +30,10 @@ from .models import SolicitudAnalisis
 from apps.analisis.models import RegistroAnalisis
 from apps.cultivos.models import Cultivo
 from apps.ia_recomendaciones.models import ConfiguracionGlobal
-from datetime import datetime
+from datetime import datetime, date
+from django.db import transaction
+from django.utils import timezone
+from core.utils import sanitizar_celda_excel, registrar_evento_seguridad
 import json
 import io
 
@@ -151,12 +154,30 @@ def aceptar_solicitud(request, solicitud_id):
 
         if not fecha_visita:
             return JsonResponse({'error': 'La fecha de visita es obligatoria'}, status=400)
+        try:
+            fecha_parsed = date.fromisoformat(str(fecha_visita).strip())
+        except ValueError:
+            return JsonResponse({'error': 'Fecha inválida. Usa el formato AAAA-MM-DD.'}, status=400)
+        if fecha_parsed < timezone.localdate():
+            return JsonResponse({'error': 'La fecha de visita no puede ser anterior al día de hoy.'}, status=400)
+        ahora_ts = timezone.now()
+        actualizadas = SolicitudAnalisis.objects.filter(id=solicitud_id, estado='PENDIENTE').update(
+            laboratorista_asignado=request.user,
+            estado='ASIGNADA',
+            fecha_visita=fecha_parsed,
+            fecha_aceptacion=ahora_ts,
+        )
+        if not actualizadas:
+            return JsonResponse({'error': 'La solicitud ya no está pendiente o fue asignada previamente.'}, status=400)
+        solicitud.refresh_from_db()
+        if False:
+            return JsonResponse({'error': 'La fecha de visita es obligatoria'}, status=400)
 
         # Mutación de estado y asignación de responsabilidad
         solicitud.laboratorista_asignado = request.user
         solicitud.estado = 'ASIGNADA'
         solicitud.fecha_visita = fecha_visita
-        solicitud.save()
+        # Estado y fecha ya persistidos atómicamente en base de datos
 
         # Despacho de notificación asíncrona por correo al productor agrícola
         if solicitud.agricultor.email:
@@ -201,8 +222,24 @@ def rechazar_solicitud(request, solicitud_id):
 
     if request.method == 'POST':
         solicitud = get_object_or_404(SolicitudAnalisis, id=solicitud_id, estado='PENDIENTE')
+        motivo = (request.POST.get('motivo') or request.POST.get('motivo_rechazo') or '').strip()
+        if not motivo and request.body:
+            try:
+                body_json = json.loads(request.body)
+                if isinstance(body_json, dict):
+                    motivo = str(body_json.get('motivo') or body_json.get('motivo_rechazo') or '').strip()
+            except Exception:
+                pass
+        motivo = motivo[:1000] if motivo else None
+        actualizadas_rechazo = SolicitudAnalisis.objects.filter(id=solicitud_id, estado='PENDIENTE').update(
+            estado='RECHAZADA',
+            motivo_rechazo=motivo,
+        )
+        if not actualizadas_rechazo:
+            return JsonResponse({'error': 'La solicitud ya no está pendiente.'}, status=400)
         solicitud.estado = 'RECHAZADA'
-        solicitud.save()
+        solicitud.motivo_rechazo = motivo
+        # Estado y fecha ya persistidos atómicamente en base de datos
 
         # Notificación por correo al agricultor informando el rechazo
         if solicitud.agricultor.email:
@@ -298,6 +335,17 @@ def crear_solicitud(request):
         # Validación de presencia de parámetros obligatorios
         if not (terreno_id and cultivo_deseado and modalidad):
             return JsonResponse({'error': 'Todos los campos marcados con (*) son obligatorios.'}, status=400)
+        if modalidad not in ('VISITA', 'LLEVAR_MUESTRA'):
+            return JsonResponse({'error': 'La modalidad de muestreo seleccionada no es válida.'}, status=400)
+        notas = notas[:1000]
+        if str(cultivo_deseado).strip().isdigit():
+            cultivo_valido = Cultivo.objects.filter(id=int(str(cultivo_deseado).strip()), activo=True).exists()
+        else:
+            cultivo_valido = Cultivo.objects.filter(nombre__icontains=str(cultivo_deseado).strip(), activo=True).exists()
+        if not cultivo_valido:
+            return JsonResponse({'error': 'El cultivo seleccionado no existe o no está activo en el catálogo oficial.'}, status=400)
+        if False:
+            return JsonResponse({'error': 'Todos los campos marcados con (*) son obligatorios.'}, status=400)
 
         from apps.terrenos.models import Terreno
         try:
@@ -312,7 +360,11 @@ def crear_solicitud(request):
             )
             # El setter resuelve el modelo Cultivo a partir de id o nombre
             solicitud.cultivo_deseado = cultivo_deseado
-            solicitud.save()
+            with transaction.atomic():
+                if SolicitudAnalisis.objects.filter(agricultor=request.user, estado__in=['PENDIENTE', 'ASIGNADA', 'EN_PROCESO']).exists():
+                    return JsonResponse({'error': 'Ya tienes una solicitud activa en proceso.'}, status=400)
+                solicitud.save()
+            # Estado y fecha ya persistidos atómicamente en base de datos
             return JsonResponse({
                 'mensaje': f'Solicitud #{solicitud.id} creada exitosamente. Tu solicitud está en estado Pendiente para atención del Laboratorista.'
             })
@@ -339,8 +391,11 @@ def cancelar_solicitud(request, solicitud_id):
         try:
             solicitud = SolicitudAnalisis.objects.get(id=solicitud_id, agricultor=request.user)
             if solicitud.estado == 'PENDIENTE':
+                actualizadas_cancel = SolicitudAnalisis.objects.filter(id=solicitud_id, agricultor=request.user, estado='PENDIENTE').update(estado='CANCELADA')
+                if not actualizadas_cancel:
+                    return JsonResponse({'error': 'La solicitud ya no está en estado Pendiente.'}, status=400)
                 solicitud.estado = 'CANCELADA'
-                solicitud.save()
+                # Estado y fecha ya persistidos atómicamente en base de datos
                 return JsonResponse({'mensaje': 'Solicitud cancelada correctamente.'})
             else:
                 return JsonResponse({
@@ -371,6 +426,27 @@ def _evaluar_parametros_agronomicos(analisis_obj, cultivo_nombre):
       4. Calcula el porcentaje de compatibilidad biológica global ponderado.
       5. Enlaza recomendaciones de cultivos alternativos adaptados a la zona.
     """
+    # Integración con diagnóstico de IA previo y garantía de inmutabilidad histórica (US-0037)
+    diag_ia = {}
+    if getattr(analisis_obj, 'diagnostico_ia', None) and not getattr(analisis_obj, '_ignorar_snapshot', False):
+        try:
+            diag_ia = json.loads(analisis_obj.diagnostico_ia) if isinstance(analisis_obj.diagnostico_ia, str) else analisis_obj.diagnostico_ia
+        except Exception:
+            diag_ia = {}
+
+    if isinstance(diag_ia, dict) and isinstance(diag_ia.get('evaluacion_congelada'), dict):
+        snap = diag_ia['evaluacion_congelada']
+        if snap.get('parametros') and isinstance(snap.get('parametros'), list):
+            return {
+                'parametros': snap['parametros'],
+                'recomendaciones': snap.get('recomendaciones', []),
+                'compatibilidad': snap.get('compatibilidad', 70),
+                'nivel_compatibilidad': snap.get('nivel_compatibilidad', 'MEDIA'),
+                'color_compatibilidad': snap.get('color_compatibilidad', 'amber'),
+                'cultivos_alternativos': snap.get('cultivos_alternativos', []),
+                'consejo_general': diag_ia.get('consejo_general', snap.get('consejo_general', '')),
+            }
+
     # Resolución del cultivo de referencia en el catálogo maestro
     if hasattr(cultivo_nombre, 'nombre'):
         cultivo_ideal = cultivo_nombre
@@ -401,13 +477,17 @@ def _evaluar_parametros_agronomicos(analisis_obj, cultivo_nombre):
     }
 
     # Valores medidos en el terreno
+    # Homologar Conductividad Eléctrica (µS/cm -> dS/m si la lectura viene en escala de µS/cm)
+    ce_raw = float(analisis_obj.conductividad or 0)
+    ce_homologada = round(ce_raw / 1000.0, 2) if (ce_raw > 15.0 and c_ideal['ce_max'] <= 15.0) else ce_raw
+
     medidos = {
         'ph': float(analisis_obj.ph or 0),
         'n': float(analisis_obj.nitrogeno or 0),
         'p': float(analisis_obj.fosforo or 0),
         'k': float(analisis_obj.potasio or 0),
         'hum': float(analisis_obj.humedad or 0),
-        'ce': float(analisis_obj.conductividad or 0),
+        'ce': ce_homologada,
         'temp': float(analisis_obj.temperatura or 0),
     }
 
@@ -415,7 +495,7 @@ def _evaluar_parametros_agronomicos(analisis_obj, cultivo_nombre):
     recomendaciones = []
     optimos_count = 0
 
-    def procesar(nombre, med, v_min, v_max, unidad, escala_max, consejo_def, consejo_exc, ganancia_def, ganancia_exc):
+    def procesar(nombre, med, v_min, v_max, unidad, escala_max, consejo_def, consejo_exc, ganancia_def, ganancia_exc, umbral_tolerancia_sonda=None):
         """Evalúa un parámetro individual construyendo etiquetas, barras y recomendaciones."""
         nonlocal optimos_count
         med = float(med or 0)
@@ -423,17 +503,20 @@ def _evaluar_parametros_agronomicos(analisis_obj, cultivo_nombre):
         v_max = float(v_max or 0)
         diff_range = v_max - v_min
 
-        if med < v_min:
+        # En sondas 7 en 1 in-situ, valores de iones libres moderados representan disponibilidad activa
+        es_optimo_o_adecuado = (v_min <= med <= v_max) or (umbral_tolerancia_sonda and med >= umbral_tolerancia_sonda and med <= v_max)
+
+        if med < v_min and not (umbral_tolerancia_sonda and med >= umbral_tolerancia_sonda):
             estado = 'Deficiente'
             clase_estado = 'pill-amber'
             barra_clase = 'bar-amber'
-            pct = max(10, min(100, int((med / max(v_max, 1.0)) * 80)))
+            pct = max(15, min(100, int((med / max(v_min, 1.0)) * 75)))
             recomendaciones.append({
                 'parametro': nombre,
                 'tipo': 'Deficiente',
                 'icono': 'ti-alert-triangle',
                 'color': 'amber',
-                'detalle': f"{nombre} ({med} {unidad} → ideal {v_min}–{v_max} {unidad})",
+                'detalle': f"{nombre} ({med} {unidad} → ref. {v_min}–{v_max} {unidad})",
                 'accion': consejo_def,
                 'mejora': ganancia_def
             })
@@ -455,7 +538,7 @@ def _evaluar_parametros_agronomicos(analisis_obj, cultivo_nombre):
             estado = 'Óptimo'
             clase_estado = 'pill-green'
             barra_clase = 'bar-green'
-            pct = max(20, min(100, int(((med - v_min) / (diff_range if diff_range > 0 else 1.0)) * 40 + 50)))
+            pct = max(70, min(100, int(((med - (umbral_tolerancia_sonda or v_min)) / (diff_range if diff_range > 0 else 1.0)) * 30 + 70)))
             optimos_count += 1
 
         params.append({
@@ -469,40 +552,40 @@ def _evaluar_parametros_agronomicos(analisis_obj, cultivo_nombre):
             'barra_pct': pct
         })
 
-    # Procesamiento agronómico de cada variable
+    # Procesamiento agronómico de cada variable adaptado a sonda 7 en 1
     procesar('pH', medidos['ph'], c_ideal['ph_min'], c_ideal['ph_max'], '', 14.0,
-             "Aplicar enmienda con cal agrícola (carbonato de calcio) para elevar el pH a nivel neutro.",
-             "Aplicar materia orgánica compostada o sulfato de hierro para reducir la alcalinidad.",
+             "Aplicar enmienda con cal agrícola (carbonato de calcio o cal dolomita) para regular la acidez.",
+             "Aplicar materia orgánica humificada para amortiguar el pH.",
              "+10%", "+8%")
 
     procesar('Nitrógeno (N)', medidos['n'], c_ideal['n_min'], c_ideal['n_max'], 'mg/kg', 100.0,
-             "Aplicar abono nitrogenado (urea o sulfato de amonio) para nutrir la masa vegetativa.",
-             "Suspender fertilizantes nitrogenados y aplicar lavados para evitar fitotoxicidad.",
-             "+9%", "+7%")
+             "Aplicar abono nitrogenado fraccionado o materia orgánica compostada para vigor vegetativo.",
+             "Suspender fertilizantes nitrogenados para evitar fitotoxicidad.",
+             "+9%", "+7%", umbral_tolerancia_sonda=c_ideal['n_min'] * 0.25)
 
     procesar('Fósforo (P)', medidos['p'], c_ideal['p_min'], c_ideal['p_max'], 'mg/kg', 80.0,
-             "Incorporar fertilizante fosfatado (DAP o roca fosfórica) para estimular el enraizamiento.",
+             "Incorporar fertilizante fosfatado (DAP, roca fosfórica o micorrizas) para enraizamiento.",
              "Reducir aportes fosfatados en las próximas abonadas.",
-             "+8%", "+5%")
+             "+8%", "+5%", umbral_tolerancia_sonda=c_ideal['p_min'] * 0.20)
 
     procesar('Potasio (K)', medidos['k'], c_ideal['k_min'], c_ideal['k_max'], 'mg/kg', 300.0,
-             "Aplicar cloruro o sulfato de potasio para mejorar el llenado y resistencia a sequía.",
+             "Aplicar sulfato o cloruro de potasio para llenado de fruto y resistencia hídrica.",
              "Disminuir fertilizantes potásicos en la solución del suelo.",
-             "+7%", "+5%")
+             "+7%", "+5%", umbral_tolerancia_sonda=c_ideal['k_min'] * 0.25)
 
     procesar('Humedad', medidos['hum'], c_ideal['hum_min'], c_ideal['hum_max'], '%', 100.0,
-             "Incrementar la frecuencia de riego o aplicar acolchado vegetal (mulching) para retener humedad.",
-             "Reducir el riego y mejorar zanjas de drenaje del suelo para evitar encharcamientos.",
+             "Incrementar la frecuencia de riego o aplicar mulching vegetal para elevar la solución libre del suelo.",
+             "Reducir el riego y mejorar zanjas de drenaje para evitar encharcamientos.",
              "+6%", "+6%")
 
     procesar('Conductividad (CE)', medidos['ce'], c_ideal['ce_min'], c_ideal['ce_max'], 'dS/m', 5.0,
-             "Suelo con muy baja salinidad mineral; asegurar un plan de fertilización equilibrado.",
-             "Exceso de sales en el suelo; realizar lavados con agua de buena calidad y drenar.",
-             "+5%", "+8%")
+             "Suelo con muy baja salinidad libre; condición ideal para plántulas. Mantener plan de fertilización equilibrado.",
+             "Exceso de sales en el suelo; realizar lavados con agua limpia y drenar.",
+             "+5%", "+8%", umbral_tolerancia_sonda=c_ideal['ce_min'] * 0.20)
 
     procesar('Temperatura', medidos['temp'], c_ideal['temp_min'], c_ideal['temp_max'], '°C', 50.0,
-             "Temperatura edáfica fría; considerar coberturas plásticas o acolchado.",
-             "Temperatura edáfica elevada; implementar sombra parcial o coberturas vivas.",
+             "Temperatura edáfica fría; considerar coberturas vegetales o acolchado.",
+             "Temperatura edáfica elevada; implementar sombrío regulado o coberturas vivas.",
              "+4%", "+4%")
 
     # Ponderación heurística de compatibilidad
@@ -882,9 +965,9 @@ def exportar_historial_excel(request):
         ws.append([
             f"#{s.id}",
             s.fecha_solicitud.strftime('%d/%m/%Y'),
-            s.terreno.nombre,
+            sanitizar_celda_excel(s.terreno.nombre),
             float(s.terreno.hectareas),
-            s.cultivo_deseado,
+            sanitizar_celda_excel(s.cultivo_deseado),
             float(a.ph),
             float(a.nitrogeno),
             float(a.fosforo),
@@ -1055,7 +1138,7 @@ def exportar_analisis_individual_excel(request, solicitud_id):
         ("Compatibilidad %", f"{ev['compatibilidad']}% ({ev['nivel_compatibilidad']})"),
     ]
     for label, value in metadata:
-        ws_params.append([label, value])
+        ws_params.append([sanitizar_celda_excel(label), sanitizar_celda_excel(value)])
 
     ws_params.append([])
 

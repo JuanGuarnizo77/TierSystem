@@ -26,6 +26,13 @@ Este módulo concentra los controladores basados en funciones (FBV) para:
 import io
 import json
 from datetime import timedelta
+import logging
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from core.utils import sanitizar_celda_excel, registrar_evento_seguridad
+
+logger = logging.getLogger(__name__)
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -394,6 +401,17 @@ def crear_laboratorista(request):
             # Validar unicidad del nombre de usuario en el modelo User de Django
             if User.objects.filter(username=username).exists():
                 return JsonResponse({'error': 'El usuario ya existe'}, status=400)
+            if email:
+                try:
+                    validate_email(email)
+                except ValidationError:
+                    return JsonResponse({'error': 'El correo electrónico no tiene un formato válido'}, status=400)
+                if User.objects.filter(email__iexact=email).exists():
+                    return JsonResponse({'error': 'El correo electrónico ya está registrado'}, status=400)
+            try:
+                validate_password(password)
+            except ValidationError as ve:
+                return JsonResponse({'error': ' '.join(ve.messages)}, status=400)
 
             # Crear usuario con contraseña cifrada (PBKDF2/SHA256)
             user = User.objects.create_user(
@@ -411,9 +429,11 @@ def crear_laboratorista(request):
             user.perfil.rol = 'LABORATORISTA'
             user.perfil.save()
 
+            registrar_evento_seguridad(request, 'CREACION_LABORATORISTA', f"Laboratorista creado: username='{username}'")
             return JsonResponse({'mensaje': 'Laboratorista creado exitosamente'})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+        except Exception:
+            logger.exception("Excepción controlada en operación administrativa")
+            return JsonResponse({'error': 'Error interno al procesar la solicitud administrativa.'}, status=500)
 
     # Si se intenta acceder vía GET, redirigir al listado de usuarios
     return redirect('lista_usuarios')
@@ -451,16 +471,27 @@ def editar_usuario(request, user_id):
 
             # Recuperar y actualizar los campos del usuario en base de datos
             usuario = User.objects.get(id=user_id)
+            if usuario.is_superuser and not request.user.is_superuser:
+                return JsonResponse({'error': 'No tiene permisos para modificar una cuenta superadministradora'}, status=403)
+            if email:
+                try:
+                    validate_email(email)
+                except ValidationError:
+                    return JsonResponse({'error': 'El formato del correo electrónico es inválido'}, status=400)
+                if User.objects.filter(email__iexact=email).exclude(id=usuario.id).exists():
+                    return JsonResponse({'error': 'El correo electrónico ya pertenece a otro usuario'}, status=400)
             usuario.first_name = first_name
             usuario.last_name = last_name
             usuario.email = email
             usuario.save()
 
+            registrar_evento_seguridad(request, 'USUARIO_EDITADO', f"Usuario editado id={usuario.id} ({usuario.username})")
             return JsonResponse({'mensaje': 'Información de usuario actualizada'})
         except User.DoesNotExist:
             return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
-        except Exception as e:
-          return JsonResponse({'error': str(e)}, status=500)
+        except Exception:
+            logger.exception("Excepción controlada en editar_usuario")
+            return JsonResponse({'error': 'Error interno al procesar la solicitud administrativa.'}, status=500)
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
@@ -486,20 +517,26 @@ def cambiar_estado_usuario(request, user_id):
             estado = data.get('is_active')
 
             usuario = User.objects.get(id=user_id)
+            if usuario.is_superuser and not request.user.is_superuser:
+                return JsonResponse({'error': 'No tiene permisos para modificar una cuenta superadministradora'}, status=403)
 
             # Evitar el bloqueo accidental de la propia cuenta del administrador en sesión
             if usuario == request.user:
                 return JsonResponse({'error': 'No puedes cambiar tu propio estado'}, status=400)
 
             # Actualizar y persistir el nuevo estado de activación
+            if not isinstance(estado, bool):
+                return JsonResponse({'error': 'El campo is_active debe ser booleano'}, status=400)
             usuario.is_active = estado
             usuario.save()
 
+            registrar_evento_seguridad(request, 'USUARIO_ESTADO_CAMBIADO', f"Estado de usuario id={usuario.id} -> is_active={estado}")
             return JsonResponse({'mensaje': 'Estado actualizado correctamente'})
         except User.DoesNotExist:
             return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+        except Exception:
+            logger.exception("Excepción controlada en operación administrativa")
+            return JsonResponse({'error': 'Error interno al procesar la solicitud administrativa.'}, status=500)
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
@@ -524,6 +561,8 @@ def eliminar_usuario(request, user_id):
     if request.method == 'POST':
         try:
             usuario = User.objects.get(id=user_id)
+            if usuario.is_superuser and not request.user.is_superuser:
+                return JsonResponse({'error': 'No tiene permisos para modificar una cuenta superadministradora'}, status=403)
 
             # Evitar que el administrador se autodestruya
             if usuario == request.user:
@@ -531,11 +570,13 @@ def eliminar_usuario(request, user_id):
 
             # Eliminación física en cascada según las reglas de relaciones foráneas
             usuario.delete()
+            registrar_evento_seguridad(request, 'USUARIO_ELIMINADO', f"Usuario eliminado permanentemente id={user_id}", nivel='WARNING')
             return JsonResponse({'mensaje': 'Usuario eliminado permanentemente'})
         except User.DoesNotExist:
             return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+        except Exception:
+            logger.exception("Excepción controlada en operación administrativa")
+            return JsonResponse({'error': 'Error interno al procesar la solicitud administrativa.'}, status=500)
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
@@ -652,7 +693,7 @@ def exportar_pdf(request):
             y = 750
             p.setFont("Helvetica", 10)
 
-        nombre_agricultor = a.solicitud.agricultor.get_full_name() or a.solicitud.agricultor.username
+        nombre_agricultor = sanitizar_celda_excel(a.solicitud.agricultor.get_full_name() or a.solicitud.agricultor.username)
         texto = f"{idx+1}. {a.fecha_analisis.strftime('%d/%m/%Y')} | Agricultor: {nombre_agricultor} | Cultivo: {a.solicitud.cultivo_deseado}"
         p.drawString(50, y, texto)
         y -= 20
@@ -720,13 +761,13 @@ def exportar_excel(request):
 
     # Poblar filas con los valores numéricos de los sensores
     for a in analisis:
-        nombre_agricultor = a.solicitud.agricultor.get_full_name() or a.solicitud.agricultor.username
+        nombre_agricultor = sanitizar_celda_excel(a.solicitud.agricultor.get_full_name() or a.solicitud.agricultor.username)
         ws.append([
             a.id,
             a.fecha_analisis.strftime('%d/%m/%Y %H:%M'),
             nombre_agricultor,
-            a.solicitud.terreno.nombre,
-            a.solicitud.cultivo_deseado,
+            sanitizar_celda_excel(a.solicitud.terreno.nombre),
+            sanitizar_celda_excel(a.solicitud.cultivo_deseado),
             float(a.ph),
             float(a.nitrogeno),
             float(a.fosforo),
@@ -798,7 +839,10 @@ def guardar_cultivo_admin(request):
                 cultivo = Cultivo()
 
             # Asignación de datos descriptivos y taxonómicos
-            cultivo.nombre = data.get('nombre')
+            nombre_cultivo = (data.get('nombre') or '').strip()
+            if not nombre_cultivo or len(nombre_cultivo) > 100:
+                return JsonResponse({'error': 'El nombre del cultivo es obligatorio y no debe superar 100 caracteres.'}, status=400)
+            cultivo.nombre = nombre_cultivo
             cultivo.descripcion = data.get('descripcion', '')
             cultivo.categoria = data.get('categoria', cultivo.categoria or 'Frutal')
             cultivo.clima = data.get('clima', cultivo.clima or 'Templado')
@@ -823,10 +867,32 @@ def guardar_cultivo_admin(request):
             cultivo.potasio_max = float(data.get('potasio_max', cultivo.potasio_max or 0))
 
             # Guardado definitivo en la base de datos
+            # Validación en el servidor de consistencia de rangos (mínimo <= máximo y límites físicos)
+            import math
+            pares_rangos = [
+                ('Altitud', cultivo.altitud_min, cultivo.altitud_max, -500.0, 9000.0),
+                ('Humedad', cultivo.humedad_min, cultivo.humedad_max, 0.0, 100.0),
+                ('Temperatura', cultivo.temperatura_min, cultivo.temperatura_max, -20.0, 80.0),
+                ('Conductividad', cultivo.conductividad_min, cultivo.conductividad_max, 0.0, 50.0),
+                ('pH', cultivo.ph_min, cultivo.ph_max, 0.0, 14.0),
+                ('Nitrógeno', cultivo.nitrogeno_min, cultivo.nitrogeno_max, 0.0, 5000.0),
+                ('Fósforo', cultivo.fosforo_min, cultivo.fosforo_max, 0.0, 5000.0),
+                ('Potasio', cultivo.potasio_min, cultivo.potasio_max, 0.0, 5000.0),
+            ]
+            for etiqueta, v_min, v_max, lim_inf, lim_sup in pares_rangos:
+                if math.isnan(v_min) or math.isinf(v_min) or math.isnan(v_max) or math.isinf(v_max):
+                    return JsonResponse({'error': f'Rango numérico inválido en {etiqueta}.'}, status=400)
+                if v_min > v_max:
+                    return JsonResponse({'error': f'El valor mínimo de {etiqueta} ({v_min}) no puede ser mayor que el máximo ({v_max}).'}, status=400)
+                if v_min < lim_inf or v_max > lim_sup:
+                    return JsonResponse({'error': f'El rango de {etiqueta} debe estar entre {lim_inf} y {lim_sup}.'}, status=400)
+
+            # Guardado definitivo en la base de datos
             cultivo.save()
             return JsonResponse({'mensaje': 'Cultivo guardado correctamente en la Base de Datos MySQL (cultivos_cultivo)'})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+        except Exception:
+            logger.exception("Excepción controlada en operación administrativa")
+            return JsonResponse({'error': 'Error interno al procesar la solicitud administrativa.'}, status=500)
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
@@ -849,8 +915,9 @@ def eliminar_cultivo_admin(request, cultivo_id):
             return JsonResponse({'mensaje': 'Cultivo eliminado permanentemente'})
         except Cultivo.DoesNotExist:
             return JsonResponse({'error': 'Cultivo no encontrado'}, status=404)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+        except Exception:
+            logger.exception("Excepción controlada en operación administrativa")
+            return JsonResponse({'error': 'Error interno al procesar la solicitud administrativa.'}, status=500)
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
@@ -880,10 +947,12 @@ def estado_hardware(request):
     ultima_lectura = LecturaSensor.objects.order_by('-timestamp').first()
 
     estado_conexion = 'Inactivo'
-    bateria = 85.0  # Nivel estimado de batería del sistema de energía solar en campo
+    bateria = 85.0  # Nivel de respaldo si el nodo no reportó telemetría de batería
 
     # Comprobar la ventana de recencia de comunicación (15 minutos)
     if ultima_lectura:
+        if ultima_lectura.bateria is not None:
+            bateria = float(ultima_lectura.bateria)
         tiempo_limite = timezone.now() - timedelta(minutes=15)
         if ultima_lectura.timestamp >= tiempo_limite:
             estado_conexion = 'Activo'
@@ -926,7 +995,20 @@ def configuracion_global_view(request):
 
             # Ajustes de tiempo y contingencia de la Inteligencia Artificial
             config.tiempo_espera_ia = data.get('tiempo_espera_ia', config.tiempo_espera_ia)
-            config.accion_fallo_ia = data.get('accion_fallo_ia', config.accion_fallo_ia)
+            accion_raw = str(data.get('accion_fallo_ia', config.accion_fallo_ia) or '').strip().upper()
+            if accion_raw == 'LOCAL':
+                accion_raw = 'DB_LOCAL'
+            elif accion_raw == 'REINTENTAR':
+                accion_raw = 'CANCELAR'
+            config.accion_fallo_ia = accion_raw
+
+            # Parámetros de seguridad y sesión configurables por el Administrador
+            if 'tiempo_inactividad_min' in data:
+                config.tiempo_inactividad_min = int(data.get('tiempo_inactividad_min'))
+            if 'max_intentos_login' in data:
+                config.max_intentos_login = int(data.get('max_intentos_login'))
+            if 'tiempo_bloqueo_min' in data:
+                config.tiempo_bloqueo_min = int(data.get('tiempo_bloqueo_min'))
 
             # Umbrales físicos de validación de sensores
             config.rango_ph_min = data.get('rango_ph_min', config.rango_ph_min)
@@ -945,10 +1027,49 @@ def configuracion_global_view(request):
             config.rango_temp_max = data.get('rango_temp_max', config.rango_temp_max)
 
             # Guardar cambios
+            # Validación en el servidor de tipos, límites y consistencia de umbrales globales
+            import math
+            try:
+                config.tiempo_espera_ia = int(config.tiempo_espera_ia)
+                if not (1 <= config.tiempo_espera_ia <= 60):
+                    return JsonResponse({'error': 'El tiempo de espera de la IA debe estar entre 1 y 60 segundos.'}, status=400)
+                if config.accion_fallo_ia not in ('DB_LOCAL', 'CANCELAR'):
+                    return JsonResponse({'error': 'La acción de contingencia de IA no es válida.'}, status=400)
+                if not (5 <= int(config.tiempo_inactividad_min) <= 480):
+                    return JsonResponse({'error': 'El tiempo de inactividad debe estar entre 5 y 480 minutos.'}, status=400)
+                if not (3 <= int(config.max_intentos_login) <= 20):
+                    return JsonResponse({'error': 'El máximo de intentos de login debe estar entre 3 y 20.'}, status=400)
+                if not (1 <= int(config.tiempo_bloqueo_min) <= 120):
+                    return JsonResponse({'error': 'El tiempo de bloqueo debe estar entre 1 y 120 minutos.'}, status=400)
+                pares_cfg = [
+                    ('pH', 'rango_ph_min', 'rango_ph_max', 0.0, 14.0),
+                    ('Nitrógeno', 'rango_n_min', 'rango_n_max', 0.0, 5000.0),
+                    ('Fósforo', 'rango_p_min', 'rango_p_max', 0.0, 5000.0),
+                    ('Potasio', 'rango_k_min', 'rango_k_max', 0.0, 5000.0),
+                    ('Humedad', 'rango_humedad_min', 'rango_humedad_max', 0.0, 100.0),
+                    ('Conductividad', 'rango_ce_min', 'rango_ce_max', 0.0, 50.0),
+                    ('Temperatura', 'rango_temp_min', 'rango_temp_max', -20.0, 80.0),
+                ]
+                for etiq, attr_min, attr_max, l_inf, l_sup in pares_cfg:
+                    val_min = float(getattr(config, attr_min))
+                    val_max = float(getattr(config, attr_max))
+                    if math.isnan(val_min) or math.isinf(val_min) or math.isnan(val_max) or math.isinf(val_max):
+                        return JsonResponse({'error': f'Umbral numérico inválido en {etiq}.'}, status=400)
+                    if val_min > val_max:
+                        return JsonResponse({'error': f'El umbral mínimo de {etiq} no puede superar al máximo.'}, status=400)
+                    if val_min < l_inf or val_max > l_sup:
+                        return JsonResponse({'error': f'El umbral de {etiq} está fuera de los límites físicos ({l_inf} a {l_sup}).'}, status=400)
+                    setattr(config, attr_min, val_min)
+                    setattr(config, attr_max, val_max)
+            except (ValueError, TypeError):
+                return JsonResponse({'error': 'Los valores de configuración deben ser numéricos válidos.'}, status=400)
+
+            # Guardar cambios
             config.save()
             return JsonResponse({'mensaje': 'Configuración guardada exitosamente'})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+        except Exception:
+            logger.exception("Excepción controlada en operación administrativa")
+            return JsonResponse({'error': 'Error interno al procesar la solicitud administrativa.'}, status=500)
 
     # Renderizar el formulario administrativo de configuración
     return render(request, 'admin/configuracion.html', {'config': config})

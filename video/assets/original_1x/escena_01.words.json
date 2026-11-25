@@ -1,0 +1,338 @@
+[
+  {
+    "id": "w0",
+    "text": "En",
+    "start": 0,
+    "end": 0.139
+  },
+  {
+    "id": "w1",
+    "text": "el",
+    "start": 0.197,
+    "end": 0.267
+  },
+  {
+    "id": "w2",
+    "text": "Huila,",
+    "start": 0.337,
+    "end": 0.952
+  },
+  {
+    "id": "w3",
+    "text": "la",
+    "start": 1.463,
+    "end": 1.533
+  },
+  {
+    "id": "w4",
+    "text": "mayoría",
+    "start": 1.579,
+    "end": 1.881
+  },
+  {
+    "id": "w5",
+    "text": "de",
+    "start": 1.916,
+    "end": 1.962
+  },
+  {
+    "id": "w6",
+    "text": "los",
+    "start": 1.997,
+    "end": 2.09
+  },
+  {
+    "id": "w7",
+    "text": "agricultores",
+    "start": 2.136,
+    "end": 2.728
+  },
+  {
+    "id": "w8",
+    "text": "siembran",
+    "start": 2.937,
+    "end": 3.367
+  },
+  {
+    "id": "w9",
+    "text": "arroz",
+    "start": 3.46,
+    "end": 3.773
+  },
+  {
+    "id": "w10",
+    "text": "y",
+    "start": 3.831,
+    "end": 3.855
+  },
+  {
+    "id": "w11",
+    "text": "café.",
+    "start": 3.889,
+    "end": 4.377
+  },
+  {
+    "id": "w12",
+    "text": "No",
+    "start": 4.981,
+    "end": 5.097
+  },
+  {
+    "id": "w13",
+    "text": "solo",
+    "start": 5.143,
+    "end": 5.294
+  },
+  {
+    "id": "w14",
+    "text": "por",
+    "start": 5.329,
+    "end": 5.422
+  },
+  {
+    "id": "w15",
+    "text": "gusto,",
+    "start": 5.468,
+    "end": 5.84
+  },
+  {
+    "id": "w16",
+    "text": "sino",
+    "start": 5.909,
+    "end": 6.13
+  },
+  {
+    "id": "w17",
+    "text": "por",
+    "start": 6.177,
+    "end": 6.293
+  },
+  {
+    "id": "w18",
+    "text": "tradición:",
+    "start": 6.362,
+    "end": 7.047
+  },
+  {
+    "id": "w19",
+    "text": "saben",
+    "start": 7.558,
+    "end": 7.872
+  },
+  {
+    "id": "w20",
+    "text": "que",
+    "start": 7.918,
+    "end": 7.999
+  },
+  {
+    "id": "w21",
+    "text": "sus",
+    "start": 8.046,
+    "end": 8.255
+  },
+  {
+    "id": "w22",
+    "text": "tierras",
+    "start": 8.324,
+    "end": 8.603
+  },
+  {
+    "id": "w23",
+    "text": "funcionan",
+    "start": 8.638,
+    "end": 9.056
+  },
+  {
+    "id": "w24",
+    "text": "bien",
+    "start": 9.137,
+    "end": 9.358
+  },
+  {
+    "id": "w25",
+    "text": "para",
+    "start": 9.427,
+    "end": 9.578
+  },
+  {
+    "id": "w26",
+    "text": "esos",
+    "start": 9.601,
+    "end": 9.764
+  },
+  {
+    "id": "w27",
+    "text": "cultivos.",
+    "start": 9.799,
+    "end": 10.426
+  },
+  {
+    "id": "w28",
+    "text": "Pero",
+    "start": 11.122,
+    "end": 11.331
+  },
+  {
+    "id": "w29",
+    "text": "cuando",
+    "start": 11.378,
+    "end": 11.622
+  },
+  {
+    "id": "w30",
+    "text": "quieren",
+    "start": 11.68,
+    "end": 11.865
+  },
+  {
+    "id": "w31",
+    "text": "probar",
+    "start": 11.9,
+    "end": 12.132
+  },
+  {
+    "id": "w32",
+    "text": "algo",
+    "start": 12.167,
+    "end": 12.33
+  },
+  {
+    "id": "w33",
+    "text": "distinto,",
+    "start": 12.376,
+    "end": 13.038
+  },
+  {
+    "id": "w34",
+    "text": "aparece",
+    "start": 13.421,
+    "end": 13.851
+  },
+  {
+    "id": "w35",
+    "text": "la",
+    "start": 13.897,
+    "end": 13.955
+  },
+  {
+    "id": "w36",
+    "text": "duda:",
+    "start": 14.002,
+    "end": 14.443
+  },
+  {
+    "id": "w37",
+    "text": "¿mi",
+    "start": 14.826,
+    "end": 15
+  },
+  {
+    "id": "w38",
+    "text": "suelo",
+    "start": 15.081,
+    "end": 15.337
+  },
+  {
+    "id": "w39",
+    "text": "servirá?",
+    "start": 15.383,
+    "end": 16.01
+  },
+  {
+    "id": "w40",
+    "text": "Experimentar",
+    "start": 16.707,
+    "end": 17.368
+  },
+  {
+    "id": "w41",
+    "text": "cuesta",
+    "start": 17.438,
+    "end": 17.74
+  },
+  {
+    "id": "w42",
+    "text": "dinero",
+    "start": 17.786,
+    "end": 18.135
+  },
+  {
+    "id": "w43",
+    "text": "y",
+    "start": 18.158,
+    "end": 18.193
+  },
+  {
+    "id": "w44",
+    "text": "tiempo,",
+    "start": 18.239,
+    "end": 18.855
+  },
+  {
+    "id": "w45",
+    "text": "y",
+    "start": 19.18,
+    "end": 19.238
+  },
+  {
+    "id": "w46",
+    "text": "no",
+    "start": 19.307,
+    "end": 19.377
+  },
+  {
+    "id": "w47",
+    "text": "todos",
+    "start": 19.435,
+    "end": 19.644
+  },
+  {
+    "id": "w48",
+    "text": "pueden",
+    "start": 19.714,
+    "end": 19.899
+  },
+  {
+    "id": "w49",
+    "text": "asumir",
+    "start": 19.946,
+    "end": 20.259
+  },
+  {
+    "id": "w50",
+    "text": "ese",
+    "start": 20.294,
+    "end": 20.433
+  },
+  {
+    "id": "w51",
+    "text": "riesgo",
+    "start": 20.526,
+    "end": 20.898
+  },
+  {
+    "id": "w52",
+    "text": "sin",
+    "start": 20.944,
+    "end": 21.084
+  },
+  {
+    "id": "w53",
+    "text": "un",
+    "start": 21.142,
+    "end": 21.2
+  },
+  {
+    "id": "w54",
+    "text": "respaldo",
+    "start": 21.269,
+    "end": 21.722
+  },
+  {
+    "id": "w55",
+    "text": "técnico.",
+    "start": 21.769,
+    "end": 22.57
+  }
+]

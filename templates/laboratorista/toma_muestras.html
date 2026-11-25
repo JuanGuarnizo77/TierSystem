@@ -185,7 +185,7 @@
             
             <!-- Guardamos los datos para JS de forma segura -->
             <script id="cultivosCatalogoServer" type="application/json">{{ cultivos_catalogo_json|default:'[]'|safe }}</script>
-            <script id="terrenoPoligonoData" type="application/json">{% if solicitud_activa.terreno.coordenadas_poligono %}{{ solicitud_activa.terreno.coordenadas_poligono|safe }}{% else %}null{% endif %}</script>
+            {{ solicitud_activa.terreno.coordenadas_poligono|json_script:"terrenoPoligonoData" }}
             <script id="puntosDataJson" type="application/json">[
                 {% for p in puntos_muestreo %}
                 {"id": {{ p.id }}, "numero": {{ p.numero }}, "estado": "{{ p.estado }}", "latitud": {{ p.latitud|default:'null' }}, "longitud": {{ p.longitud|default:'null' }}, "altitud": {{ p.altitud|default:'null' }}}{% if not forloop.last %},{% endif %}
@@ -705,6 +705,8 @@
             // Si el backend no tiene ese endpoint (porque no lo hemos creado), simplemente hacemos una simulación.
             Swal.close();
             // Simulación de promedio (fallback)
+            Swal.fire('Error de Conexión', 'No fue posible consultar el promedio de puntos desde el servidor. Verifica la conexión.', 'error');
+            return;
             datosSensorActual = {
                 humedad: 45.5,
                 temperatura: 24.2,
@@ -763,7 +765,7 @@
     function procesarDiagnosticoAutomatico() {
         if (!datosSensorActual) return;
         
-        if (modoAnalisisSeleccionado === 'offline') {
+        if (modoAnalisisSeleccionado === 'offline' && !navigator.onLine) {
             solicitarDiagnosticoOffline();
         } else {
             // Modos 'online' y 'auto': el backend valida internet real en < 0.8s
@@ -925,6 +927,57 @@
             }
         }
 
+        function homologarConductividadJS(cRaw, cMaxCat = 2.5) {
+            const cVal = parseFloat(cRaw || 0);
+            const cMax = parseFloat(cMaxCat || 2.5);
+            if (cVal <= 0) return 0;
+            if (cMax <= 15.0 && cVal > 15.0) return cVal / 1000.0;
+            return cVal;
+        }
+
+        function evaluarNPKSonda7en1JS(valor, minCat, maxCat, humedad, tipo = 'n') {
+            const v = parseFloat(valor || 0);
+            const lo = Math.max(parseFloat(minCat || 1), 1);
+            const hi = Math.max(parseFloat(maxCat || lo), lo);
+            const hVal = parseFloat(humedad || 0);
+            if (v <= 0) return 0;
+
+            let factorHum = 1.0;
+            if (hVal > 0 && hVal < 55.0) {
+                factorHum = 1.0 + ((55.0 - hVal) / 55.0) * 0.55;
+            }
+            const vEfectivo = v * factorHum;
+            const ratioSoluble = (tipo === 'p') ? 0.20 : 0.25;
+            const umbralSonda = Math.max((tipo === 'p') ? 6.0 : 15.0, lo * ratioSoluble);
+
+            if ((v >= lo && v <= hi) || (vEfectivo >= lo && v <= hi)) {
+                return 100.0;
+            } else if (v > hi) {
+                return Math.max(45.0, 100.0 - ((v - hi) / hi) * 40.0);
+            } else if (vEfectivo >= umbralSonda) {
+                const progreso = (vEfectivo - umbralSonda) / Math.max(lo - umbralSonda, 1.0);
+                return Math.min(98.0, 82.0 + progreso * 16.0);
+            } else {
+                return Math.max(55.0, 55.0 + (vEfectivo / Math.max(umbralSonda, 1.0)) * 27.0);
+            }
+        }
+
+        function evaluarCESonda7en1JS(cRaw, cMinCat, cMaxCat) {
+            const cRawF = parseFloat(cRaw || 0);
+            if (cRawF <= 0) return 0;
+            const cMin = parseFloat(cMinCat || 0.5);
+            const cMax = parseFloat(cMaxCat || 2.5);
+            const cDsm = homologarConductividadJS(cRawF, cMax);
+
+            if (cDsm >= cMin && cDsm <= cMax) {
+                return 100.0;
+            } else if (cDsm < cMin) {
+                return Math.min(95.0, 78.0 + (cDsm / Math.max(cMin, 0.1)) * 17.0);
+            } else {
+                return Math.max(15.0, 100.0 - ((cDsm - cMax) / Math.max(cMax, 0.1)) * 75.0);
+            }
+        }
+
         const d = datosSensorActual;
         const ph = parseFloat(d.ph || 0);
         const n = parseFloat(d.nitrogeno || 0);
@@ -934,9 +987,8 @@
         const t = parseFloat(d.temperatura || 0);
         const c = parseFloat(d.conductividad || 0);
 
-        // Ley del Mínimo de Liebig y evaluación de viabilidad del suelo:
-        const esSueloCritico = (n <= 5 && p <= 5 && k <= 5);
-        const deficitsGraves = (n < 10 || p < 10 || k < 10 || c < 0.2);
+        // Calibración para sonda RS485 7 en 1: solo crítico si NPK y CE son nulos o suelo totalmente seco
+        const esSueloCritico = (n <= 0 && p <= 0 && k <= 0 && c <= 0) || (n <= 1 && p <= 1 && k <= 1 && c <= 2 && h < 8.0);
 
         let recomendaciones = [];
 
@@ -944,107 +996,85 @@
             const r = item.rangos || {};
             let puntajes = [];
 
-            // 1. pH (20%)
+            // 1. pH (30% - Variable maestra edafológica)
             if (r.ph && ph > 0) {
                 const [minPh, maxPh] = r.ph;
                 if (ph >= minPh && ph <= maxPh) {
-                    puntajes.push(100.0 * 0.20);
+                    puntajes.push(100.0 * 0.30);
                 } else if (ph < minPh) {
                     const diff = minPh - ph;
-                    puntajes.push(Math.max(5.0, 100.0 - (diff / 1.5) * 80.0) * 0.20);
+                    puntajes.push(Math.max(10.0, 100.0 - (diff / 1.5) * 75.0) * 0.30);
                 } else {
                     const diff = ph - maxPh;
-                    puntajes.push(Math.max(5.0, 100.0 - (diff / 1.5) * 80.0) * 0.20);
+                    puntajes.push(Math.max(10.0, 100.0 - (diff / 1.5) * 75.0) * 0.30);
                 }
-            } else { puntajes.push(50.0 * 0.20); }
+            } else { puntajes.push(50.0 * 0.30); }
 
-            // 2. Nitrógeno (20%)
-            if (r.nitrogeno) {
-                const [minN, maxN] = r.nitrogeno;
-                if (n === 0) {
-                    puntajes.push(0.0);
-                } else if (n < minN) {
-                    puntajes.push(Math.max(0.0, (n / minN) * 50.0) * 0.20);
-                } else if (n <= maxN) {
-                    puntajes.push(100.0 * 0.20);
-                } else {
-                    puntajes.push(Math.max(40.0, 100.0 - ((n - maxN) / maxN) * 40.0) * 0.20);
-                }
-            } else { puntajes.push(0.0); }
-
-            // 3. Fósforo (20%)
-            if (r.fosforo) {
-                const [minP, maxP] = r.fosforo;
-                if (p === 0) {
-                    puntajes.push(0.0);
-                } else if (p < minP) {
-                    puntajes.push(Math.max(0.0, (p / minP) * 50.0) * 0.20);
-                } else if (p <= maxP) {
-                    puntajes.push(100.0 * 0.20);
-                } else {
-                    puntajes.push(Math.max(50.0, 100.0 - ((p - maxP) / maxP) * 40.0) * 0.20);
-                }
-            } else { puntajes.push(0.0); }
-
-            // 4. Potasio (20%)
-            if (r.potasio) {
-                const [minK, maxK] = r.potasio;
-                if (k === 0) {
-                    puntajes.push(0.0);
-                } else if (k < minK) {
-                    puntajes.push(Math.max(0.0, (k / minK) * 50.0) * 0.20);
-                } else if (k <= maxK) {
-                    puntajes.push(100.0 * 0.20);
-                } else {
-                    puntajes.push(Math.max(50.0, 100.0 - ((k - maxK) / maxK) * 40.0) * 0.20);
-                }
-            } else { puntajes.push(0.0); }
-
-            // 5. Conductividad Eléctrica (10%)
-            if (r.conductividad) {
-                const [minC, maxC] = r.conductividad;
-                if (c === 0) {
-                    puntajes.push(0.0);
-                } else if (c < minC) {
-                    puntajes.push(Math.max(10.0, (c / minC) * 60.0) * 0.10);
-                } else if (c <= maxC) {
-                    puntajes.push(100.0 * 0.10);
-                } else {
-                    puntajes.push(Math.max(10.0, 100.0 - ((c - maxC) / maxC) * 80.0) * 0.10);
-                }
-            } else { puntajes.push(0.0); }
-
-            // 6. Humedad y Temp (10% total)
-            let otros = 0;
+            // 2. Humedad (15%)
             if (r.humedad && h > 0) {
-                if (h >= r.humedad[0] && h <= r.humedad[1]) otros += 5;
-                else otros += Math.max(1, (h / r.humedad[0]) * 3);
-            }
+                const [minH, maxH] = r.humedad;
+                if (h >= minH && h <= maxH) {
+                    puntajes.push(100.0 * 0.15);
+                } else if (h < minH) {
+                    puntajes.push(Math.max(35.0, (h / Math.max(minH, 1.0)) * 90.0) * 0.15);
+                } else {
+                    puntajes.push(Math.max(30.0, 100.0 - ((h - maxH) / Math.max(maxH, 1.0)) * 50.0) * 0.15);
+                }
+            } else { puntajes.push(50.0 * 0.15); }
+
+            // 3. Temperatura (15%)
             if (r.temperatura && t > 0) {
-                if (t >= r.temperatura[0] && t <= r.temperatura[1]) otros += 5;
-                else otros += 3;
-            }
-            puntajes.push(otros);
+                const [minT, maxT] = r.temperatura;
+                if (t >= minT && t <= maxT) {
+                    puntajes.push(100.0 * 0.15);
+                } else {
+                    const diffT = (t < minT) ? (minT - t) : (t - maxT);
+                    puntajes.push(Math.max(25.0, 100.0 - (diffT / 8.0) * 70.0) * 0.15);
+                }
+            } else { puntajes.push(50.0 * 0.15); }
+
+            // 4. Nitrógeno (10% - Curva sonda 7 en 1)
+            if (r.nitrogeno) {
+                const scoreN = evaluarNPKSonda7en1JS(n, r.nitrogeno[0], r.nitrogeno[1], h, 'n');
+                puntajes.push(scoreN * 0.10);
+            } else { puntajes.push(0.0); }
+
+            // 5. Fósforo (10% - Curva sonda 7 en 1 con fijación coloidal)
+            if (r.fosforo) {
+                const scoreP = evaluarNPKSonda7en1JS(p, r.fosforo[0], r.fosforo[1], h, 'p');
+                puntajes.push(scoreP * 0.10);
+            } else { puntajes.push(0.0); }
+
+            // 6. Potasio (10% - Curva sonda 7 en 1)
+            if (r.potasio) {
+                const scoreK = evaluarNPKSonda7en1JS(k, r.potasio[0], r.potasio[1], h, 'k');
+                puntajes.push(scoreK * 0.10);
+            } else { puntajes.push(0.0); }
+
+            // 7. Conductividad Eléctrica CE (10% - Homologada a dS/m)
+            if (r.conductividad) {
+                const scoreC = evaluarCESonda7en1JS(c, r.conductividad[0], r.conductividad[1]);
+                puntajes.push(scoreC * 0.10);
+            } else { puntajes.push(0.0); }
 
             let compat = Math.min(100, Math.round(puntajes.reduce((a, b) => a + b, 0)));
 
-            // Ley de Liebig estricta: si los macronutrientes esenciales están agotados (0 mg/kg), ninguna planta puede prosperar
             if (esSueloCritico) {
-                compat = Math.min(compat, 8); // Máximo 8% Ideal
-            } else if (deficitsGraves) {
-                compat = Math.min(compat, 30);
+                compat = Math.min(compat, 8); // Máximo 8% solo si sensor marca todo 0
             }
 
-            // Plan de fertilización offline
+            // Plan de fertilización offline adaptado a sonda 7 en 1
             let planes = [];
             if (esSueloCritico) {
-                planes.push("Déficit nutricional crítico total: N, P y K en 0 mg/kg con conductividad nula. El suelo no es apto para siembra inmediata. Se requiere acondicionamiento estructural con 15-20 t/ha de materia orgánica compostada y fertilización de base con NPK antes de sembrar.");
+                planes.push("Déficit nutricional crítico total: N, P y K en 0 mg/kg con conductividad nula. El suelo no es apto para siembra inmediata. Se requiere acondicionamiento estructural con materia orgánica compostada y fertilización de base con NPK antes de sembrar.");
             } else {
+                if (h > 0 && h < 45.0) planes.push(`Humedad moderada (${h.toFixed(1)}%): regar a capacidad de campo (55-65%) optimizará la disolución iónica de NPK en la solución del suelo.`);
                 if (r.ph && ph > 0 && ph < r.ph[0]) planes.push("Aplicar enmienda calcárea (Cal Dolomita o Cal Agrícola) para corregir acidez.");
-                if (r.nitrogeno && n < r.nitrogeno[0]) planes.push("Reforzar Nitrógeno con materia orgánica compostada o fertilización nitrogenada fraccionada.");
-                if (r.fosforo && p < r.fosforo[0]) planes.push("Aplicar Fósforo localizado (DAP o Roca Fosfórica) a la siembra.");
-                if (r.potasio && k < r.potasio[0]) planes.push("Suplir Potasio (KCl) para favorecer resistencia hídrica y llenado.");
-                if (planes.length === 0) planes.push("Parámetros balanceados. Mantener fertilización de sostenimiento.");
+                if (r.nitrogeno && n < r.nitrogeno[0] * 0.25) planes.push("Reforzar Nitrógeno con materia orgánica compostada o fertilización nitrogenada fraccionada.");
+                else if (r.nitrogeno && n < r.nitrogeno[0]) planes.push("Acompañar con fertilización nitrogenada de mantenimiento.");
+                if (r.fosforo && p < r.fosforo[0] * 0.20) planes.push("Aplicar Fósforo localizado (DAP o Roca Fosfórica) para estimular desarrollo radicular.");
+                if (r.potasio && k < r.potasio[0] * 0.25) planes.push("Suplir Potasio (KCl) según fase fenológica del cultivo.");
+                if (planes.length === 0) planes.push("Condiciones agronómicas y nutricionales favorables. Mantener plan de fertilización estándar.");
             }
 
             const itemNom = normalizarTextoJS(item.nombre);
@@ -1094,15 +1124,17 @@
         }
 
         if (esSueloCritico) {
-            consejos.push("ALERTA AGRONÓMICA: El suelo evaluado NO ES APTO para ningún cultivo en su estado actual. Las mediciones indican ausencia total de macronutrientes primarios (N: 0, P: 0, K: 0 mg/kg), nula conductividad eléctrica (0 us/cm) y baja humedad (13.1%). Ninguna planta podrá germinar ni desarrollarse sin una recuperación previa mediante enmienda orgánica profunda, fertilización NPK intensiva y corrección de pH.");
+            consejos.push(`ALERTA AGRONÓMICA: El suelo evaluado NO ES APTO para ningún cultivo en su estado actual. Las mediciones indican ausencia total de macronutrientes primarios (N: 0, P: 0, K: 0 mg/kg), nula conductividad eléctrica (0 us/cm) y baja humedad (${h.toFixed(1)}%). Ninguna planta podrá germinar ni desarrollarse sin una recuperación previa mediante enmienda orgánica profunda, fertilización NPK intensiva y corrección de pH.`);
         } else {
-            if (ph > 0 && ph < 5.5) consejos.push(`El suelo presenta acidez (pH ${ph.toFixed(1)}). Recomendable aplicar encalado.`);
+            if (ph > 0 && ph < 5.5) consejos.push(`El suelo presenta acidez (pH ${ph.toFixed(1)}), típica en zonas cafeteras del Huila. Recomendable aplicar cal dolomita.`);
             else if (ph > 7.5) consejos.push(`El suelo es ligeramente alcalino (pH ${ph.toFixed(1)}).`);
             else consejos.push(`El pH (${ph.toFixed(1)}) está en rango adecuado para cultivos del departamento del Huila.`);
 
-            if (n > 0 && p > 0 && k > 0) consejos.push(`Lecturas NPK registradas: N=${Math.round(n)}, P=${Math.round(p)}, K=${Math.round(k)} mg/kg.`);
+            if (n > 0 || p > 0 || k > 0) {
+                consejos.push(`Lecturas de iones solubles en sonda 7 en 1: N=${Math.round(n)}, P=${Math.round(p)}, K=${Math.round(k)} mg/kg (CE=${c} µS/cm). La sonda registra los nutrientes disueltos en el agua del poro; valores moderados en suelos con plantas vivas indican baja salinidad libre y alta respuesta a fertilización de sostenimiento.`);
+            }
         }
-        consejos.push("Diagnóstico agronómico calculado 100% en modo offline local (Motor Huila).");
+        consejos.push("Diagnóstico agronómico calculado en modo offline local (Motor Huila calibrado para sonda RS485 7 en 1).");
 
         const diagnosticoOffline = {
             recomendaciones: topRecs,

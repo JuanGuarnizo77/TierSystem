@@ -1,0 +1,425 @@
+{
+  "ok": true,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 2,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "nested_media_start_basis_ambiguous",
+        "severity": "warning",
+        "message": "<video id=\"s3-sensor-vid\"> has data-start=\"5.6\" inside a sub-composition. Nested media timing is local to its composition by default; a nonzero value can be confused with a legacy root-global timestamp.",
+        "selector": "#s3-sensor-vid",
+        "dataAttributes": {},
+        "sourceFile": "C:\\laragon\\www\\TierSystem-Django\\video\\compositions\\scene3.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Keep data-start=\"5.6\" if it is composition-local. If this is a legacy root-global timestamp, add data-hf-media-start-basis=\"global\"; otherwise convert it to local time by subtracting the host start."
+      },
+      {
+        "code": "nested_media_start_basis_ambiguous",
+        "severity": "warning",
+        "message": "<video id=\"s4-pwa-vid\"> has data-start=\"4.0\" inside a sub-composition. Nested media timing is local to its composition by default; a nonzero value can be confused with a legacy root-global timestamp.",
+        "selector": "#s4-pwa-vid",
+        "dataAttributes": {},
+        "sourceFile": "C:\\laragon\\www\\TierSystem-Django\\video\\compositions\\scene4.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Keep data-start=\"4.0\" if it is composition-local. If this is a legacy root-global timestamp, add data-hf-media-start-basis=\"global\"; otherwise convert it to local time by subtracting the host start."
+      }
+    ],
+    "filesScanned": 8
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 2,
+    "findings": [
+      {
+        "code": "text_occluded",
+        "severity": "info",
+        "time": 25.025,
+        "selector": "div.slot-badge",
+        "message": "Text is hidden beneath an opaque element.",
+        "rect": {
+          "left": 1399.83,
+          "top": 452,
+          "right": 1547.45,
+          "bottom": 481,
+          "width": 147.63,
+          "height": 29
+        },
+        "containerSelector": "#s3-sensor-vid",
+        "text": "3s · SENSOR",
+        "fixHint": "Give the text its own zone, raise its stacking order above the covering element, or mark intentional layering with data-layout-allow-occlusion.",
+        "coveredFraction": 1,
+        "lifetime": {
+          "start": 18.55,
+          "end": 27.450000000000003
+        },
+        "dataAttributes": {},
+        "sourceFile": "compositions/scene3.html",
+        "bbox": {
+          "x": 1399.83,
+          "y": 452,
+          "width": 147.63,
+          "height": 29
+        },
+        "firstSeen": 25.025,
+        "lastSeen": 25.025,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          25.025
+        ]
+      },
+      {
+        "code": "text_occluded",
+        "severity": "info",
+        "time": 25.025,
+        "selector": "div.slot-file",
+        "message": "Text is hidden beneath an opaque element.",
+        "rect": {
+          "left": 1350.75,
+          "top": 505,
+          "right": 1596.53,
+          "bottom": 536,
+          "width": 245.78,
+          "height": 31
+        },
+        "containerSelector": "#s3-sensor-vid",
+        "text": "assets/sensor.mp4",
+        "fixHint": "Give the text its own zone, raise its stacking order above the covering element, or mark intentional layering with data-layout-allow-occlusion.",
+        "coveredFraction": 1,
+        "lifetime": {
+          "start": 18.55,
+          "end": 27.450000000000003
+        },
+        "dataAttributes": {},
+        "sourceFile": "compositions/scene3.html",
+        "bbox": {
+          "x": 1350.75,
+          "y": 505,
+          "width": 245.78,
+          "height": 31
+        },
+        "firstSeen": 25.025,
+        "lastSeen": 25.025,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          25.025
+        ]
+      }
+    ],
+    "duration": 50.05,
+    "samples": [
+      2.781,
+      8.342,
+      13.903,
+      19.464,
+      25.025,
+      30.586,
+      36.147,
+      41.708,
+      47.269
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 2,
+    "truncated": false,
+    "faceCheck": {
+      "ran": true,
+      "candidates": 0,
+      "faces": 0
+    }
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      2.781,
+      13.903,
+      25.025,
+      36.147,
+      47.269
+    ],
+    "checked": 43,
+    "passed": 43
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 4,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 3 text elements stay under it for 0.5 s or more, the smallest \"HUILA\" at 22 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "HUILA",
+        "selector": "div.map-badge",
+        "dataAttributes": {},
+        "sourceFile": "compositions/scene1.html",
+        "bbox": {
+          "x": 132,
+          "y": 118,
+          "width": 76.39,
+          "height": 26
+        },
+        "time": 0,
+        "times": [
+          0,
+          0,
+          0
+        ],
+        "fontPx": 22,
+        "floorPx": 28,
+        "seconds": 10.984,
+        "elements": [
+          {
+            "selector": "div.map-badge",
+            "text": "HUILA",
+            "fontPx": 22,
+            "time": 0,
+            "seconds": 10.984
+          },
+          {
+            "selector": "div.map-legend > div:nth-of-type(1) > span:nth-of-type(2)",
+            "text": "Arroz",
+            "fontPx": 22,
+            "time": 0,
+            "seconds": 10.984
+          },
+          {
+            "selector": "div.map-legend > div:nth-of-type(2) > span:nth-of-type(2)",
+            "text": "Café",
+            "fontPx": 22,
+            "time": 0,
+            "seconds": 10.984
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 2 text elements stay under it for 0.5 s or more, the smallest \"3s · SENSOR\" at 24 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "3s · SENSOR",
+        "selector": "div.slot-badge",
+        "dataAttributes": {},
+        "sourceFile": "compositions/scene3.html",
+        "bbox": {
+          "x": 1399.83,
+          "y": 452,
+          "width": 147.62,
+          "height": 29
+        },
+        "time": 24.089,
+        "times": [
+          24.089,
+          24.089
+        ],
+        "fontPx": 24,
+        "floorPx": 28,
+        "seconds": 3.245,
+        "elements": [
+          {
+            "selector": "div.slot-badge",
+            "text": "3s · SENSOR",
+            "fontPx": 24,
+            "time": 24.089,
+            "seconds": 3.245
+          },
+          {
+            "selector": "div.slot-file",
+            "text": "assets/sensor.mp4",
+            "fontPx": 26,
+            "time": 24.089,
+            "seconds": 3.245
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 6 text elements stay under it for 0.5 s or more, the smallest \"Datos de ejemplo\" at 22 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Datos de ejemplo",
+        "selector": "#s4-badge",
+        "dataAttributes": {},
+        "sourceFile": "compositions/scene4.html",
+        "bbox": {
+          "x": 1616.84,
+          "y": 90,
+          "width": 201.16,
+          "height": 26
+        },
+        "time": 27.958,
+        "times": [
+          27.958,
+          28.957,
+          29.206,
+          29.456,
+          31.827,
+          31.827
+        ],
+        "fontPx": 22,
+        "floorPx": 28,
+        "seconds": 6.99,
+        "elements": [
+          {
+            "selector": "#s4-badge",
+            "text": "Datos de ejemplo",
+            "fontPx": 22,
+            "time": 27.958,
+            "seconds": 6.99
+          },
+          {
+            "selector": "div.pwa-tag",
+            "text": "3s · PWA",
+            "fontPx": 22,
+            "time": 31.827,
+            "seconds": 3.121
+          },
+          {
+            "selector": "div.pwa-path",
+            "text": "assets/pwa_resultado.mp4",
+            "fontPx": 22,
+            "time": 31.827,
+            "seconds": 3.121
+          },
+          {
+            "selector": "#s4-ind-1 > span:nth-of-type(1)",
+            "text": "pH · K",
+            "fontPx": 24,
+            "time": 28.957,
+            "seconds": 5.991
+          },
+          {
+            "selector": "#s4-ind-2 > span:nth-of-type(1)",
+            "text": "N · P",
+            "fontPx": 24,
+            "time": 29.206,
+            "seconds": 5.742
+          },
+          {
+            "selector": "#s4-ind-3 > span:nth-of-type(1)",
+            "text": "CE",
+            "fontPx": 24,
+            "time": 29.456,
+            "seconds": 5.492
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 4 text elements stay under it for 0.5 s or more, the smallest \"Datos de ejemplo\" at 22 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Datos de ejemplo",
+        "selector": "div.example-tag",
+        "dataAttributes": {},
+        "sourceFile": "compositions/scene5.html",
+        "bbox": {
+          "x": 897.42,
+          "y": 128,
+          "width": 187.08,
+          "height": 26
+        },
+        "time": 35.447,
+        "times": [
+          35.447,
+          35.447,
+          35.447,
+          35.447
+        ],
+        "fontPx": 22,
+        "floorPx": 28,
+        "seconds": 6.366,
+        "elements": [
+          {
+            "selector": "div.example-tag",
+            "text": "Datos de ejemplo",
+            "fontPx": 22,
+            "time": 35.447,
+            "seconds": 6.366
+          },
+          {
+            "selector": "div.weeks-row > span:nth-of-type(1)",
+            "text": "Sem 1",
+            "fontPx": 26,
+            "time": 35.447,
+            "seconds": 6.366
+          },
+          {
+            "selector": "div.weeks-row > span:nth-of-type(2)",
+            "text": "Sem 2",
+            "fontPx": 26,
+            "time": 35.447,
+            "seconds": 6.366
+          },
+          {
+            "selector": "div.weeks-row > span:nth-of-type(3)",
+            "text": "Sem 3",
+            "fontPx": 26,
+            "time": 35.447,
+            "seconds": 6.366
+          }
+        ]
+      }
+    ],
+    "enabled": true,
+    "step": 0.125,
+    "samples": 401
+  },
+  "audio": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

@@ -1,0 +1,122 @@
+[
+  {
+    "id": "w0",
+    "text": "El",
+    "start": 0,
+    "end": 0.139
+  },
+  {
+    "id": "w1",
+    "text": "agricultor",
+    "start": 0.186,
+    "end": 0.743
+  },
+  {
+    "id": "w2",
+    "text": "solicita",
+    "start": 0.813,
+    "end": 1.312
+  },
+  {
+    "id": "w3",
+    "text": "el",
+    "start": 1.335,
+    "end": 1.382
+  },
+  {
+    "id": "w4",
+    "text": "análisis.",
+    "start": 1.44,
+    "end": 2.113
+  },
+  {
+    "id": "w5",
+    "text": "Un",
+    "start": 2.519,
+    "end": 2.635
+  },
+  {
+    "id": "w6",
+    "text": "laboratorista",
+    "start": 2.682,
+    "end": 3.355
+  },
+  {
+    "id": "w7",
+    "text": "va",
+    "start": 3.413,
+    "end": 3.518
+  },
+  {
+    "id": "w8",
+    "text": "al",
+    "start": 3.553,
+    "end": 3.622
+  },
+  {
+    "id": "w9",
+    "text": "terreno",
+    "start": 3.68,
+    "end": 4.075
+  },
+  {
+    "id": "w10",
+    "text": "y",
+    "start": 4.122,
+    "end": 4.156
+  },
+  {
+    "id": "w11",
+    "text": "toma",
+    "start": 4.226,
+    "end": 4.423
+  },
+  {
+    "id": "w12",
+    "text": "las",
+    "start": 4.458,
+    "end": 4.574
+  },
+  {
+    "id": "w13",
+    "text": "lecturas",
+    "start": 4.632,
+    "end": 5.027
+  },
+  {
+    "id": "w14",
+    "text": "de",
+    "start": 5.074,
+    "end": 5.132
+  },
+  {
+    "id": "w15",
+    "text": "pH,",
+    "start": 5.201,
+    "end": 5.828
+  },
+  {
+    "id": "w16",
+    "text": "nutrientes,",
+    "start": 5.991,
+    "end": 6.838
+  },
+  {
+    "id": "w17",
+    "text": "humedad",
+    "start": 6.92,
+    "end": 7.419
+  },
+  {
+    "id": "w18",
+    "text": "y",
+    "start": 7.639,
+    "end": 7.744
+  },
+  {
+    "id": "w19",
+    "text": "conductividad.",
+    "start": 7.814,
+    "end": 8.87
+  }
+]

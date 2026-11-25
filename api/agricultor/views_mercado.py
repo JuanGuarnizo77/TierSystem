@@ -10,6 +10,10 @@ la sincronización bajo demanda mediante el comando de gestión `actualizar_sips
 """
 
 from datetime import timedelta
+import logging
+from core.utils import verificar_rate_limit
+
+logger = logging.getLogger(__name__)
 from io import StringIO
 
 from django.core.management import call_command
@@ -117,11 +121,15 @@ def actualizar_precios_view(request):
       - 200 OK: Proceso exitoso con captura del log de consola generado por el comando.
       - 500 Internal Server Error: Si ocurre una excepción de red o parsing.
     """
+    bloqueado, _ = verificar_rate_limit(request, 'api_mercado_actualizar_sipsa', limite=5, ventana_segundos=300)
+    if bloqueado:
+        return Response({'status': 'error', 'error': 'Demasiadas solicitudes de actualización. Intente en unos minutos.'}, status=429)
     out = StringIO()
     try:
         # Invocación programática del management command de Django redirigiendo stdout
         call_command('actualizar_sipsa', stdout=out)
         return Response({'status': 'ok', 'output': out.getvalue()})
-    except Exception as exc:
+    except Exception:
         # Captura y notificación de errores durante la conexión o el parseo
-        return Response({'status': 'error', 'error': str(exc)}, status=500)
+        logger.exception("Error en actualizar_precios_view API")
+        return Response({'status': 'error', 'error': 'Error interno al sincronizar precios SIPSA.'}, status=500)

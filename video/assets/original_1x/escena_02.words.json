@@ -1,0 +1,314 @@
+[
+  {
+    "id": "w0",
+    "text": "Hoy,",
+    "start": 0,
+    "end": 0.406
+  },
+  {
+    "id": "w1",
+    "text": "conocer",
+    "start": 0.557,
+    "end": 0.859
+  },
+  {
+    "id": "w2",
+    "text": "las",
+    "start": 0.882,
+    "end": 0.987
+  },
+  {
+    "id": "w3",
+    "text": "propiedades",
+    "start": 1.033,
+    "end": 1.672
+  },
+  {
+    "id": "w4",
+    "text": "del",
+    "start": 1.695,
+    "end": 1.8
+  },
+  {
+    "id": "w5",
+    "text": "suelo",
+    "start": 1.846,
+    "end": 2.194
+  },
+  {
+    "id": "w6",
+    "text": "depende",
+    "start": 2.438,
+    "end": 2.786
+  },
+  {
+    "id": "w7",
+    "text": "de",
+    "start": 2.833,
+    "end": 2.879
+  },
+  {
+    "id": "w8",
+    "text": "laboratorios",
+    "start": 2.926,
+    "end": 3.495
+  },
+  {
+    "id": "w9",
+    "text": "que",
+    "start": 3.541,
+    "end": 3.622
+  },
+  {
+    "id": "w10",
+    "text": "suelen",
+    "start": 3.68,
+    "end": 3.936
+  },
+  {
+    "id": "w11",
+    "text": "quedar",
+    "start": 3.971,
+    "end": 4.226
+  },
+  {
+    "id": "w12",
+    "text": "lejos",
+    "start": 4.319,
+    "end": 4.656
+  },
+  {
+    "id": "w13",
+    "text": "de",
+    "start": 4.679,
+    "end": 4.725
+  },
+  {
+    "id": "w14",
+    "text": "las",
+    "start": 4.772,
+    "end": 4.888
+  },
+  {
+    "id": "w15",
+    "text": "zonas",
+    "start": 4.911,
+    "end": 5.19
+  },
+  {
+    "id": "w16",
+    "text": "rurales.",
+    "start": 5.236,
+    "end": 5.886
+  },
+  {
+    "id": "w17",
+    "text": "El",
+    "start": 6.397,
+    "end": 6.525
+  },
+  {
+    "id": "w18",
+    "text": "costo",
+    "start": 6.606,
+    "end": 6.908
+  },
+  {
+    "id": "w19",
+    "text": "y",
+    "start": 6.943,
+    "end": 6.966
+  },
+  {
+    "id": "w20",
+    "text": "la",
+    "start": 7.001,
+    "end": 7.047
+  },
+  {
+    "id": "w21",
+    "text": "logística",
+    "start": 7.094,
+    "end": 7.674
+  },
+  {
+    "id": "w22",
+    "text": "hacen",
+    "start": 7.918,
+    "end": 8.208
+  },
+  {
+    "id": "w23",
+    "text": "que",
+    "start": 8.255,
+    "end": 8.324
+  },
+  {
+    "id": "w24",
+    "text": "muchos",
+    "start": 8.371,
+    "end": 8.731
+  },
+  {
+    "id": "w25",
+    "text": "desistan",
+    "start": 8.766,
+    "end": 9.242
+  },
+  {
+    "id": "w26",
+    "text": "y",
+    "start": 9.3,
+    "end": 9.334
+  },
+  {
+    "id": "w27",
+    "text": "siembren",
+    "start": 9.404,
+    "end": 9.764
+  },
+  {
+    "id": "w28",
+    "text": "por",
+    "start": 9.81,
+    "end": 9.915
+  },
+  {
+    "id": "w29",
+    "text": "intuición.",
+    "start": 9.961,
+    "end": 10.623
+  },
+  {
+    "id": "w30",
+    "text": "Tampoco",
+    "start": 11.227,
+    "end": 11.656
+  },
+  {
+    "id": "w31",
+    "text": "existe",
+    "start": 11.68,
+    "end": 12.028
+  },
+  {
+    "id": "w32",
+    "text": "un",
+    "start": 12.063,
+    "end": 12.109
+  },
+  {
+    "id": "w33",
+    "text": "registro",
+    "start": 12.19,
+    "end": 12.666
+  },
+  {
+    "id": "w34",
+    "text": "que",
+    "start": 12.713,
+    "end": 12.794
+  },
+  {
+    "id": "w35",
+    "text": "muestre",
+    "start": 12.875,
+    "end": 13.317
+  },
+  {
+    "id": "w36",
+    "text": "cómo",
+    "start": 13.386,
+    "end": 13.572
+  },
+  {
+    "id": "w37",
+    "text": "ha",
+    "start": 13.595,
+    "end": 13.642
+  },
+  {
+    "id": "w38",
+    "text": "cambiado",
+    "start": 13.677,
+    "end": 14.118
+  },
+  {
+    "id": "w39",
+    "text": "cada",
+    "start": 14.153,
+    "end": 14.327
+  },
+  {
+    "id": "w40",
+    "text": "terreno,",
+    "start": 14.373,
+    "end": 14.861
+  },
+  {
+    "id": "w41",
+    "text": "ni",
+    "start": 15.105,
+    "end": 15.198
+  },
+  {
+    "id": "w42",
+    "text": "información",
+    "start": 15.232,
+    "end": 15.755
+  },
+  {
+    "id": "w43",
+    "text": "clara",
+    "start": 15.813,
+    "end": 16.092
+  },
+  {
+    "id": "w44",
+    "text": "de",
+    "start": 16.126,
+    "end": 16.184
+  },
+  {
+    "id": "w45",
+    "text": "precios",
+    "start": 16.254,
+    "end": 16.695
+  },
+  {
+    "id": "w46",
+    "text": "al",
+    "start": 16.742,
+    "end": 16.8
+  },
+  {
+    "id": "w47",
+    "text": "momento",
+    "start": 16.858,
+    "end": 17.16
+  },
+  {
+    "id": "w48",
+    "text": "de",
+    "start": 17.206,
+    "end": 17.264
+  },
+  {
+    "id": "w49",
+    "text": "vender",
+    "start": 17.299,
+    "end": 17.554
+  },
+  {
+    "id": "w50",
+    "text": "la",
+    "start": 17.601,
+    "end": 17.659
+  },
+  {
+    "id": "w51",
+    "text": "cosecha.",
+    "start": 17.705,
+    "end": 18.483
+  }
+]

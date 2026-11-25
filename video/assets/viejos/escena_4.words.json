@@ -1,0 +1,116 @@
+[
+  {
+    "id": "w0",
+    "text": "La",
+    "start": 0,
+    "end": 0.174
+  },
+  {
+    "id": "w1",
+    "text": "IA",
+    "start": 0.197,
+    "end": 0.372
+  },
+  {
+    "id": "w2",
+    "text": "calcula",
+    "start": 0.418,
+    "end": 0.836
+  },
+  {
+    "id": "w3",
+    "text": "qué",
+    "start": 0.906,
+    "end": 1.045
+  },
+  {
+    "id": "w4",
+    "text": "tan",
+    "start": 1.115,
+    "end": 1.242
+  },
+  {
+    "id": "w5",
+    "text": "compatible",
+    "start": 1.3,
+    "end": 1.869
+  },
+  {
+    "id": "w6",
+    "text": "es",
+    "start": 1.904,
+    "end": 1.985
+  },
+  {
+    "id": "w7",
+    "text": "el",
+    "start": 2.043,
+    "end": 2.125
+  },
+  {
+    "id": "w8",
+    "text": "suelo",
+    "start": 2.194,
+    "end": 2.473
+  },
+  {
+    "id": "w9",
+    "text": "con",
+    "start": 2.519,
+    "end": 2.624
+  },
+  {
+    "id": "w10",
+    "text": "el",
+    "start": 2.67,
+    "end": 2.728
+  },
+  {
+    "id": "w11",
+    "text": "cultivo",
+    "start": 2.775,
+    "end": 3.158
+  },
+  {
+    "id": "w12",
+    "text": "deseado,",
+    "start": 3.193,
+    "end": 3.75
+  },
+  {
+    "id": "w13",
+    "text": "recomienda",
+    "start": 4.156,
+    "end": 4.598
+  },
+  {
+    "id": "w14",
+    "text": "mejoras",
+    "start": 4.656,
+    "end": 5.143
+  },
+  {
+    "id": "w15",
+    "text": "y",
+    "start": 5.213,
+    "end": 5.248
+  },
+  {
+    "id": "w16",
+    "text": "sugiere",
+    "start": 5.317,
+    "end": 5.689
+  },
+  {
+    "id": "w17",
+    "text": "cultivos",
+    "start": 5.747,
+    "end": 6.223
+  },
+  {
+    "id": "w18",
+    "text": "alternativos.",
+    "start": 6.293,
+    "end": 7.245
+  }
+]

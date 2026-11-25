@@ -1,0 +1,308 @@
+[
+  {
+    "id": "w0",
+    "text": "Para",
+    "start": 0,
+    "end": 0.197
+  },
+  {
+    "id": "w1",
+    "text": "que",
+    "start": 0.218,
+    "end": 0.279
+  },
+  {
+    "id": "w2",
+    "text": "el",
+    "start": 0.301,
+    "end": 0.342
+  },
+  {
+    "id": "w3",
+    "text": "análisis",
+    "start": 0.394,
+    "end": 0.85
+  },
+  {
+    "id": "w4",
+    "text": "represente",
+    "start": 0.954,
+    "end": 1.347
+  },
+  {
+    "id": "w5",
+    "text": "todo",
+    "start": 1.421,
+    "end": 1.7
+  },
+  {
+    "id": "w6",
+    "text": "el",
+    "start": 1.721,
+    "end": 1.762
+  },
+  {
+    "id": "w7",
+    "text": "terreno,",
+    "start": 1.824,
+    "end": 2.374
+  },
+  {
+    "id": "w8",
+    "text": "el",
+    "start": 2.664,
+    "end": 2.747
+  },
+  {
+    "id": "w9",
+    "text": "sistema",
+    "start": 2.788,
+    "end": 3.13
+  },
+  {
+    "id": "w10",
+    "text": "sugiere",
+    "start": 3.162,
+    "end": 3.483
+  },
+  {
+    "id": "w11",
+    "text": "cuántos",
+    "start": 3.566,
+    "end": 4.032
+  },
+  {
+    "id": "w12",
+    "text": "puntos",
+    "start": 4.115,
+    "end": 4.447
+  },
+  {
+    "id": "w13",
+    "text": "de",
+    "start": 4.468,
+    "end": 4.509
+  },
+  {
+    "id": "w14",
+    "text": "muestreo",
+    "start": 4.551,
+    "end": 5.017
+  },
+  {
+    "id": "w15",
+    "text": "tomar",
+    "start": 5.235,
+    "end": 5.722
+  },
+  {
+    "id": "w16",
+    "text": "según",
+    "start": 5.857,
+    "end": 6.179
+  },
+  {
+    "id": "w17",
+    "text": "su",
+    "start": 6.22,
+    "end": 6.323
+  },
+  {
+    "id": "w18",
+    "text": "área.",
+    "start": 6.396,
+    "end": 6.717
+  },
+  {
+    "id": "w19",
+    "text": "El",
+    "start": 7.256,
+    "end": 7.371
+  },
+  {
+    "id": "w20",
+    "text": "laboratorista",
+    "start": 7.391,
+    "end": 8.013
+  },
+  {
+    "id": "w21",
+    "text": "captura",
+    "start": 8.23,
+    "end": 8.677
+  },
+  {
+    "id": "w22",
+    "text": "cada",
+    "start": 8.749,
+    "end": 8.946
+  },
+  {
+    "id": "w23",
+    "text": "punto,",
+    "start": 8.987,
+    "end": 9.454
+  },
+  {
+    "id": "w24",
+    "text": "el",
+    "start": 9.91,
+    "end": 10.004
+  },
+  {
+    "id": "w25",
+    "text": "sistema",
+    "start": 10.055,
+    "end": 10.366
+  },
+  {
+    "id": "w26",
+    "text": "valida",
+    "start": 10.397,
+    "end": 10.822
+  },
+  {
+    "id": "w27",
+    "text": "que",
+    "start": 11.04,
+    "end": 11.144
+  },
+  {
+    "id": "w28",
+    "text": "las",
+    "start": 11.196,
+    "end": 11.288
+  },
+  {
+    "id": "w29",
+    "text": "lecturas",
+    "start": 11.32,
+    "end": 11.693
+  },
+  {
+    "id": "w30",
+    "text": "estén",
+    "start": 11.745,
+    "end": 11.942
+  },
+  {
+    "id": "w31",
+    "text": "en",
+    "start": 11.994,
+    "end": 12.046
+  },
+  {
+    "id": "w32",
+    "text": "rango",
+    "start": 12.129,
+    "end": 12.439
+  },
+  {
+    "id": "w33",
+    "text": "y",
+    "start": 12.781,
+    "end": 12.854
+  },
+  {
+    "id": "w34",
+    "text": "calcula",
+    "start": 12.927,
+    "end": 13.33
+  },
+  {
+    "id": "w35",
+    "text": "el",
+    "start": 13.362,
+    "end": 13.413
+  },
+  {
+    "id": "w36",
+    "text": "perfil",
+    "start": 13.476,
+    "end": 13.879
+  },
+  {
+    "id": "w37",
+    "text": "promedio",
+    "start": 13.942,
+    "end": 14.304
+  },
+  {
+    "id": "w38",
+    "text": "del",
+    "start": 14.326,
+    "end": 14.429
+  },
+  {
+    "id": "w39",
+    "text": "suelo.",
+    "start": 14.471,
+    "end": 14.833
+  },
+  {
+    "id": "w40",
+    "text": "Si",
+    "start": 15.829,
+    "end": 15.953
+  },
+  {
+    "id": "w41",
+    "text": "una",
+    "start": 15.995,
+    "end": 16.087
+  },
+  {
+    "id": "w42",
+    "text": "lectura",
+    "start": 16.129,
+    "end": 16.44
+  },
+  {
+    "id": "w43",
+    "text": "sale",
+    "start": 16.492,
+    "end": 16.679
+  },
+  {
+    "id": "w44",
+    "text": "fuera",
+    "start": 16.73,
+    "end": 16.896
+  },
+  {
+    "id": "w45",
+    "text": "de",
+    "start": 16.928,
+    "end": 16.979
+  },
+  {
+    "id": "w46",
+    "text": "rango,",
+    "start": 17.031,
+    "end": 17.404
+  },
+  {
+    "id": "w47",
+    "text": "pide",
+    "start": 17.477,
+    "end": 17.715
+  },
+  {
+    "id": "w48",
+    "text": "repetir",
+    "start": 17.767,
+    "end": 18.099
+  },
+  {
+    "id": "w49",
+    "text": "la",
+    "start": 18.14,
+    "end": 18.192
+  },
+  {
+    "id": "w50",
+    "text": "captura.",
+    "start": 18.234,
+    "end": 18.824
+  }
+]

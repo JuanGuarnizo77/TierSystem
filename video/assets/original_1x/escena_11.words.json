@@ -1,0 +1,308 @@
+[
+  {
+    "id": "w0",
+    "text": "Como",
+    "start": 0,
+    "end": 0.279
+  },
+  {
+    "id": "w1",
+    "text": "muchas",
+    "start": 0.325,
+    "end": 0.615
+  },
+  {
+    "id": "w2",
+    "text": "zonas",
+    "start": 0.65,
+    "end": 0.882
+  },
+  {
+    "id": "w3",
+    "text": "rurales",
+    "start": 0.929,
+    "end": 1.498
+  },
+  {
+    "id": "w4",
+    "text": "tienen",
+    "start": 1.741,
+    "end": 2.043
+  },
+  {
+    "id": "w5",
+    "text": "poca",
+    "start": 2.113,
+    "end": 2.357
+  },
+  {
+    "id": "w6",
+    "text": "señal,",
+    "start": 2.403,
+    "end": 3.019
+  },
+  {
+    "id": "w7",
+    "text": "el",
+    "start": 3.297,
+    "end": 3.402
+  },
+  {
+    "id": "w8",
+    "text": "laboratorista",
+    "start": 3.437,
+    "end": 4.098
+  },
+  {
+    "id": "w9",
+    "text": "puede",
+    "start": 4.156,
+    "end": 4.354
+  },
+  {
+    "id": "w10",
+    "text": "capturar",
+    "start": 4.4,
+    "end": 4.841
+  },
+  {
+    "id": "w11",
+    "text": "datos",
+    "start": 4.923,
+    "end": 5.387
+  },
+  {
+    "id": "w12",
+    "text": "y",
+    "start": 5.596,
+    "end": 5.712
+  },
+  {
+    "id": "w13",
+    "text": "generar",
+    "start": 5.782,
+    "end": 6.211
+  },
+  {
+    "id": "w14",
+    "text": "el",
+    "start": 6.258,
+    "end": 6.304
+  },
+  {
+    "id": "w15",
+    "text": "análisis",
+    "start": 6.374,
+    "end": 6.885
+  },
+  {
+    "id": "w16",
+    "text": "sin",
+    "start": 7.001,
+    "end": 7.256
+  },
+  {
+    "id": "w17",
+    "text": "internet.",
+    "start": 7.326,
+    "end": 8.069
+  },
+  {
+    "id": "w18",
+    "text": "Si",
+    "start": 8.766,
+    "end": 8.905
+  },
+  {
+    "id": "w19",
+    "text": "la",
+    "start": 8.963,
+    "end": 9.009
+  },
+  {
+    "id": "w20",
+    "text": "inteligencia",
+    "start": 9.033,
+    "end": 9.555
+  },
+  {
+    "id": "w21",
+    "text": "artificial",
+    "start": 9.578,
+    "end": 10.112
+  },
+  {
+    "id": "w22",
+    "text": "no",
+    "start": 10.182,
+    "end": 10.252
+  },
+  {
+    "id": "w23",
+    "text": "responde,",
+    "start": 10.333,
+    "end": 11.134
+  },
+  {
+    "id": "w24",
+    "text": "un",
+    "start": 11.459,
+    "end": 11.575
+  },
+  {
+    "id": "w25",
+    "text": "motor",
+    "start": 11.598,
+    "end": 11.9
+  },
+  {
+    "id": "w26",
+    "text": "local",
+    "start": 11.958,
+    "end": 12.249
+  },
+  {
+    "id": "w27",
+    "text": "calcula",
+    "start": 12.307,
+    "end": 12.783
+  },
+  {
+    "id": "w28",
+    "text": "la",
+    "start": 12.829,
+    "end": 12.899
+  },
+  {
+    "id": "w29",
+    "text": "compatibilidad",
+    "start": 12.968,
+    "end": 13.851
+  },
+  {
+    "id": "w30",
+    "text": "con",
+    "start": 13.909,
+    "end": 14.048
+  },
+  {
+    "id": "w31",
+    "text": "los",
+    "start": 14.083,
+    "end": 14.222
+  },
+  {
+    "id": "w32",
+    "text": "rangos",
+    "start": 14.373,
+    "end": 14.745
+  },
+  {
+    "id": "w33",
+    "text": "agronómicos",
+    "start": 14.803,
+    "end": 15.534
+  },
+  {
+    "id": "w34",
+    "text": "registrados",
+    "start": 15.975,
+    "end": 16.846
+  },
+  {
+    "id": "w35",
+    "text": "y",
+    "start": 17.543,
+    "end": 17.659
+  },
+  {
+    "id": "w36",
+    "text": "marca",
+    "start": 17.775,
+    "end": 18.065
+  },
+  {
+    "id": "w37",
+    "text": "el",
+    "start": 18.1,
+    "end": 18.147
+  },
+  {
+    "id": "w38",
+    "text": "resultado",
+    "start": 18.228,
+    "end": 18.692
+  },
+  {
+    "id": "w39",
+    "text": "como",
+    "start": 18.727,
+    "end": 18.878
+  },
+  {
+    "id": "w40",
+    "text": "análisis",
+    "start": 18.901,
+    "end": 19.342
+  },
+  {
+    "id": "w41",
+    "text": "en",
+    "start": 19.412,
+    "end": 19.47
+  },
+  {
+    "id": "w42",
+    "text": "modo",
+    "start": 19.54,
+    "end": 19.795
+  },
+  {
+    "id": "w43",
+    "text": "local.",
+    "start": 19.842,
+    "end": 20.364
+  },
+  {
+    "id": "w44",
+    "text": "Al",
+    "start": 20.875,
+    "end": 21.014
+  },
+  {
+    "id": "w45",
+    "text": "volver",
+    "start": 21.061,
+    "end": 21.304
+  },
+  {
+    "id": "w46",
+    "text": "la",
+    "start": 21.351,
+    "end": 21.409
+  },
+  {
+    "id": "w47",
+    "text": "conexión,",
+    "start": 21.455,
+    "end": 22.059
+  },
+  {
+    "id": "w48",
+    "text": "todo",
+    "start": 22.233,
+    "end": 22.535
+  },
+  {
+    "id": "w49",
+    "text": "se",
+    "start": 22.593,
+    "end": 22.674
+  },
+  {
+    "id": "w50",
+    "text": "sincroniza.",
+    "start": 22.721,
+    "end": 23.685
+  }
+]

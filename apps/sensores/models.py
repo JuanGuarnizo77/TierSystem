@@ -28,13 +28,15 @@ class LecturaSensor(models.Model):
         timestamp (DateTimeField): Marca temporal precisa de ingesta en el servidor,
                                   fundamental para las ventanas de estabilización de 15 segundos.
     """
-    humedad = models.FloatField(help_text="Porcentaje de humedad del suelo (%)")
-    temperatura = models.FloatField(help_text="Temperatura del suelo (°C)")
-    conductividad = models.FloatField(help_text="Conductividad eléctrica (salinidad)")
-    ph = models.FloatField(help_text="Potencial de hidrógeno (pH)")
-    nitrogeno = models.FloatField(help_text="Nitrógeno elemental (mg/kg)")
-    fosforo = models.FloatField(help_text="Fósforo elemental (mg/kg)")
-    potasio = models.FloatField(help_text="Potasio elemental (mg/kg)")
+    humedad = models.FloatField(null=True, blank=True, help_text="Porcentaje de humedad del suelo (%)")
+    temperatura = models.FloatField(null=True, blank=True, help_text="Temperatura del suelo (°C)")
+    conductividad = models.FloatField(null=True, blank=True, help_text="Conductividad eléctrica (salinidad)")
+    ph = models.FloatField(null=True, blank=True, help_text="Potencial de hidrógeno (pH)")
+    nitrogeno = models.FloatField(null=True, blank=True, help_text="Nitrógeno elemental (mg/kg)")
+    fosforo = models.FloatField(null=True, blank=True, help_text="Fósforo elemental (mg/kg)")
+    potasio = models.FloatField(null=True, blank=True, help_text="Potasio elemental (mg/kg)")
+    bateria = models.FloatField(null=True, blank=True, default=None, help_text="Nivel de batería del nodo sensor IoT (%)")
+    senal_rssi = models.IntegerField(null=True, blank=True, default=None, help_text="Intensidad de señal inalámbrica RSSI (dBm)")
 
     # Marca temporal de ingesta automática para ventanas móviles de estabilización
     timestamp = models.DateTimeField(

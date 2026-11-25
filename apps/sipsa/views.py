@@ -12,6 +12,9 @@ Proporciona vistas de visualización de series de tiempo y endpoints JSON:
 """
 
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 from types import SimpleNamespace
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -168,5 +171,6 @@ def actualizar_precios_view(request):
         out = StringIO()
         call_command('actualizar_sipsa', stdout=out)
         return JsonResponse({'status': 'ok', 'message': 'Precios SIPSA actualizados correctamente.'})
-    except Exception as exc:
-        return JsonResponse({'status': 'error', 'message': str(exc)}, status=500)
+    except Exception:
+        logger.exception("Error ejecutando actualizar_sipsa")
+        return JsonResponse({'status': 'error', 'message': 'Error interno al actualizar los precios SIPSA.'}, status=500)

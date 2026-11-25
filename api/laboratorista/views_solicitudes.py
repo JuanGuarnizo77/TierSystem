@@ -6,6 +6,7 @@ rechazar solicitudes no viables y notificar al productor por correo SMTP.
 """
 
 from datetime import date
+from django.utils import timezone
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -132,6 +133,8 @@ def aceptar_view(request, solicitud_id):
         return Response({'error': 'La fecha de visita es obligatoria.'}, status=400)
     try:
         fecha = date.fromisoformat(texto)
+        if fecha < timezone.localdate():
+            return Response({'error': 'La fecha de visita no puede ser anterior al día de hoy.'}, status=400)
     except ValueError:
         return Response({'error': 'Fecha inválida. Usa el formato AAAA-MM-DD.'}, status=400)
 

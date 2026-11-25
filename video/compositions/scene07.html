@@ -1,0 +1,185 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      background: #FFFFFF;
+      background-image:
+        radial-gradient(circle at 15% 15%, rgba(22, 163, 74, 0.06) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(245, 158, 11, 0.06) 0%, transparent 45%),
+        linear-gradient(to right, rgba(226, 232, 240, 0.55) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(226, 232, 240, 0.55) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 64px 64px, 64px 64px;
+      font-family: "Inter", sans-serif;
+      color: #0F172A;
+      overflow: hidden;
+    }
+    .safe-stage {
+      position: absolute;
+      inset: 76px 80px 172px 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .scene-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .step-num {
+      background: #ECFDF5;
+      border: 2.5px solid #16A34A;
+      color: #15803D;
+      font-size: 28px;
+      font-weight: 900;
+      padding: 8px 20px;
+      border-radius: 16px;
+    }
+    .scene-title {
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      color: #0F172A;
+      line-height: 1.1;
+    }
+    .scene-title .accent-green { color: #16A34A; }
+    .scene-title .accent-orange { color: #D97706; }
+    .scene-title .accent-pink { color: #E11D48; }
+    .badge-pill {
+      font-size: 28px;
+      font-weight: 800;
+      padding: 10px 26px;
+      border-radius: 999px;
+      background: #FEF3C7;
+      border: 2.5px solid #D97706;
+      color: #92400E;
+      box-shadow: 0 6px 16px rgba(217, 119, 6, 0.12);
+    }
+    .badge-green {
+      font-size: 28px;
+      font-weight: 800;
+      padding: 10px 26px;
+      border-radius: 999px;
+      background: #DCFCE7;
+      border: 2.5px solid #16A34A;
+      color: #166534;
+      box-shadow: 0 6px 16px rgba(22, 163, 74, 0.12);
+    }
+    .illus-card {
+      width: 100%;
+      height: 700px;
+      background: #FFFFFF;
+      border: 2.5px solid #CBD5E1;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.07);
+      border-radius: 32px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+</style>
+  <div id="root" data-composition-id="scene07" data-width="1920" data-height="1080">
+    <div id="scene07-clip" class="clip" data-start="0" data-duration="22.319" data-track-index="0">
+      <div class="safe-stage">
+        <div id="scene07-hdr" class="scene-header">
+          <div class="title-group">
+            <span class="step-num">07</span>
+            <div class="scene-title">ESP32 + Sonda <span class="accent-green">RS485</span></div>
+          </div>
+        </div>
+        <div id="scene07-stage" class="illus-card" data-layout-allow-overflow>
+          <div style="width:100%; height:100%; display:grid; grid-template-columns: 0.88fr 1.12fr; gap: 40px; padding: 32px 52px; align-items:center;">
+    <!-- Esquema ESP32 + Sonda 5 puntas clavada en la tierra -->
+    <div style="height:100%; background:#F8FAFC; border:2.5px solid #CBD5E1; border-radius:26px; display:flex; align-items:center; justify-content:center;">
+      <svg width="640" height="580" viewBox="0 0 640 580" fill="none">
+        <!-- Módulo ESP32 WiFi/BT -->
+        <g id="s07-esp">
+          <rect x="36" y="48" width="220" height="130" rx="20" fill="#FFFFFF" stroke="#D97706" stroke-width="4" />
+          <rect x="58" y="72" width="105" height="82" rx="10" fill="#FEF3C7" stroke="#D97706" stroke-width="2.5" />
+          <text x="110" y="122" text-anchor="middle" fill="#92400E" font-size="28" font-weight="900" font-family="Inter">ESP32</text>
+          <path d="M185 98 C202 98 212 108 212 125" stroke="#16A34A" stroke-width="5" stroke-linecap="round" />
+          <path d="M185 78 C214 78 232 98 232 125" stroke="#16A34A" stroke-width="5" stroke-linecap="round" />
+        </g>
+        <!-- Cable RS485 -->
+        <path d="M256 115 H405 V135" stroke="#D97706" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+
+        <!-- Suelo en capas -->
+        <rect x="160" y="365" width="445" height="185" rx="22" fill="#DCFCE7" stroke="#16A34A" stroke-width="3.5" />
+        <line x1="160" y1="365" x2="605" y2="365" stroke="#15803D" stroke-width="6" />
+        <!-- Ondas de pulso en tierra -->
+        <circle id="s07-wave" cx="405" cy="450" r="65" stroke="#16A34A" stroke-width="3.5" stroke-dasharray="10 8" fill="none" />
+
+        <!-- Sonda real 5 puntas -->
+        <g id="s07-probe">
+          <rect x="330" y="135" width="150" height="150" rx="18" fill="#1E293B" stroke="#0F172A" stroke-width="4" />
+          <rect x="352" y="155" width="106" height="110" rx="10" fill="#3B82F6" stroke="#60A5FA" stroke-width="2.5" />
+          <line x1="350" y1="285" x2="350" y2="445" stroke="#475569" stroke-width="8" stroke-linecap="round" />
+          <line x1="377" y1="285" x2="377" y2="445" stroke="#64748B" stroke-width="8" stroke-linecap="round" />
+          <line x1="405" y1="285" x2="405" y2="445" stroke="#1E293B" stroke-width="8" stroke-linecap="round" />
+          <line x1="433" y1="285" x2="433" y2="445" stroke="#64748B" stroke-width="8" stroke-linecap="round" />
+          <line x1="460" y1="285" x2="460" y2="445" stroke="#475569" stroke-width="8" stroke-linecap="round" />
+        </g>
+      </svg>
+    </div>
+
+    <!-- 7 tarjetas detalladas de parámetros con lectura en vivo -->
+    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 18px;">
+      <div id="s07-p1" style="background:#F0FDF4; border:3px solid #16A34A; border-radius:22px; padding:24px 16px; text-align:center; display:flex; flex-direction:column; gap:10px;">
+        <div style="font-size:30px; font-weight:800; color:#166534;">pH</div>
+        <div style="font-size:46px; font-weight:900; color:#0F172A;">6.4</div>
+      </div>
+      <div id="s07-p2" style="background:#F0FDF4; border:3px solid #16A34A; border-radius:22px; padding:24px 16px; text-align:center; display:flex; flex-direction:column; gap:10px;">
+        <div style="font-size:30px; font-weight:800; color:#166534;">N</div>
+        <div style="font-size:46px; font-weight:900; color:#0F172A;">45</div>
+      </div>
+      <div id="s07-p3" style="background:#F0FDF4; border:3px solid #16A34A; border-radius:22px; padding:24px 16px; text-align:center; display:flex; flex-direction:column; gap:10px;">
+        <div style="font-size:30px; font-weight:800; color:#166534;">P</div>
+        <div style="font-size:46px; font-weight:900; color:#0F172A;">32</div>
+      </div>
+      <div id="s07-p4" style="background:#F0FDF4; border:3px solid #16A34A; border-radius:22px; padding:24px 16px; text-align:center; display:flex; flex-direction:column; gap:10px;">
+        <div style="font-size:30px; font-weight:800; color:#166534;">K</div>
+        <div style="font-size:46px; font-weight:900; color:#0F172A;">180</div>
+      </div>
+      <div id="s07-p5" style="background:#FFFBEB; border:3px solid #D97706; border-radius:22px; padding:24px 16px; text-align:center; display:flex; flex-direction:column; gap:10px;">
+        <div style="font-size:28px; font-weight:800; color:#92400E;">Humedad</div>
+        <div style="font-size:44px; font-weight:900; color:#0F172A;">68%</div>
+      </div>
+      <div id="s07-p6" style="background:#FFFBEB; border:3px solid #D97706; border-radius:22px; padding:24px 16px; text-align:center; display:flex; flex-direction:column; gap:10px;">
+        <div style="font-size:28px; font-weight:800; color:#92400E;">CE</div>
+        <div style="font-size:44px; font-weight:900; color:#0F172A;">1.4</div>
+      </div>
+      <div id="s07-p7" style="grid-column: span 2; background:#FFF1F2; border:3px solid #E11D48; border-radius:22px; padding:24px 16px; text-align:center; display:flex; flex-direction:column; gap:10px;">
+        <div style="font-size:28px; font-weight:800; color:#9F1239;">Temperatura</div>
+        <div style="font-size:44px; font-weight:900; color:#0F172A;">24 °C</div>
+      </div>
+    </div>
+  </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#scene07-clip", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, 0);
+    tl.fromTo("#scene07-hdr", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.12);
+    tl.fromTo("#scene07-stage", { scale: 0.992 }, { scale: 1.008, duration: 21.92, ease: "none" }, 0);
+
+    tl.fromTo("#s07-esp", { opacity: 0 }, { opacity: 1, duration: 0.6, ease: "power3.out" }, 0.3);
+    tl.fromTo("#s07-probe", { y: -40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, ease: "power3.out" }, 3.8);
+    tl.fromTo("#s07-wave", { opacity: 0 }, { opacity: 1, duration: 0.6 }, 4.7);
+    ["#s07-p1", "#s07-p2", "#s07-p3", "#s07-p4", "#s07-p5", "#s07-p6", "#s07-p7"].forEach((sel, idx) => {
+      tl.fromTo(sel, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 9.2 + idx * 0.8);
+    });
+  
+    tl.to("#scene07-clip", { opacity: 0, duration: 0.3, ease: "power2.inOut" }, 22.019);
+    window.__timelines["scene07"] = tl;
+  </script>
+</template>

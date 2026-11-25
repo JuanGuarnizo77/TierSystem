@@ -5,8 +5,10 @@ los predios por productor y garantizando la asignación automática del propieta
 """
 
 from rest_framework import viewsets
+from rest_framework.exceptions import ValidationError
 
 from apps.terrenos.models import Terreno
+from apps.solicitudes.models import SolicitudAnalisis
 from api.permissions import IsAgricultor
 from .serializers import TerrenoSerializer
 
@@ -42,3 +44,12 @@ class TerrenoViewSet(viewsets.ModelViewSet):
         """
         serializer.save(agricultor=self.request.user)
 
+    def perform_destroy(self, instance):
+        """
+        Impide eliminar una finca si tiene una orden de muestreo en curso ('ASIGNADA' o 'EN_PROCESO').
+        """
+        if SolicitudAnalisis.objects.filter(terreno=instance, estado__in=['ASIGNADA', 'EN_PROCESO']).exists():
+            raise ValidationError(
+                {"error": "No es posible eliminar esta finca porque tiene un muestreo de laboratorio en curso."}
+            )
+        super().perform_destroy(instance)

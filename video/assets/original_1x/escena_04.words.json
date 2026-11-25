@@ -1,0 +1,272 @@
+[
+  {
+    "id": "w0",
+    "text": "El",
+    "start": 0,
+    "end": 0.151
+  },
+  {
+    "id": "w1",
+    "text": "agricultor",
+    "start": 0.174,
+    "end": 0.639
+  },
+  {
+    "id": "w2",
+    "text": "es",
+    "start": 0.662,
+    "end": 0.72
+  },
+  {
+    "id": "w3",
+    "text": "el",
+    "start": 0.766,
+    "end": 0.813
+  },
+  {
+    "id": "w4",
+    "text": "usuario",
+    "start": 0.871,
+    "end": 1.207
+  },
+  {
+    "id": "w5",
+    "text": "final:",
+    "start": 1.242,
+    "end": 1.753
+  },
+  {
+    "id": "w6",
+    "text": "se",
+    "start": 2.194,
+    "end": 2.299
+  },
+  {
+    "id": "w7",
+    "text": "registra",
+    "start": 2.368,
+    "end": 2.763
+  },
+  {
+    "id": "w8",
+    "text": "por",
+    "start": 2.81,
+    "end": 2.914
+  },
+  {
+    "id": "w9",
+    "text": "su",
+    "start": 2.961,
+    "end": 3.053
+  },
+  {
+    "id": "w10",
+    "text": "cuenta,",
+    "start": 3.088,
+    "end": 3.704
+  },
+  {
+    "id": "w11",
+    "text": "administra",
+    "start": 3.913,
+    "end": 4.54
+  },
+  {
+    "id": "w12",
+    "text": "sus",
+    "start": 4.586,
+    "end": 4.737
+  },
+  {
+    "id": "w13",
+    "text": "terrenos",
+    "start": 4.783,
+    "end": 5.259
+  },
+  {
+    "id": "w14",
+    "text": "y",
+    "start": 5.468,
+    "end": 5.561
+  },
+  {
+    "id": "w15",
+    "text": "solicita",
+    "start": 5.631,
+    "end": 6.107
+  },
+  {
+    "id": "w16",
+    "text": "los",
+    "start": 6.142,
+    "end": 6.246
+  },
+  {
+    "id": "w17",
+    "text": "análisis.",
+    "start": 6.293,
+    "end": 6.966
+  },
+  {
+    "id": "w18",
+    "text": "El",
+    "start": 7.407,
+    "end": 7.535
+  },
+  {
+    "id": "w19",
+    "text": "laboratorista",
+    "start": 7.558,
+    "end": 8.278
+  },
+  {
+    "id": "w20",
+    "text": "opera",
+    "start": 8.359,
+    "end": 8.707
+  },
+  {
+    "id": "w21",
+    "text": "el",
+    "start": 8.731,
+    "end": 8.789
+  },
+  {
+    "id": "w22",
+    "text": "sensor",
+    "start": 8.847,
+    "end": 9.207
+  },
+  {
+    "id": "w23",
+    "text": "en",
+    "start": 9.242,
+    "end": 9.3
+  },
+  {
+    "id": "w24",
+    "text": "campo",
+    "start": 9.358,
+    "end": 9.752
+  },
+  {
+    "id": "w25",
+    "text": "y",
+    "start": 10.077,
+    "end": 10.17
+  },
+  {
+    "id": "w26",
+    "text": "comparte",
+    "start": 10.263,
+    "end": 10.728
+  },
+  {
+    "id": "w27",
+    "text": "los",
+    "start": 10.774,
+    "end": 10.879
+  },
+  {
+    "id": "w28",
+    "text": "resultados.",
+    "start": 10.913,
+    "end": 11.691
+  },
+  {
+    "id": "w29",
+    "text": "Y",
+    "start": 12.074,
+    "end": 12.167
+  },
+  {
+    "id": "w30",
+    "text": "el",
+    "start": 12.225,
+    "end": 12.283
+  },
+  {
+    "id": "w31",
+    "text": "administrador",
+    "start": 12.341,
+    "end": 13.084
+  },
+  {
+    "id": "w32",
+    "text": "gestiona",
+    "start": 13.363,
+    "end": 13.816
+  },
+  {
+    "id": "w33",
+    "text": "las",
+    "start": 13.851,
+    "end": 13.955
+  },
+  {
+    "id": "w34",
+    "text": "cuentas",
+    "start": 14.013,
+    "end": 14.338
+  },
+  {
+    "id": "w35",
+    "text": "de",
+    "start": 14.362,
+    "end": 14.408
+  },
+  {
+    "id": "w36",
+    "text": "los",
+    "start": 14.443,
+    "end": 14.547
+  },
+  {
+    "id": "w37",
+    "text": "laboratoristas,",
+    "start": 14.605,
+    "end": 15.557
+  },
+  {
+    "id": "w38",
+    "text": "configura",
+    "start": 15.708,
+    "end": 16.242
+  },
+  {
+    "id": "w39",
+    "text": "el",
+    "start": 16.266,
+    "end": 16.312
+  },
+  {
+    "id": "w40",
+    "text": "sistema",
+    "start": 16.37,
+    "end": 16.8
+  },
+  {
+    "id": "w41",
+    "text": "y",
+    "start": 16.834,
+    "end": 16.858
+  },
+  {
+    "id": "w42",
+    "text": "supervisa",
+    "start": 16.904,
+    "end": 17.543
+  },
+  {
+    "id": "w43",
+    "text": "la",
+    "start": 17.589,
+    "end": 17.636
+  },
+  {
+    "id": "w44",
+    "text": "operación.",
+    "start": 17.67,
+    "end": 18.576
+  }
+]

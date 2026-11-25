@@ -139,6 +139,7 @@ def sensor_view(request):
     galvánicas y extraer la moda estadística de las lecturas del ESP32.
     """
     # Reutiliza el controlador web pasando la solicitud WSGI subyacente
+    request._request.user = request.user
     resp = captura_estable(request._request)
     data = json.loads(resp.content)
     if data.get('estado') != 'ok':

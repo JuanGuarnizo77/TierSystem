@@ -9,10 +9,16 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from core.utils import (
+    registrar_evento_seguridad,
+    verificar_rate_limit,
+    limpiar_rate_limit,
+)
 from .serializers import UsuarioSerializer, RegistroSerializer
 
 
@@ -41,6 +47,33 @@ class LoginView(TokenObtainPairView):
     """
     serializer_class = TierSystemTokenSerializer
 
+    def post(self, request, *args, **kwargs):
+        bloqueado, _ = verificar_rate_limit(request, 'api_login', limite=10, ventana_segundos=300)
+        if bloqueado:
+            registrar_evento_seguridad(
+                request, 'API_LOGIN_BLOQUEADO',
+                f"Rate-limit alcanzado en /api/v1/auth/login/ para username='{str(request.data.get('username', ''))[:60]}'",
+                nivel='WARNING',
+            )
+            return Response(
+                {"detail": "Demasiados intentos de inicio de sesión. Intente nuevamente en unos minutos."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == 200:
+            limpiar_rate_limit(request, 'api_login')
+            registrar_evento_seguridad(
+                request, 'API_LOGIN_EXITOSO',
+                f"Login JWT exitoso para username='{str(request.data.get('username', ''))[:60]}'",
+            )
+        else:
+            registrar_evento_seguridad(
+                request, 'API_LOGIN_FALLIDO',
+                f"Login JWT fallido para username='{str(request.data.get('username', ''))[:60]}'",
+                nivel='WARNING',
+            )
+        return response
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -66,6 +99,13 @@ def registro_view(request):
     Crea la cuenta, asigna rol 'AGRICULTOR' y expide automáticamente el par de tokens JWT
     para inicio de sesión transparente inmediato.
     """
+    bloqueado, _ = verificar_rate_limit(request, 'api_registro', limite=10, ventana_segundos=600)
+    if bloqueado:
+        return Response(
+            {"error": "Demasiadas solicitudes de registro. Intente nuevamente más tarde."},
+            status=status.HTTP_429_TOO_MANY_REQUESTS,
+        )
+
     # Valida integridad sintáctica, fortaleza de contraseña y unicidad de email
     serializer = RegistroSerializer(data=request.data)
     if not serializer.is_valid():
@@ -73,6 +113,10 @@ def registro_view(request):
 
     # Persistencia en base de datos
     user = serializer.save()
+    registrar_evento_seguridad(
+        request, 'API_REGISTRO_USUARIO',
+        f"Nuevo agricultor registrado vía API: username='{user.username}'",
+    )
 
     # Emisión criptográfica inmediata de credenciales JWT
     refresh = RefreshToken.for_user(user)
@@ -103,7 +147,9 @@ def logout_view(request):
     try:
         # Instancia el token para verificar que sea sintáctica y criptográficamente válido
         RefreshToken(refresh_token)
+        registrar_evento_seguridad(request, 'API_LOGOUT', 'Cierre de sesión JWT')
         return Response({"mensaje": "Sesión cerrada correctamente."})
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+    except TokenError:
+        return Response({"error": "El token de refresco es inválido o ha expirado."}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception:
+        return Response({"error": "No se pudo procesar el cierre de sesión."}, status=status.HTTP_400_BAD_REQUEST)

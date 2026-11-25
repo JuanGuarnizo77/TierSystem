@@ -1,0 +1,153 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      background: #FFFFFF;
+      background-image:
+        radial-gradient(circle at 15% 15%, rgba(22, 163, 74, 0.06) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(245, 158, 11, 0.06) 0%, transparent 45%),
+        linear-gradient(to right, rgba(226, 232, 240, 0.55) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(226, 232, 240, 0.55) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 64px 64px, 64px 64px;
+      font-family: "Inter", sans-serif;
+      color: #0F172A;
+      overflow: hidden;
+    }
+    .safe-stage {
+      position: absolute;
+      inset: 76px 80px 172px 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .scene-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .step-num {
+      background: #ECFDF5;
+      border: 2.5px solid #16A34A;
+      color: #15803D;
+      font-size: 28px;
+      font-weight: 900;
+      padding: 8px 20px;
+      border-radius: 16px;
+    }
+    .scene-title {
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      color: #0F172A;
+      line-height: 1.1;
+    }
+    .scene-title .accent-green { color: #16A34A; }
+    .scene-title .accent-orange { color: #D97706; }
+    .scene-title .accent-pink { color: #E11D48; }
+    .badge-pill {
+      font-size: 28px;
+      font-weight: 800;
+      padding: 10px 26px;
+      border-radius: 999px;
+      background: #FEF3C7;
+      border: 2.5px solid #D97706;
+      color: #92400E;
+      box-shadow: 0 6px 16px rgba(217, 119, 6, 0.12);
+    }
+    .badge-green {
+      font-size: 28px;
+      font-weight: 800;
+      padding: 10px 26px;
+      border-radius: 999px;
+      background: #DCFCE7;
+      border: 2.5px solid #16A34A;
+      color: #166534;
+      box-shadow: 0 6px 16px rgba(22, 163, 74, 0.12);
+    }
+    .illus-card {
+      width: 100%;
+      height: 700px;
+      background: #FFFFFF;
+      border: 2.5px solid #CBD5E1;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.07);
+      border-radius: 32px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #s16-whiteout {
+      position: absolute;
+      inset: 0;
+      background: #FFFFFF;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 30;
+    }
+  </style>
+  <div id="root" data-composition-id="scene16" data-width="1920" data-height="1080">
+    <div id="scene16-clip" class="clip" data-start="0" data-duration="18.404" data-track-index="0">
+      <div class="safe-stage">
+        <div id="scene16-hdr" class="scene-header">
+          <div class="title-group">
+            <span class="step-num">16</span>
+            <div class="scene-title">Decisiones basadas <span class="accent-green">en datos</span></div>
+          </div>
+          <div class="badge-green">Agricultura Inteligente</div>
+        </div>
+        <div id="scene16-stage" class="illus-card" data-layout-allow-overflow style="flex-direction:column; justify-content:space-between; padding: 48px 56px; background:linear-gradient(135deg,#F0FDF4 0%,#FFFFFF 50%,#FFFBEB 100%);">
+          <!-- Hero central TierSystem -->
+          <div id="s16-logos" style="display:flex; align-items:center; gap:38px; background:#FFFFFF; border:3.5px solid #16A34A; padding:28px 56px; border-radius:34px; box-shadow:0 20px 48px rgba(22,163,74,0.14);">
+            <img src="assets/logo_tiersystem.jpg" alt="TierSystem" style="width:152px; height:152px; border-radius:32px; border:4px solid #16A34A; object-fit:cover;" />
+            <div>
+              <div style="font-size:80px; font-weight:900; color:#0F172A; letter-spacing:-0.03em; line-height:1;">Tier<span style="color:#16A34A;">System</span></div>
+              <div style="font-size:30px; font-weight:800; color:#475569; margin-top:8px;">Datos reales para decidir mejor</div>
+            </div>
+          </div>
+
+          <!-- 4 pilares animados del resumen -->
+          <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:24px; width:100%;">
+            <div id="s16-p1" style="background:#FFFFFF; border:3px solid #16A34A; border-radius:22px; padding:24px; text-align:center; box-shadow:0 10px 24px rgba(22,163,74,0.08);">
+              <div style="font-size:32px; font-weight:900; color:#166534;">Conocer Suelo</div>
+              <div style="font-size:28px; font-weight:700; color:#475569; margin-top:6px;">7 parámetros</div>
+            </div>
+            <div id="s16-p2" style="background:#FFFFFF; border:3px solid #16A34A; border-radius:22px; padding:24px; text-align:center; box-shadow:0 10px 24px rgba(22,163,74,0.08);">
+              <div style="font-size:32px; font-weight:900; color:#166534;">Recomendación</div>
+              <div style="font-size:28px; font-weight:700; color:#475569; margin-top:6px;">Asistida con IA</div>
+            </div>
+            <div id="s16-p3" style="background:#FFFFFF; border:3px solid #D97706; border-radius:22px; padding:24px; text-align:center; box-shadow:0 10px 24px rgba(217,119,6,0.08);">
+              <div style="font-size:32px; font-weight:900; color:#92400E;">Seguimiento</div>
+              <div style="font-size:28px; font-weight:700; color:#475569; margin-top:6px;">Historial real</div>
+            </div>
+            <div id="s16-p4" style="background:#FFFFFF; border:3px solid #D97706; border-radius:22px; padding:24px; text-align:center; box-shadow:0 10px 24px rgba(217,119,6,0.08);">
+              <div style="font-size:32px; font-weight:900; color:#92400E;">Mercado Real</div>
+              <div style="font-size:28px; font-weight:700; color:#475569; margin-top:6px;">SIPSA · DANE</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="s16-whiteout" data-layout-allow-occlusion></div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#scene16-clip", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, 0);
+    tl.fromTo("#s16-logos", { opacity: 0, y: 24, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: "power3.out" }, 0.3);
+    tl.fromTo("#s16-p1", { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 4.2);
+    tl.fromTo("#s16-p2", { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 5.6);
+    tl.fromTo("#s16-p3", { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 7.0);
+    tl.fromTo("#s16-p4", { opacity: 0, y: 22 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 8.4);
+    tl.fromTo("#s16-whiteout", { opacity: 0 }, { opacity: 1, duration: 1.0, ease: "power2.inOut" }, 17.404);
+    window.__timelines["scene16"] = tl;
+  </script>
+</template>

@@ -1,0 +1,224 @@
+[
+  {
+    "id": "w0",
+    "text": "El",
+    "start": 0,
+    "end": 0.163
+  },
+  {
+    "id": "w1",
+    "text": "administrador",
+    "start": 0.197,
+    "end": 0.789
+  },
+  {
+    "id": "w2",
+    "text": "configura",
+    "start": 0.836,
+    "end": 1.265
+  },
+  {
+    "id": "w3",
+    "text": "los",
+    "start": 1.312,
+    "end": 1.44
+  },
+  {
+    "id": "w4",
+    "text": "rangos",
+    "start": 1.498,
+    "end": 1.811
+  },
+  {
+    "id": "w5",
+    "text": "agronómicos,",
+    "start": 1.881,
+    "end": 2.821
+  },
+  {
+    "id": "w6",
+    "text": "gestiona",
+    "start": 3.146,
+    "end": 3.529
+  },
+  {
+    "id": "w7",
+    "text": "el",
+    "start": 3.553,
+    "end": 3.599
+  },
+  {
+    "id": "w8",
+    "text": "catálogo",
+    "start": 3.657,
+    "end": 4.098
+  },
+  {
+    "id": "w9",
+    "text": "de",
+    "start": 4.145,
+    "end": 4.203
+  },
+  {
+    "id": "w10",
+    "text": "cultivos,",
+    "start": 4.249,
+    "end": 5.085
+  },
+  {
+    "id": "w11",
+    "text": "define",
+    "start": 5.468,
+    "end": 5.817
+  },
+  {
+    "id": "w12",
+    "text": "cuánto",
+    "start": 5.886,
+    "end": 6.177
+  },
+  {
+    "id": "w13",
+    "text": "esperar",
+    "start": 6.211,
+    "end": 6.571
+  },
+  {
+    "id": "w14",
+    "text": "a",
+    "start": 6.606,
+    "end": 6.629
+  },
+  {
+    "id": "w15",
+    "text": "la",
+    "start": 6.664,
+    "end": 6.722
+  },
+  {
+    "id": "w16",
+    "text": "inteligencia",
+    "start": 6.757,
+    "end": 7.349
+  },
+  {
+    "id": "w17",
+    "text": "artificial",
+    "start": 7.372,
+    "end": 7.988
+  },
+  {
+    "id": "w18",
+    "text": "y",
+    "start": 8.371,
+    "end": 8.487
+  },
+  {
+    "id": "w19",
+    "text": "qué",
+    "start": 8.603,
+    "end": 8.696
+  },
+  {
+    "id": "w20",
+    "text": "hacer",
+    "start": 8.754,
+    "end": 9.009
+  },
+  {
+    "id": "w21",
+    "text": "si",
+    "start": 9.067,
+    "end": 9.137
+  },
+  {
+    "id": "w22",
+    "text": "no",
+    "start": 9.195,
+    "end": 9.265
+  },
+  {
+    "id": "w23",
+    "text": "responde,",
+    "start": 9.334,
+    "end": 10.008
+  },
+  {
+    "id": "w24",
+    "text": "monitorea",
+    "start": 10.449,
+    "end": 10.937
+  },
+  {
+    "id": "w25",
+    "text": "el",
+    "start": 10.96,
+    "end": 11.018
+  },
+  {
+    "id": "w26",
+    "text": "sensor",
+    "start": 11.076,
+    "end": 11.471
+  },
+  {
+    "id": "w27",
+    "text": "y",
+    "start": 11.494,
+    "end": 11.517
+  },
+  {
+    "id": "w28",
+    "text": "su",
+    "start": 11.564,
+    "end": 11.656
+  },
+  {
+    "id": "w29",
+    "text": "batería,",
+    "start": 11.703,
+    "end": 12.411
+  },
+  {
+    "id": "w30",
+    "text": "y",
+    "start": 12.794,
+    "end": 12.875
+  },
+  {
+    "id": "w31",
+    "text": "genera",
+    "start": 12.945,
+    "end": 13.212
+  },
+  {
+    "id": "w32",
+    "text": "reportes",
+    "start": 13.293,
+    "end": 13.758
+  },
+  {
+    "id": "w33",
+    "text": "en",
+    "start": 13.816,
+    "end": 13.862
+  },
+  {
+    "id": "w34",
+    "text": "PDF",
+    "start": 13.92,
+    "end": 14.362
+  },
+  {
+    "id": "w35",
+    "text": "o",
+    "start": 14.489,
+    "end": 14.536
+  },
+  {
+    "id": "w36",
+    "text": "Excel.",
+    "start": 14.605,
+    "end": 15.232
+  }
+]

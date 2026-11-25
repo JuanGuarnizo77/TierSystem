@@ -1,0 +1,164 @@
+[
+  {
+    "id": "w0",
+    "text": "El",
+    "start": 0,
+    "end": 0.124
+  },
+  {
+    "id": "w1",
+    "text": "laboratorista",
+    "start": 0.155,
+    "end": 0.726
+  },
+  {
+    "id": "w2",
+    "text": "revisa",
+    "start": 0.778,
+    "end": 1.078
+  },
+  {
+    "id": "w3",
+    "text": "las",
+    "start": 1.109,
+    "end": 1.192
+  },
+  {
+    "id": "w4",
+    "text": "solicitudes",
+    "start": 1.212,
+    "end": 1.762
+  },
+  {
+    "id": "w5",
+    "text": "pendientes,",
+    "start": 1.814,
+    "end": 2.509
+  },
+  {
+    "id": "w6",
+    "text": "las",
+    "start": 2.664,
+    "end": 2.799
+  },
+  {
+    "id": "w7",
+    "text": "acepta",
+    "start": 2.871,
+    "end": 3.328
+  },
+  {
+    "id": "w8",
+    "text": "o",
+    "start": 3.431,
+    "end": 3.504
+  },
+  {
+    "id": "w9",
+    "text": "rechaza",
+    "start": 3.607,
+    "end": 4.084
+  },
+  {
+    "id": "w10",
+    "text": "y",
+    "start": 4.333,
+    "end": 4.396
+  },
+  {
+    "id": "w11",
+    "text": "les",
+    "start": 4.468,
+    "end": 4.571
+  },
+  {
+    "id": "w12",
+    "text": "asigna",
+    "start": 4.634,
+    "end": 4.924
+  },
+  {
+    "id": "w13",
+    "text": "una",
+    "start": 4.976,
+    "end": 5.121
+  },
+  {
+    "id": "w14",
+    "text": "fecha",
+    "start": 5.204,
+    "end": 5.484
+  },
+  {
+    "id": "w15",
+    "text": "de",
+    "start": 5.536,
+    "end": 5.577
+  },
+  {
+    "id": "w16",
+    "text": "atención.",
+    "start": 5.597,
+    "end": 6.157
+  },
+  {
+    "id": "w17",
+    "text": "El",
+    "start": 6.552,
+    "end": 6.665
+  },
+  {
+    "id": "w18",
+    "text": "agricultor",
+    "start": 6.707,
+    "end": 7.236
+  },
+  {
+    "id": "w19",
+    "text": "recibe",
+    "start": 7.578,
+    "end": 7.847
+  },
+  {
+    "id": "w20",
+    "text": "una",
+    "start": 7.868,
+    "end": 7.951
+  },
+  {
+    "id": "w21",
+    "text": "notificación",
+    "start": 7.992,
+    "end": 8.583
+  },
+  {
+    "id": "w22",
+    "text": "con",
+    "start": 8.624,
+    "end": 8.749
+  },
+  {
+    "id": "w23",
+    "text": "cada",
+    "start": 8.832,
+    "end": 9.071
+  },
+  {
+    "id": "w24",
+    "text": "cambio",
+    "start": 9.143,
+    "end": 9.433
+  },
+  {
+    "id": "w25",
+    "text": "de",
+    "start": 9.475,
+    "end": 9.527
+  },
+  {
+    "id": "w26",
+    "text": "estado.",
+    "start": 9.547,
+    "end": 10.242
+  }
+]

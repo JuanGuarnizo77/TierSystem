@@ -7,15 +7,18 @@ comunicación asíncrona, internacionalización y servicios de autenticación de
 Componentes clave:
   - Carga dinámica de variables de entorno mediante `python-dotenv`.
   - Soporte dual de motores de base de datos (MySQL para entornos de producción/staging
-    y SQLite3 para entornos de desarrollo local rápido).
-  - Configuración de Django REST Framework con autenticación de tokens JWT (`SimpleJWT`).
+    y SQLite3 para entornos de desarrollo local rápido y pruebas aisladas).
+  - Configuración de Django REST Framework con autenticación de tokens JWT (`SimpleJWT`)
+    y limitación de tasa de peticiones (Rate Limiting).
   - Documentación de API OpenAPI 3.0 mediante `drf-spectacular`.
   - Zona horaria de Colombia ('America/Bogota') e idioma español colombiano ('es-co').
   - Gestor de correo electrónico transaccional SMTP con fallback a consola.
   - Llave de autenticación compartida para telemetría de sensores IoT de campo.
+  - Cabeceras HTTP de seguridad, protección de cookies y registro de auditoría (`LOGGING`).
 """
 
 import os
+import sys
 from pathlib import Path
 from datetime import timedelta
 
@@ -135,7 +138,16 @@ WSGI_APPLICATION = 'tiersystem.wsgi.application'
 
 DB_ENGINE = os.getenv('DB_ENGINE', 'sqlite').lower()
 
-if DB_ENGINE == 'mysql':
+# En ejecución de pruebas automatizadas (`manage.py test`), permite aislar en SQLite en memoria
+# cuando se indique o cuando no se requiera tocar el servidor MySQL de producción/desarrollo
+if 'test' in sys.argv and os.getenv('TEST_USE_MYSQL', 'false').lower() != 'true':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': ':memory:',
+        }
+    }
+elif DB_ENGINE == 'mysql':
     # Conexión relacional para servidor MySQL
     DATABASES = {
         'default': {
@@ -221,6 +233,18 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    # Limitación de solicitudes (Rate Limiting - OWASP API4:2023)
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': os.getenv('API_THROTTLE_ANON', '60/minute'),
+        'user': os.getenv('API_THROTTLE_USER', '300/minute'),
+        'auth_login': os.getenv('API_THROTTLE_LOGIN', '10/minute'),
+        'auth_register': os.getenv('API_THROTTLE_REGISTER', '10/minute'),
+    },
     # Generador de esquema OpenAPI 3.0 para documentación interactiva
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
@@ -268,3 +292,80 @@ DEFAULT_FROM_EMAIL = f'TierSystem Notificaciones <{_email_user}>' if _email_user
 
 # Llave secreta para autenticación de peticiones POST originadas por los microcontroladores ESP32
 SENSOR_API_KEY = os.getenv('SENSOR_API_KEY', 'tiersystem-sensor-key-dev')
+
+
+# =============================================================================
+# CONTROLES DE SEGURIDAD HTTP, SESIONES, COOKIES Y LÍMITES DE CARGA (OWASP ASVS)
+# =============================================================================
+
+# Protección de cookies de sesión y CSRF
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+# Nota: CSRF_COOKIE_HTTPONLY se mantiene en False porque las vistas PWA/AJAX leen 'csrftoken' vía JS
+CSRF_COOKIE_HTTPONLY = False
+SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', 28800))  # 8 horas por defecto
+SESSION_EXPIRE_AT_BROWSER_CLOSE = os.getenv('SESSION_EXPIRE_AT_BROWSER_CLOSE', 'False').lower() == 'true'
+
+# Cabeceras de endurecimiento HTTP transversales (activas en desarrollo y producción)
+X_FRAME_OPTIONS = 'DENY'
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'same-origin'
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
+
+# Límites de tamaño de solicitudes para mitigar ataques de denegación de servicio (DoS)
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv('DATA_UPLOAD_MAX_MEMORY_SIZE', 5 * 1024 * 1024))  # 5 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv('FILE_UPLOAD_MAX_MEMORY_SIZE', 5 * 1024 * 1024))  # 5 MB
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
+
+# Controles criptográficos estrictos para entornos de producción (DEBUG=False)
+SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', str(not DEBUG)).lower() == 'true'
+CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', str(not DEBUG)).lower() == 'true'
+SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', str(not DEBUG)).lower() == 'true'
+SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '31536000' if not DEBUG else '0'))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('SECURE_HSTS_INCLUDE_SUBDOMAINS', str(not DEBUG)).lower() == 'true'
+SECURE_HSTS_PRELOAD = os.getenv('SECURE_HSTS_PRELOAD', str(not DEBUG)).lower() == 'true'
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
+# =============================================================================
+# REGISTRO DE AUDITORÍA Y EVENTOS DE SEGURIDAD (LOGGING)
+# =============================================================================
+
+LOGS_DIR = BASE_DIR / 'logs'
+os.makedirs(LOGS_DIR, exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'security_fmt': {
+            'format': '[{asctime}] [{levelname}] [{name}] {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'security_fmt',
+        },
+        'security_file': {
+            'class': 'logging.FileHandler',
+            'filename': LOGS_DIR / 'security_audit.log',
+            'formatter': 'security_fmt',
+            'encoding': 'utf-8',
+        },
+    },
+    'loggers': {
+        'tiersystem.security': {
+            'handlers': ['console', 'security_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['console', 'security_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
+}

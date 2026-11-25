@@ -1,0 +1,110 @@
+[
+  {
+    "id": "w0",
+    "text": "Por",
+    "start": 0,
+    "end": 0.197
+  },
+  {
+    "id": "w1",
+    "text": "eso",
+    "start": 0.244,
+    "end": 0.383
+  },
+  {
+    "id": "w2",
+    "text": "creamos",
+    "start": 0.43,
+    "end": 0.813
+  },
+  {
+    "id": "w3",
+    "text": "TierSystem:",
+    "start": 0.882,
+    "end": 1.591
+  },
+  {
+    "id": "w4",
+    "text": "una",
+    "start": 1.95,
+    "end": 2.09
+  },
+  {
+    "id": "w5",
+    "text": "aplicación",
+    "start": 2.113,
+    "end": 2.624
+  },
+  {
+    "id": "w6",
+    "text": "web",
+    "start": 2.694,
+    "end": 2.844
+  },
+  {
+    "id": "w7",
+    "text": "que",
+    "start": 2.926,
+    "end": 3.019
+  },
+  {
+    "id": "w8",
+    "text": "analiza",
+    "start": 3.053,
+    "end": 3.448
+  },
+  {
+    "id": "w9",
+    "text": "el",
+    "start": 3.471,
+    "end": 3.529
+  },
+  {
+    "id": "w10",
+    "text": "suelo",
+    "start": 3.587,
+    "end": 3.843
+  },
+  {
+    "id": "w11",
+    "text": "con",
+    "start": 3.889,
+    "end": 3.994
+  },
+  {
+    "id": "w12",
+    "text": "un",
+    "start": 4.063,
+    "end": 4.122
+  },
+  {
+    "id": "w13",
+    "text": "sensor",
+    "start": 4.18,
+    "end": 4.493
+  },
+  {
+    "id": "w14",
+    "text": "portátil",
+    "start": 4.563,
+    "end": 5.074
+  },
+  {
+    "id": "w15",
+    "text": "e",
+    "start": 5.155,
+    "end": 5.213
+  },
+  {
+    "id": "w16",
+    "text": "inteligencia",
+    "start": 5.259,
+    "end": 5.875
+  },
+  {
+    "id": "w17",
+    "text": "artificial.",
+    "start": 5.898,
+    "end": 6.827
+  }
+]

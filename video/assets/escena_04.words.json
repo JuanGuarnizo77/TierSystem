@@ -1,0 +1,272 @@
+[
+  {
+    "id": "w0",
+    "text": "El",
+    "start": 0,
+    "end": 0.135
+  },
+  {
+    "id": "w1",
+    "text": "agricultor",
+    "start": 0.155,
+    "end": 0.571
+  },
+  {
+    "id": "w2",
+    "text": "es",
+    "start": 0.591,
+    "end": 0.643
+  },
+  {
+    "id": "w3",
+    "text": "el",
+    "start": 0.684,
+    "end": 0.726
+  },
+  {
+    "id": "w4",
+    "text": "usuario",
+    "start": 0.778,
+    "end": 1.078
+  },
+  {
+    "id": "w5",
+    "text": "final:",
+    "start": 1.109,
+    "end": 1.565
+  },
+  {
+    "id": "w6",
+    "text": "se",
+    "start": 1.959,
+    "end": 2.053
+  },
+  {
+    "id": "w7",
+    "text": "registra",
+    "start": 2.114,
+    "end": 2.467
+  },
+  {
+    "id": "w8",
+    "text": "por",
+    "start": 2.509,
+    "end": 2.602
+  },
+  {
+    "id": "w9",
+    "text": "su",
+    "start": 2.644,
+    "end": 2.726
+  },
+  {
+    "id": "w10",
+    "text": "cuenta,",
+    "start": 2.757,
+    "end": 3.307
+  },
+  {
+    "id": "w11",
+    "text": "administra",
+    "start": 3.494,
+    "end": 4.054
+  },
+  {
+    "id": "w12",
+    "text": "sus",
+    "start": 4.095,
+    "end": 4.229
+  },
+  {
+    "id": "w13",
+    "text": "terrenos",
+    "start": 4.271,
+    "end": 4.696
+  },
+  {
+    "id": "w14",
+    "text": "y",
+    "start": 4.882,
+    "end": 4.965
+  },
+  {
+    "id": "w15",
+    "text": "solicita",
+    "start": 5.028,
+    "end": 5.453
+  },
+  {
+    "id": "w16",
+    "text": "los",
+    "start": 5.484,
+    "end": 5.577
+  },
+  {
+    "id": "w17",
+    "text": "análisis.",
+    "start": 5.619,
+    "end": 6.22
+  },
+  {
+    "id": "w18",
+    "text": "El",
+    "start": 6.613,
+    "end": 6.728
+  },
+  {
+    "id": "w19",
+    "text": "laboratorista",
+    "start": 6.748,
+    "end": 7.391
+  },
+  {
+    "id": "w20",
+    "text": "opera",
+    "start": 7.463,
+    "end": 7.774
+  },
+  {
+    "id": "w21",
+    "text": "el",
+    "start": 7.796,
+    "end": 7.847
+  },
+  {
+    "id": "w22",
+    "text": "sensor",
+    "start": 7.899,
+    "end": 8.221
+  },
+  {
+    "id": "w23",
+    "text": "en",
+    "start": 8.252,
+    "end": 8.304
+  },
+  {
+    "id": "w24",
+    "text": "campo",
+    "start": 8.355,
+    "end": 8.707
+  },
+  {
+    "id": "w25",
+    "text": "y",
+    "start": 8.997,
+    "end": 9.08
+  },
+  {
+    "id": "w26",
+    "text": "comparte",
+    "start": 9.163,
+    "end": 9.579
+  },
+  {
+    "id": "w27",
+    "text": "los",
+    "start": 9.62,
+    "end": 9.713
+  },
+  {
+    "id": "w28",
+    "text": "resultados.",
+    "start": 9.744,
+    "end": 10.438
+  },
+  {
+    "id": "w29",
+    "text": "Y",
+    "start": 10.78,
+    "end": 10.863
+  },
+  {
+    "id": "w30",
+    "text": "el",
+    "start": 10.915,
+    "end": 10.967
+  },
+  {
+    "id": "w31",
+    "text": "administrador",
+    "start": 11.019,
+    "end": 11.682
+  },
+  {
+    "id": "w32",
+    "text": "gestiona",
+    "start": 11.931,
+    "end": 12.336
+  },
+  {
+    "id": "w33",
+    "text": "las",
+    "start": 12.367,
+    "end": 12.46
+  },
+  {
+    "id": "w34",
+    "text": "cuentas",
+    "start": 12.512,
+    "end": 12.802
+  },
+  {
+    "id": "w35",
+    "text": "de",
+    "start": 12.823,
+    "end": 12.864
+  },
+  {
+    "id": "w36",
+    "text": "los",
+    "start": 12.896,
+    "end": 12.988
+  },
+  {
+    "id": "w37",
+    "text": "laboratoristas,",
+    "start": 13.04,
+    "end": 13.89
+  },
+  {
+    "id": "w38",
+    "text": "configura",
+    "start": 14.025,
+    "end": 14.502
+  },
+  {
+    "id": "w39",
+    "text": "el",
+    "start": 14.523,
+    "end": 14.564
+  },
+  {
+    "id": "w40",
+    "text": "sistema",
+    "start": 14.616,
+    "end": 15
+  },
+  {
+    "id": "w41",
+    "text": "y",
+    "start": 15.03,
+    "end": 15.052
+  },
+  {
+    "id": "w42",
+    "text": "supervisa",
+    "start": 15.093,
+    "end": 15.663
+  },
+  {
+    "id": "w43",
+    "text": "la",
+    "start": 15.704,
+    "end": 15.746
+  },
+  {
+    "id": "w44",
+    "text": "operación.",
+    "start": 15.777,
+    "end": 16.586
+  }
+]

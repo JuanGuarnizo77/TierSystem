@@ -1,0 +1,374 @@
+[
+  {
+    "id": "w0",
+    "text": "Con",
+    "start": 0,
+    "end": 0.155
+  },
+  {
+    "id": "w1",
+    "text": "ese",
+    "start": 0.207,
+    "end": 0.301
+  },
+  {
+    "id": "w2",
+    "text": "perfil,",
+    "start": 0.342,
+    "end": 0.746
+  },
+  {
+    "id": "w3",
+    "text": "el",
+    "start": 0.933,
+    "end": 1.026
+  },
+  {
+    "id": "w4",
+    "text": "sistema",
+    "start": 1.078,
+    "end": 1.379
+  },
+  {
+    "id": "w5",
+    "text": "consulta",
+    "start": 1.41,
+    "end": 1.835
+  },
+  {
+    "id": "w6",
+    "text": "al",
+    "start": 1.855,
+    "end": 1.907
+  },
+  {
+    "id": "w7",
+    "text": "servicio",
+    "start": 1.949,
+    "end": 2.312
+  },
+  {
+    "id": "w8",
+    "text": "de",
+    "start": 2.332,
+    "end": 2.374
+  },
+  {
+    "id": "w9",
+    "text": "inteligencia",
+    "start": 2.395,
+    "end": 2.944
+  },
+  {
+    "id": "w10",
+    "text": "artificial,",
+    "start": 2.975,
+    "end": 3.618
+  },
+  {
+    "id": "w11",
+    "text": "que",
+    "start": 3.908,
+    "end": 3.991
+  },
+  {
+    "id": "w12",
+    "text": "lo",
+    "start": 4.032,
+    "end": 4.095
+  },
+  {
+    "id": "w13",
+    "text": "compara",
+    "start": 4.126,
+    "end": 4.468
+  },
+  {
+    "id": "w14",
+    "text": "con",
+    "start": 4.509,
+    "end": 4.603
+  },
+  {
+    "id": "w15",
+    "text": "los",
+    "start": 4.623,
+    "end": 4.717
+  },
+  {
+    "id": "w16",
+    "text": "parámetros",
+    "start": 4.779,
+    "end": 5.204
+  },
+  {
+    "id": "w17",
+    "text": "ideales",
+    "start": 5.266,
+    "end": 5.619
+  },
+  {
+    "id": "w18",
+    "text": "del",
+    "start": 5.639,
+    "end": 5.732
+  },
+  {
+    "id": "w19",
+    "text": "cultivo",
+    "start": 5.774,
+    "end": 6.22
+  },
+  {
+    "id": "w20",
+    "text": "y",
+    "start": 6.437,
+    "end": 6.51
+  },
+  {
+    "id": "w21",
+    "text": "calcula",
+    "start": 6.582,
+    "end": 6.955
+  },
+  {
+    "id": "w22",
+    "text": "un",
+    "start": 6.997,
+    "end": 7.038
+  },
+  {
+    "id": "w23",
+    "text": "porcentaje",
+    "start": 7.09,
+    "end": 7.64
+  },
+  {
+    "id": "w24",
+    "text": "de",
+    "start": 7.681,
+    "end": 7.744
+  },
+  {
+    "id": "w25",
+    "text": "compatibilidad:",
+    "start": 7.785,
+    "end": 8.655
+  },
+  {
+    "id": "w26",
+    "text": "alta,",
+    "start": 9.195,
+    "end": 9.734
+  },
+  {
+    "id": "w27",
+    "text": "media",
+    "start": 10.076,
+    "end": 10.47
+  },
+  {
+    "id": "w28",
+    "text": "o",
+    "start": 10.573,
+    "end": 10.625
+  },
+  {
+    "id": "w29",
+    "text": "baja.",
+    "start": 10.677,
+    "end": 11.092
+  },
+  {
+    "id": "w30",
+    "text": "Cada",
+    "start": 11.713,
+    "end": 11.931
+  },
+  {
+    "id": "w31",
+    "text": "parámetro",
+    "start": 11.983,
+    "end": 12.419
+  },
+  {
+    "id": "w32",
+    "text": "se",
+    "start": 12.637,
+    "end": 12.771
+  },
+  {
+    "id": "w33",
+    "text": "marca",
+    "start": 12.833,
+    "end": 13.071
+  },
+  {
+    "id": "w34",
+    "text": "en",
+    "start": 13.103,
+    "end": 13.165
+  },
+  {
+    "id": "w35",
+    "text": "verde",
+    "start": 13.248,
+    "end": 13.59
+  },
+  {
+    "id": "w36",
+    "text": "si",
+    "start": 13.631,
+    "end": 13.725
+  },
+  {
+    "id": "w37",
+    "text": "es",
+    "start": 13.766,
+    "end": 13.839
+  },
+  {
+    "id": "w38",
+    "text": "óptimo,",
+    "start": 13.922,
+    "end": 14.399
+  },
+  {
+    "id": "w39",
+    "text": "amarillo",
+    "start": 14.793,
+    "end": 15.353
+  },
+  {
+    "id": "w40",
+    "text": "si",
+    "start": 15.571,
+    "end": 15.726
+  },
+  {
+    "id": "w41",
+    "text": "es",
+    "start": 15.778,
+    "end": 15.85
+  },
+  {
+    "id": "w42",
+    "text": "deficiente",
+    "start": 15.871,
+    "end": 16.534
+  },
+  {
+    "id": "w43",
+    "text": "y",
+    "start": 16.752,
+    "end": 16.855
+  },
+  {
+    "id": "w44",
+    "text": "rojo",
+    "start": 16.99,
+    "end": 17.415
+  },
+  {
+    "id": "w45",
+    "text": "si",
+    "start": 17.705,
+    "end": 17.851
+  },
+  {
+    "id": "w46",
+    "text": "es",
+    "start": 17.903,
+    "end": 17.975
+  },
+  {
+    "id": "w47",
+    "text": "excesivo.",
+    "start": 18.038,
+    "end": 18.67
+  },
+  {
+    "id": "w48",
+    "text": "También",
+    "start": 19.292,
+    "end": 19.634
+  },
+  {
+    "id": "w49",
+    "text": "genera",
+    "start": 19.665,
+    "end": 19.945
+  },
+  {
+    "id": "w50",
+    "text": "recomendaciones",
+    "start": 19.996,
+    "end": 20.619
+  },
+  {
+    "id": "w51",
+    "text": "de",
+    "start": 20.639,
+    "end": 20.68
+  },
+  {
+    "id": "w52",
+    "text": "mejora",
+    "start": 20.712,
+    "end": 21.074
+  },
+  {
+    "id": "w53",
+    "text": "y,",
+    "start": 21.469,
+    "end": 21.676
+  },
+  {
+    "id": "w54",
+    "text": "si",
+    "start": 21.707,
+    "end": 21.811
+  },
+  {
+    "id": "w55",
+    "text": "la",
+    "start": 21.862,
+    "end": 21.924
+  },
+  {
+    "id": "w56",
+    "text": "compatibilidad",
+    "start": 21.977,
+    "end": 22.722
+  },
+  {
+    "id": "w57",
+    "text": "es",
+    "start": 22.775,
+    "end": 22.837
+  },
+  {
+    "id": "w58",
+    "text": "baja,",
+    "start": 22.879,
+    "end": 23.365
+  },
+  {
+    "id": "w59",
+    "text": "sugiere",
+    "start": 23.583,
+    "end": 23.967
+  },
+  {
+    "id": "w60",
+    "text": "cultivos",
+    "start": 23.997,
+    "end": 24.422
+  },
+  {
+    "id": "w61",
+    "text": "alternativos.",
+    "start": 24.475,
+    "end": 25.294
+  }
+]

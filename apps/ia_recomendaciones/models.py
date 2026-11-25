@@ -63,9 +63,32 @@ class ConfiguracionGlobal(models.Model):
     rango_temp_min = models.FloatField(default=-10.0, help_text="Temperatura mínima edáfica (°C)")
     rango_temp_max = models.FloatField(default=60.0, help_text="Temperatura máxima edáfica (°C)")
 
+    # Parámetros de Gobernanza de Seguridad y Sesión configurables por el Administrador
+    tiempo_inactividad_min = models.IntegerField(
+        default=30,
+        help_text="Tiempo máximo de inactividad de sesión en minutos antes de cierre automático"
+    )
+    max_intentos_login = models.IntegerField(
+        default=8,
+        help_text="Número máximo de intentos fallidos de inicio de sesión antes de bloqueo temporal"
+    )
+    tiempo_bloqueo_min = models.IntegerField(
+        default=5,
+        help_text="Tiempo de bloqueo temporal de cuenta/IP tras exceder intentos fallidos (minutos)"
+    )
+
     class Meta:
         verbose_name = 'Configuración Global'
         verbose_name_plural = 'Configuraciones Globales'
+        constraints = [
+            models.CheckConstraint(check=models.Q(rango_ph_min__lte=models.F('rango_ph_max')), name='chk_cfg_ph_min_lte_max'),
+            models.CheckConstraint(check=models.Q(rango_n_min__lte=models.F('rango_n_max')), name='chk_cfg_n_min_lte_max'),
+            models.CheckConstraint(check=models.Q(rango_p_min__lte=models.F('rango_p_max')), name='chk_cfg_p_min_lte_max'),
+            models.CheckConstraint(check=models.Q(rango_k_min__lte=models.F('rango_k_max')), name='chk_cfg_k_min_lte_max'),
+            models.CheckConstraint(check=models.Q(rango_humedad_min__lte=models.F('rango_humedad_max')), name='chk_cfg_hum_min_lte_max'),
+            models.CheckConstraint(check=models.Q(rango_ce_min__lte=models.F('rango_ce_max')), name='chk_cfg_ce_min_lte_max'),
+            models.CheckConstraint(check=models.Q(rango_temp_min__lte=models.F('rango_temp_max')), name='chk_cfg_temp_min_lte_max'),
+        ]
 
     def save(self, *args, **kwargs):
         """

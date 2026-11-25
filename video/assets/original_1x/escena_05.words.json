@@ -1,0 +1,302 @@
+[
+  {
+    "id": "w0",
+    "text": "Todo",
+    "start": 0,
+    "end": 0.255
+  },
+  {
+    "id": "w1",
+    "text": "empieza",
+    "start": 0.279,
+    "end": 0.65
+  },
+  {
+    "id": "w2",
+    "text": "cuando",
+    "start": 0.685,
+    "end": 0.964
+  },
+  {
+    "id": "w3",
+    "text": "el",
+    "start": 0.998,
+    "end": 1.057
+  },
+  {
+    "id": "w4",
+    "text": "agricultor",
+    "start": 1.115,
+    "end": 1.73
+  },
+  {
+    "id": "w5",
+    "text": "registra",
+    "start": 2.055,
+    "end": 2.589
+  },
+  {
+    "id": "w6",
+    "text": "su",
+    "start": 2.624,
+    "end": 2.728
+  },
+  {
+    "id": "w7",
+    "text": "terreno",
+    "start": 2.786,
+    "end": 3.158
+  },
+  {
+    "id": "w8",
+    "text": "con",
+    "start": 3.216,
+    "end": 3.367
+  },
+  {
+    "id": "w9",
+    "text": "nombre",
+    "start": 3.483,
+    "end": 3.889
+  },
+  {
+    "id": "w10",
+    "text": "y",
+    "start": 3.959,
+    "end": 3.982
+  },
+  {
+    "id": "w11",
+    "text": "área.",
+    "start": 4.075,
+    "end": 4.551
+  },
+  {
+    "id": "w12",
+    "text": "Luego",
+    "start": 5.364,
+    "end": 5.677
+  },
+  {
+    "id": "w13",
+    "text": "crea",
+    "start": 5.724,
+    "end": 5.979
+  },
+  {
+    "id": "w14",
+    "text": "una",
+    "start": 6.06,
+    "end": 6.211
+  },
+  {
+    "id": "w15",
+    "text": "solicitud",
+    "start": 6.258,
+    "end": 6.78
+  },
+  {
+    "id": "w16",
+    "text": "de",
+    "start": 6.803,
+    "end": 6.85
+  },
+  {
+    "id": "w17",
+    "text": "análisis",
+    "start": 6.885,
+    "end": 7.5
+  },
+  {
+    "id": "w18",
+    "text": "indicando",
+    "start": 7.883,
+    "end": 8.394
+  },
+  {
+    "id": "w19",
+    "text": "el",
+    "start": 8.417,
+    "end": 8.464
+  },
+  {
+    "id": "w20",
+    "text": "cultivo",
+    "start": 8.522,
+    "end": 9.079
+  },
+  {
+    "id": "w21",
+    "text": "que",
+    "start": 9.125,
+    "end": 9.207
+  },
+  {
+    "id": "w22",
+    "text": "desea",
+    "start": 9.265,
+    "end": 9.52
+  },
+  {
+    "id": "w23",
+    "text": "sembrar",
+    "start": 9.555,
+    "end": 10.019
+  },
+  {
+    "id": "w24",
+    "text": "y",
+    "start": 10.403,
+    "end": 10.519
+  },
+  {
+    "id": "w25",
+    "text": "si",
+    "start": 10.6,
+    "end": 10.704
+  },
+  {
+    "id": "w26",
+    "text": "prefiere",
+    "start": 10.774,
+    "end": 11.215
+  },
+  {
+    "id": "w27",
+    "text": "llevar",
+    "start": 11.238,
+    "end": 11.529
+  },
+  {
+    "id": "w28",
+    "text": "la",
+    "start": 11.575,
+    "end": 11.645
+  },
+  {
+    "id": "w29",
+    "text": "muestra",
+    "start": 11.703,
+    "end": 12.121
+  },
+  {
+    "id": "w30",
+    "text": "o",
+    "start": 12.19,
+    "end": 12.225
+  },
+  {
+    "id": "w31",
+    "text": "pedir",
+    "start": 12.272,
+    "end": 12.55
+  },
+  {
+    "id": "w32",
+    "text": "una",
+    "start": 12.597,
+    "end": 12.701
+  },
+  {
+    "id": "w33",
+    "text": "visita",
+    "start": 12.748,
+    "end": 13.096
+  },
+  {
+    "id": "w34",
+    "text": "técnica.",
+    "start": 13.142,
+    "end": 13.758
+  },
+  {
+    "id": "w35",
+    "text": "Solo",
+    "start": 14.571,
+    "end": 14.861
+  },
+  {
+    "id": "w36",
+    "text": "puede",
+    "start": 14.907,
+    "end": 15.093
+  },
+  {
+    "id": "w37",
+    "text": "tener",
+    "start": 15.139,
+    "end": 15.406
+  },
+  {
+    "id": "w38",
+    "text": "una",
+    "start": 15.453,
+    "end": 15.569
+  },
+  {
+    "id": "w39",
+    "text": "solicitud",
+    "start": 15.615,
+    "end": 16.091
+  },
+  {
+    "id": "w40",
+    "text": "activa",
+    "start": 16.126,
+    "end": 16.544
+  },
+  {
+    "id": "w41",
+    "text": "a",
+    "start": 16.614,
+    "end": 16.649
+  },
+  {
+    "id": "w42",
+    "text": "la",
+    "start": 16.695,
+    "end": 16.765
+  },
+  {
+    "id": "w43",
+    "text": "vez",
+    "start": 16.811,
+    "end": 17.078
+  },
+  {
+    "id": "w44",
+    "text": "y",
+    "start": 17.589,
+    "end": 17.705
+  },
+  {
+    "id": "w45",
+    "text": "puede",
+    "start": 17.775,
+    "end": 18.03
+  },
+  {
+    "id": "w46",
+    "text": "cancelarla",
+    "start": 18.077,
+    "end": 18.657
+  },
+  {
+    "id": "w47",
+    "text": "mientras",
+    "start": 18.692,
+    "end": 19.006
+  },
+  {
+    "id": "w48",
+    "text": "esté",
+    "start": 19.052,
+    "end": 19.215
+  },
+  {
+    "id": "w49",
+    "text": "pendiente.",
+    "start": 19.261,
+    "end": 20.109
+  }
+]

@@ -1,0 +1,167 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      background: #FFFFFF;
+      background-image:
+        radial-gradient(circle at 15% 15%, rgba(22, 163, 74, 0.06) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(245, 158, 11, 0.06) 0%, transparent 45%),
+        linear-gradient(to right, rgba(226, 232, 240, 0.55) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(226, 232, 240, 0.55) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 64px 64px, 64px 64px;
+      font-family: "Inter", sans-serif;
+      color: #0F172A;
+      overflow: hidden;
+    }
+    .safe-stage {
+      position: absolute;
+      inset: 76px 80px 172px 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .scene-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .step-num {
+      background: #ECFDF5;
+      border: 2.5px solid #16A34A;
+      color: #15803D;
+      font-size: 28px;
+      font-weight: 900;
+      padding: 8px 20px;
+      border-radius: 16px;
+    }
+    .scene-title {
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      color: #0F172A;
+      line-height: 1.1;
+    }
+    .scene-title .accent-green { color: #16A34A; }
+    .scene-title .accent-orange { color: #D97706; }
+    .scene-title .accent-pink { color: #E11D48; }
+    .badge-pill {
+      font-size: 28px;
+      font-weight: 800;
+      padding: 10px 26px;
+      border-radius: 999px;
+      background: #FEF3C7;
+      border: 2.5px solid #D97706;
+      color: #92400E;
+      box-shadow: 0 6px 16px rgba(217, 119, 6, 0.12);
+    }
+    .badge-green {
+      font-size: 28px;
+      font-weight: 800;
+      padding: 10px 26px;
+      border-radius: 999px;
+      background: #DCFCE7;
+      border: 2.5px solid #16A34A;
+      color: #166534;
+      box-shadow: 0 6px 16px rgba(22, 163, 74, 0.12);
+    }
+    .illus-card {
+      width: 100%;
+      height: 700px;
+      background: #FFFFFF;
+      border: 2.5px solid #CBD5E1;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.07);
+      border-radius: 32px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+</style>
+  <div id="root" data-composition-id="scene15" data-width="1920" data-height="1080">
+    <div id="scene15-clip" class="clip" data-start="0" data-duration="13.354" data-track-index="0">
+      <div class="safe-stage">
+        <div id="scene15-hdr" class="scene-header">
+          <div class="title-group">
+            <span class="step-num">15</span>
+            <div class="scene-title">Seguridad y <span class="accent-green">diseño adaptable</span></div>
+          </div>
+        </div>
+        <div id="scene15-stage" class="illus-card" data-layout-allow-overflow>
+          <div style="width:100%; height:100%; display:grid; grid-template-columns: 0.92fr 1.08fr; gap: 36px; padding: 34px 44px; align-items:stretch; background:#F8FAFC;">
+    <!-- Protección de datos Ley 1581 -->
+    <div id="s15-lock" style="background:#FFFFFF; border:3px solid #16A34A; border-radius:26px; display:flex; flex-direction:column; justify-content:space-between; padding:32px; box-shadow:0 16px 36px rgba(22,163,74,0.08);">
+      <div style="display:flex; align-items:center; gap:18px;">
+        <div style="width:74px; height:74px; border-radius:20px; background:#DCFCE7; display:flex; align-items:center; justify-content:center;">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size:28px; font-weight:900; color:#15803D;">Protección Legal</div>
+          <div style="font-size:38px; font-weight:900; color:#0F172A;">Ley 1581 de 2012</div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div style="background:#F0FDF4; border:2px solid #86EFAC; border-radius:16px; padding:16px 22px; font-size:28px; font-weight:800; color:#166534;">✓ Control de acceso por roles</div>
+        <div style="background:#F0FDF4; border:2px solid #86EFAC; border-radius:16px; padding:16px 22px; font-size:28px; font-weight:800; color:#166534;">✓ Comunicación cifrada HTTPS</div>
+        <div style="background:#F0FDF4; border:2px solid #86EFAC; border-radius:16px; padding:16px 22px; font-size:28px; font-weight:800; color:#166534;">✓ Privacidad de fincas y datos</div>
+      </div>
+    </div>
+
+    <!-- Dispositivos PWA (Tableta + Celular modernos en HTML/CSS) -->
+    <div id="s15-devices" style="background:#FFFFFF; border:3px solid #CBD5E1; border-radius:26px; padding:30px 34px; display:flex; align-items:flex-end; justify-content:center; gap:30px; box-shadow:0 16px 36px rgba(15,23,42,0.06);">
+      <!-- Tableta -->
+      <div style="flex:1; height:490px; background:#F8FAFC; border:4px solid #16A34A; border-radius:28px; padding:24px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 12px 28px rgba(22,163,74,0.10);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:28px; font-weight:900; color:#0F172A;">Tableta · PWA</span>
+          <span style="background:#DCFCE7; color:#15803D; font-size:28px; font-weight:900; padding:4px 16px; border-radius:999px;">86%</span>
+        </div>
+        <div style="background:#FFFFFF; border:2px solid #E2E8F0; border-radius:18px; padding:20px; display:flex; flex-direction:column; gap:14px;">
+          <div style="height:18px; width:82%; background:#16A34A; border-radius:999px;"></div>
+          <div style="height:18px; width:64%; background:#D97706; border-radius:999px;"></div>
+          <div style="height:18px; width:90%; background:#22C55E; border-radius:999px;"></div>
+        </div>
+        <div style="background:#16A34A; color:#FFFFFF; font-size:28px; font-weight:900; padding:12px; border-radius:16px; text-align:center;">Instalable como App</div>
+      </div>
+
+      <!-- Celular -->
+      <div style="width:270px; height:410px; background:#FFFFFF; border:4px solid #D97706; border-radius:30px; padding:20px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 12px 28px rgba(217,119,6,0.12);">
+        <div style="width:68px; height:8px; background:#CBD5E1; border-radius:999px; align-self:center;"></div>
+        <div style="background:#F0FDF4; border:2px solid #86EFAC; border-radius:18px; padding:16px; text-align:center;">
+          <div style="font-size:40px; font-weight:900; color:#15803D;">86%</div>
+          <div style="font-size:28px; font-weight:800; color:#166534;">Óptimo</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div style="height:14px; width:100%; background:#16A34A; border-radius:999px;"></div>
+          <div style="height:14px; width:72%; background:#D97706; border-radius:999px;"></div>
+        </div>
+        <div style="background:#FEF3C7; color:#92400E; font-size:28px; font-weight:900; padding:8px; border-radius:14px; text-align:center;">Móvil</div>
+      </div>
+    </div>
+  </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#scene15-clip", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, 0);
+    tl.fromTo("#scene15-hdr", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.12);
+    tl.fromTo("#scene15-stage", { scale: 0.992 }, { scale: 1.008, duration: 12.95, ease: "none" }, 0);
+
+    tl.fromTo("#s15-lock", { opacity: 0, x: -28 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" }, 0.3);
+    tl.fromTo("#s15-devices", { opacity: 0, x: 28 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" }, 5.6);
+  
+    tl.to("#scene15-clip", { opacity: 0, duration: 0.3, ease: "power2.inOut" }, 13.054);
+    window.__timelines["scene15"] = tl;
+  </script>
+</template>

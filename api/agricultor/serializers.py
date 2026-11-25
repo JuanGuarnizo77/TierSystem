@@ -5,12 +5,14 @@ garantizando la integridad relacional con el catálogo de cultivos de Huila
 y el aislamiento de datos por usuario autenticado.
 """
 
+import math
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
 from apps.cultivos.models import Cultivo
 from apps.terrenos.models import Terreno
 from apps.solicitudes.models import SolicitudAnalisis
+from core.utils import validar_y_normalizar_poligono
 
 
 def _validar_cultivo(value):
@@ -53,10 +55,17 @@ class TerrenoSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'fecha_registro']
 
     def validate_hectareas(self, value):
-        """Regla de validación física: el área del predio debe ser estrictamente positiva."""
-        if value <= 0:
-            raise serializers.ValidationError("Las hectáreas deben ser un valor mayor a cero.")
+        """Regla de validación física: el área del predio debe ser estrictamente positiva y razonable."""
+        if math.isnan(value) or math.isinf(value) or value <= 0 or value > 100000:
+            raise serializers.ValidationError("Las hectáreas deben ser un valor positivo entre 0.01 y 100,000 ha.")
         return value
+
+    def validate_coordenadas_poligono(self, value):
+        """Valida y normaliza en el servidor la geometría GeoJSON del polígono."""
+        es_valido, resultado = validar_y_normalizar_poligono(value)
+        if not es_valido:
+            raise serializers.ValidationError(resultado)
+        return resultado
 
     def validate_cultivo_principal(self, value):
         """Valida que el cultivo principal exista en el catálogo de cultivos."""

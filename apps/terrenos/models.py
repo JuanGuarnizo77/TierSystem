@@ -75,6 +75,16 @@ class Terreno(models.Model):
         ordering = ['-fecha_registro']
         verbose_name = 'Terreno'
         verbose_name_plural = 'Terrenos'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['agricultor', 'nombre'],
+                name='uniq_terreno_nombre_agricultor'
+            ),
+            models.CheckConstraint(
+                check=models.Q(hectareas__gt=0),
+                name='chk_terreno_hectareas_positivas'
+            ),
+        ]
 
     @property
     def cultivo_principal(self):

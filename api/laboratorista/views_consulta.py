@@ -92,10 +92,12 @@ def consulta_cultivo_view(request, solicitud_id):
                 "Eres un ingeniero agrónomo experto en suelos del Huila, Colombia.\n"
                 f"Lote: '{analisis.solicitud.terreno.nombre}'. Cultivo consultado: '{nombre_cultivo}'.\n"
                 + contexto +
-                "\nResponde SOLO con JSON válido (sin markdown) con estas dos claves:\n"
-                '{"descripcion": "explicación breve de por qué este suelo sirve o no para el cultivo, '
-                'citando los parámetros fuera de rango", '
-                '"recomendacion_suelo": "enmiendas o fertilización concretas para corregir lo que falte"}'
+                "\nNota técnica de la sonda in-situ: Las lecturas provienen de una sonda RS485 7 en 1 que mide la solución del suelo. "
+                "En suelos con vegetación viva o plántulas activas, es normal registrar NPK soluble moderado sin fertilizante sintético reciente. "
+                "Explica la aptitud con enfoque constructivo y enfoca la recomendación en el plan de fertilización y abonado.\n"
+                "Responde SOLO con JSON válido (sin markdown) con estas dos claves:\n"
+                '{"descripcion": "explicación clara de por qué este suelo sirve para el cultivo y su potencial agronómico", '
+                '"recomendacion_suelo": "enmiendas o fertilización concretas para nutrir adecuadamente el cultivo"}'
             )
 
             # Envío de la consulta al modelo LLM

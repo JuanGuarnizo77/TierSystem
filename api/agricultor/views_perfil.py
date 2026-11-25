@@ -10,9 +10,14 @@ laboratorista o administrador).
 """
 
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from core.utils import registrar_evento_seguridad
 
 
 def _datos_perfil(user):
@@ -58,15 +63,19 @@ def perfil_view(request):
     user = request.user
 
     if request.method == 'PUT':
-        # Sanitización y desinfección básica de espacios en blanco
-        nombre = str(request.data.get('first_name', '')).strip()
-        apellido = str(request.data.get('last_name', '')).strip()
-        email = str(request.data.get('email', '')).strip()
-        telefono = str(request.data.get('telefono', '')).strip()
+        # Sanitización y desinfección básica de espacios en blanco y límites de longitud
+        nombre = str(request.data.get('first_name', '')).strip()[:150]
+        apellido = str(request.data.get('last_name', '')).strip()[:150]
+        email = str(request.data.get('email', '')).strip().lower()[:254]
+        telefono = str(request.data.get('telefono', '')).strip()[:20]
 
-        # Validación de unicidad de correo electrónico excluyendo la cuenta actual
+        # Validación de formato y unicidad de correo electrónico excluyendo la cuenta actual
         if email:
-            if User.objects.filter(email=email).exclude(id=user.id).exists():
+            try:
+                validate_email(email)
+            except ValidationError:
+                return Response({'error': 'El formato del correo electrónico no es válido.'}, status=400)
+            if User.objects.filter(email__iexact=email).exclude(id=user.id).exists():
                 return Response(
                     {'error': 'El correo electrónico ya está registrado por otro usuario.'},
                     status=400,
@@ -82,6 +91,8 @@ def perfil_view(request):
         if hasattr(user, 'perfil'):
             user.perfil.telefono = telefono
             user.perfil.save()
+
+        registrar_evento_seguridad(request, 'API_PERFIL_ACTUALIZADO', 'Perfil actualizado vía API')
 
     return Response(_datos_perfil(user))
 
@@ -101,7 +112,7 @@ def cambiar_password_view(request):
 
     Seguridad:
       - Valida coincidencia entre `new_password` y `confirm_password`.
-      - Valida longitud mínima de 6 caracteres.
+      - Valida longitud mínima y validadores de fortaleza de Django (`validate_password`).
       - Comprueba la validez de `old_password` mediante `user.check_password()`.
       - Realiza el hashing criptográfico de la nueva clave vía `user.set_password()`.
     """
@@ -124,9 +135,19 @@ def cambiar_password_view(request):
 
     # Verificación criptográfica contra el hash almacenado en base de datos
     if not user.check_password(old_pass):
+        registrar_evento_seguridad(
+            request, 'API_CAMBIO_PASSWORD_FALLIDO',
+            'Contraseña actual incorrecta en /api/v1/perfil/password/', nivel='WARNING'
+        )
         return Response({'error': 'La contraseña actual es incorrecta.'}, status=400)
+
+    try:
+        validate_password(new_pass, user=user)
+    except ValidationError as ve:
+        return Response({'error': ' '.join(ve.messages)}, status=400)
 
     # Aplicación del algoritmo PBKDF2 SHA-256 para la nueva contraseña y persistencia
     user.set_password(new_pass)
     user.save()
+    registrar_evento_seguridad(request, 'API_CAMBIO_PASSWORD', 'Contraseña actualizada vía API')
     return Response({'mensaje': 'Contraseña actualizada con éxito.'})

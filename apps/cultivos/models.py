@@ -128,6 +128,16 @@ class Cultivo(models.Model):
         verbose_name = 'Cultivo'
         verbose_name_plural = 'Cultivos'
         db_table = 'cultivos_cultivo'
+        constraints = [
+            models.CheckConstraint(check=models.Q(altitud_min__lte=models.F('altitud_max')), name='chk_cultivo_altitud_min_lte_max'),
+            models.CheckConstraint(check=models.Q(ph_min__lte=models.F('ph_max')), name='chk_cultivo_ph_min_lte_max'),
+            models.CheckConstraint(check=models.Q(humedad_min__lte=models.F('humedad_max')), name='chk_cultivo_humedad_min_lte_max'),
+            models.CheckConstraint(check=models.Q(temperatura_min__lte=models.F('temperatura_max')), name='chk_cultivo_temp_min_lte_max'),
+            models.CheckConstraint(check=models.Q(conductividad_min__lte=models.F('conductividad_max')), name='chk_cultivo_ce_min_lte_max'),
+            models.CheckConstraint(check=models.Q(nitrogeno_min__lte=models.F('nitrogeno_max')), name='chk_cultivo_n_min_lte_max'),
+            models.CheckConstraint(check=models.Q(fosforo_min__lte=models.F('fosforo_max')), name='chk_cultivo_p_min_lte_max'),
+            models.CheckConstraint(check=models.Q(potasio_min__lte=models.F('potasio_max')), name='chk_cultivo_k_min_lte_max'),
+        ]
 
     def __str__(self):
         """Representación textual formal del cultivo y su categoría productiva."""

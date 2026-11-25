@@ -79,7 +79,7 @@
                                    data-k="{{ a.potasio }}"
                                    data-conductividad="{{ a.conductividad }}"
                                    data-temperatura="{{ a.temperatura }}"
-                                   data-json="{{ a.diagnostico_ia|escapejs }}"
+                                   data-json="{{ a.diagnostico_ia }}"
                                    onchange="actualizarSeleccionComparar(this)">
                         </td>
                         <td class="p-4 font-bold text-gray-900 dark:text-white">#{{ a.solicitud.id }}</td>
@@ -99,7 +99,7 @@
                             </div>
                         </td>
                         <td class="p-4 text-center">
-                            <script type="application/json" id="raw-reporte-{{ a.id }}">{{ a.diagnostico_ia|safe }}</script>
+                            {# JSON seguro mediante atributo data-json con autoescape HTML #}
                             <button onclick="verReporte('{{ a.id }}')" class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-gray-700 text-blue-500 dark:text-blue-400 hover:bg-primary hover:border-primary hover:text-white transition-all inline-flex items-center justify-center border border-blue-100 dark:border-gray-600 shadow-sm" title="Ver Reporte Individual">
                                 <i class="fa-solid fa-eye text-sm"></i>
                             </button>
@@ -247,6 +247,9 @@
                             </p>
                         </div>
                     </div>
+                    <span id="badgeModoAsesorLab" class="text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1.5 shrink-0">
+                        <!-- Actualizado por JS: Online (IA Gemini) u Offline -->
+                    </span>
                 </div>
 
                 <!-- Cuadro amplio para redactar la petición o duda agrícola -->
@@ -733,15 +736,20 @@
     }
 
     function actualizarBadgeModoLab() {
-        const badge = document.getElementById('badgeModoConsultaLab');
-        if (!badge) return;
-        if (navigator.onLine) {
-            badge.className = "text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800";
-            badge.innerHTML = '<i class="fa-solid fa-wifi text-emerald-500"></i> Modo Online (IA Gemini)';
-        } else {
-            badge.className = "text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800";
-            badge.innerHTML = '<i class="fa-solid fa-database text-amber-500"></i> Modo Offline (Base de Datos Local)';
-        }
+        const badges = [
+            document.getElementById('badgeModoConsultaLab'),
+            document.getElementById('badgeModoAsesorLab')
+        ];
+        badges.forEach(badge => {
+            if (!badge) return;
+            if (navigator.onLine) {
+                badge.className = "text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800";
+                badge.innerHTML = '<i class="fa-solid fa-wifi text-emerald-500"></i> Modo Online (IA Gemini)';
+            } else {
+                badge.className = "text-[11px] font-bold px-2.5 py-1 rounded-full shadow-xs flex items-center gap-1.5 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800";
+                badge.innerHTML = '<i class="fa-solid fa-database text-amber-500"></i> Modo Offline (Base de Datos Local)';
+            }
+        });
     }
     window.addEventListener('online', actualizarBadgeModoLab);
     window.addEventListener('offline', actualizarBadgeModoLab);
@@ -882,7 +890,7 @@
             try {
                 const resp = await fetch('/api/ia/consultar-agricultor/', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]*)/) || [])[1] || '' },
                     body: JSON.stringify({
                         solicitud_id: analisisReporteActivo.solicitud,
                         cultivo: cultivo
@@ -1131,19 +1139,19 @@
         }
 
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analizando consulta...';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Consultando IA...';
         resBox.classList.remove('hidden');
         resBox.innerHTML = `
             <div class="text-center py-4 text-xs text-gray-500">
-                <i class="fa-solid fa-seedling fa-bounce text-emerald-600 text-xl mb-2"></i>
-                <p>El Asesor Agronómico está evaluando tu consulta con los parámetros del suelo...</p>
+                <i class="fa-solid fa-brain fa-bounce text-emerald-600 text-xl mb-2"></i>
+                <p>Consultando a la <strong>Inteligencia Artificial Google Gemini</strong> con los parámetros del suelo...</p>
             </div>
         `;
 
         try {
             const resp = await fetch('/api/ia/asesor-suelo/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': (document.cookie.match(/(?:^|;\s*)csrftoken=([^;]*)/) || [])[1] || '' },
                 body: JSON.stringify({
                     solicitud_id: analisisReporteActivo.solicitud,
                     pregunta: pregunta,

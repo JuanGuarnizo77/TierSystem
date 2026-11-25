@@ -1,0 +1,128 @@
+{
+  "ok": true,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "filesScanned": 18
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "duration": 274.698,
+    "samples": [
+      15.261,
+      45.783,
+      76.305,
+      106.827,
+      137.349,
+      167.871,
+      198.393,
+      228.915,
+      259.437
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 0,
+    "truncated": false,
+    "faceCheck": {
+      "ran": true,
+      "candidates": 0,
+      "faces": 0
+    }
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 1,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "contrast_aa_failure",
+        "severity": "warning",
+        "message": "Contrast is 2.86:1; WCAG AA requires 3:1.",
+        "text": "?",
+        "fg": "rgb(217,119,6)",
+        "bg": "rgb(254,243,199)",
+        "ratio": 2.86,
+        "requiredRatio": 3,
+        "suggestedColor": "rgb(211,116,6)",
+        "large": true,
+        "selector": "div > div:nth-of-type(2) > div > div > div > div:nth-of-type(2) > svg > g:nth-of-type(4) > text:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/scene01.html",
+        "bbox": {
+          "x": 794.8527221679688,
+          "y": 321.09649658203125,
+          "width": 27.864501953125,
+          "height": 56.453582763671875
+        },
+        "time": 15.261,
+        "times": [
+          15.261
+        ]
+      }
+    ],
+    "enabled": true,
+    "samples": [
+      15.261,
+      76.305,
+      137.349,
+      198.393,
+      259.437
+    ],
+    "checked": 36,
+    "passed": 35
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "step": 0.4589999999999961,
+    "samples": 599
+  },
+  "audio": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

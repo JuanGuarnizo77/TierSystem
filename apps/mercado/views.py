@@ -15,6 +15,10 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from io import StringIO
 import unicodedata
+import logging
+from core.utils import verificar_rate_limit
+
+logger = logging.getLogger(__name__)
 
 from apps.sipsa.models import PrecioSemanal
 from apps.cultivos.models import Cultivo
@@ -846,13 +850,17 @@ def actualizar_precios_view(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Método no permitido'}, status=405)
 
+    bloqueado, _ = verificar_rate_limit(request, 'mercado_actualizar_sipsa', limite=5, ventana_segundos=300)
+    if bloqueado:
+        return JsonResponse({'status': 'error', 'message': 'Demasiadas actualizaciones solicitadas. Espere unos minutos.'}, status=429)
     out = StringIO()
     try:
         from django.core.management import call_command
         call_command('actualizar_sipsa', stdout=out)
         return JsonResponse({'status': 'ok', 'output': out.getvalue()})
-    except Exception as exc:
-        return JsonResponse({'status': 'error', 'message': str(exc)}, status=500)
+    except Exception:
+        logger.exception("Error ejecutando actualizar_sipsa en mercado")
+        return JsonResponse({'status': 'error', 'message': 'Error interno al actualizar precios de mercado.'}, status=500)
 
 
 @login_required(login_url='login')

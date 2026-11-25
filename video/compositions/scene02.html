@@ -1,0 +1,184 @@
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+      background: #FFFFFF;
+      background-image:
+        radial-gradient(circle at 15% 15%, rgba(22, 163, 74, 0.06) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(245, 158, 11, 0.06) 0%, transparent 45%),
+        linear-gradient(to right, rgba(226, 232, 240, 0.55) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(226, 232, 240, 0.55) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 64px 64px, 64px 64px;
+      font-family: "Inter", sans-serif;
+      color: #0F172A;
+      overflow: hidden;
+    }
+    .safe-stage {
+      position: absolute;
+      inset: 76px 80px 172px 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .scene-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .step-num {
+      background: #ECFDF5;
+      border: 2.5px solid #16A34A;
+      color: #15803D;
+      font-size: 28px;
+      font-weight: 900;
+      padding: 8px 20px;
+      border-radius: 16px;
+    }
+    .scene-title {
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: -0.025em;
+      color: #0F172A;
+      line-height: 1.1;
+    }
+    .scene-title .accent-green { color: #16A34A; }
+    .scene-title .accent-orange { color: #D97706; }
+    .scene-title .accent-pink { color: #E11D48; }
+    .badge-pill {
+      font-size: 28px;
+      font-weight: 800;
+      padding: 10px 26px;
+      border-radius: 999px;
+      background: #FEF3C7;
+      border: 2.5px solid #D97706;
+      color: #92400E;
+      box-shadow: 0 6px 16px rgba(217, 119, 6, 0.12);
+    }
+    .badge-green {
+      font-size: 28px;
+      font-weight: 800;
+      padding: 10px 26px;
+      border-radius: 999px;
+      background: #DCFCE7;
+      border: 2.5px solid #16A34A;
+      color: #166534;
+      box-shadow: 0 6px 16px rgba(22, 163, 74, 0.12);
+    }
+    .illus-card {
+      width: 100%;
+      height: 700px;
+      background: #FFFFFF;
+      border: 2.5px solid #CBD5E1;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.07);
+      border-radius: 32px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+</style>
+  <div id="root" data-composition-id="scene02" data-width="1920" data-height="1080">
+    <div id="scene02-clip" class="clip" data-start="0" data-duration="16.515" data-track-index="0">
+      <div class="safe-stage">
+        <div id="scene02-hdr" class="scene-header">
+          <div class="title-group">
+            <span class="step-num">02</span>
+            <div class="scene-title">Laboratorio <span class="accent-pink">lejano y costoso</span></div>
+          </div>
+        </div>
+        <div id="scene02-stage" class="illus-card" data-layout-allow-overflow>
+          <div style="width:100%; height:100%; display:grid; grid-template-columns: repeat(3, 1fr); gap:32px; padding:34px 42px; align-items:stretch; background:linear-gradient(135deg,#FFFFFF 0%,#FFF1F2 100%);">
+    <!-- Barrera 1: Distancia Rural -->
+    <div id="s02-road" style="background:#FFFFFF; border:3px solid #FDA4AF; border-radius:26px; padding:30px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 16px 36px rgba(225,29,72,0.08);">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div style="width:72px; height:72px; border-radius:20px; background:#FFE4E6; display:flex; align-items:center; justify-content:center;">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+        </div>
+        <span style="background:#FFE4E6; color:#BE123C; font-size:28px; font-weight:900; padding:6px 18px; border-radius:999px;">Barrera 01</span>
+      </div>
+      <div>
+        <div style="font-size:40px; font-weight:900; color:#0F172A; line-height:1.15;">Laboratorios lejanos</div>
+        <div style="font-size:28px; font-weight:700; color:#475569; margin-top:10px;">Difícil acceso desde veredas rurales</div>
+      </div>
+      <div style="background:#F8FAFC; border:2px solid #E2E8F0; border-radius:18px; padding:18px;">
+        <svg width="420" height="46" viewBox="0 0 420 46" fill="none" style="width:100%;">
+          <circle cx="24" cy="23" r="10" fill="#16A34A"/>
+          <path id="s02-route" d="M40 23 H380" stroke="#E11D48" stroke-width="6" stroke-linecap="round" stroke-dasharray="12 10"/>
+          <circle cx="396" cy="23" r="10" fill="#E11D48"/>
+        </svg>
+        <div style="display:flex; justify-content:space-between; font-size:28px; font-weight:800; color:#334155;"><span>Finca</span><span style="color:#E11D48;">+15 días</span></div>
+      </div>
+    </div>
+
+    <!-- Barrera 2: Costo y Logística -->
+    <div id="s02-cost" style="background:#FFFFFF; border:3px solid #E11D48; border-radius:26px; padding:30px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 18px 40px rgba(225,29,72,0.12);">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div style="width:72px; height:72px; border-radius:20px; background:#E11D48; display:flex; align-items:center; justify-content:center;">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <span style="background:#E11D48; color:#FFFFFF; font-size:28px; font-weight:900; padding:6px 18px; border-radius:999px;">Barrera 02</span>
+      </div>
+      <div>
+        <div style="font-size:40px; font-weight:900; color:#0F172A; line-height:1.15;">Costo y logística</div>
+        <div style="font-size:28px; font-weight:700; color:#475569; margin-top:10px;">Muchos siembran por intuición</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; justify-content:space-between; font-size:28px; font-weight:800; color:#BE123C;"><span>Impacto</span><span>Muy alto</span></div>
+        <div style="width:100%; height:18px; background:#FFE4E6; border-radius:999px; overflow:hidden;">
+          <div id="s02-bar-cost" style="width:92%; height:100%; background:#E11D48; border-radius:999px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barrera 3: Sin Historial ni Precios -->
+    <div id="s02-notebook" style="background:#FFFFFF; border:3px solid #FCD34D; border-radius:26px; padding:30px; display:flex; flex-direction:column; justify-content:space-between; box-shadow:0 16px 36px rgba(217,119,6,0.08);">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div style="width:72px; height:72px; border-radius:20px; background:#FEF3C7; display:flex; align-items:center; justify-content:center;">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+        </div>
+        <span style="background:#FEF3C7; color:#92400E; font-size:28px; font-weight:900; padding:6px 18px; border-radius:999px;">Barrera 03</span>
+      </div>
+      <div>
+        <div style="font-size:40px; font-weight:900; color:#0F172A; line-height:1.15;">Sin registro ni precios</div>
+        <div style="font-size:28px; font-weight:700; color:#475569; margin-top:10px;">Sin evolución ni referencia al vender</div>
+      </div>
+      <div style="display:flex; gap:12px;">
+        <div style="flex:1; background:#FFFBEB; border:2px solid #D97706; color:#92400E; font-size:28px; font-weight:900; padding:12px; border-radius:14px; text-align:center;">Sin historial</div>
+        <div style="flex:1; background:#FFF1F2; border:2px solid #E11D48; color:#BE123C; font-size:28px; font-weight:900; padding:12px; border-radius:14px; text-align:center;">Sin precios</div>
+      </div>
+    </div>
+  </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#scene02-clip", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, 0);
+    tl.fromTo("#scene02-hdr", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.12);
+    tl.fromTo("#scene02-stage", { scale: 0.992 }, { scale: 1.008, duration: 16.12, ease: "none" }, 0);
+
+    tl.fromTo("#s02-road", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.65, ease: "power3.out" }, 0.3);
+    tl.fromTo("#s02-cost", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.65, ease: "power3.out" }, 4.2);
+    tl.fromTo("#s02-bar-cost", { scaleX: 0.1, transformOrigin: "left center" }, { scaleX: 1, duration: 1.0, ease: "power3.out" }, 4.6);
+    tl.fromTo("#s02-notebook", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.65, ease: "power3.out" }, 8.6);
+  
+    tl.to("#scene02-clip", { opacity: 0, duration: 0.3, ease: "power2.inOut" }, 16.215);
+    window.__timelines["scene02"] = tl;
+  </script>
+</template>

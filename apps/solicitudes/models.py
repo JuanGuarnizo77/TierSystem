@@ -24,12 +24,12 @@ class SolicitudAnalisis(models.Model):
     Articula el flujo entre el agricultor solicitante, el predio objeto de estudio,
     el laboratorista asignado para la toma de muestras y el resultado de análisis final.
     """
-    # Estados operativos del flujo de atención
+    # Estados operativos del flujo de atención (alineados con SRS: Aceptada / Finalizada)
     ESTADOS = (
         ('PENDIENTE', 'Pendiente'),
-        ('ASIGNADA', 'Asignada'),
+        ('ASIGNADA', 'Aceptada'),
         ('EN_PROCESO', 'En Proceso'),
-        ('COMPLETADA', 'Completada'),
+        ('COMPLETADA', 'Finalizada'),
         ('RECHAZADA', 'Rechazada'),
         ('CANCELADA', 'Cancelada'),
     )
@@ -106,6 +106,21 @@ class SolicitudAnalisis(models.Model):
         blank=True,
         null=True,
         help_text="Observaciones iniciales del productor (historial de abonos, síntomas, etc.)"
+    )
+    motivo_rechazo = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Justificación técnica registrada cuando el laboratorista rechaza la solicitud"
+    )
+    fecha_aceptacion = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="Marca temporal exacta en que el laboratorista aceptó la solicitud"
+    )
+    fecha_finalizacion = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="Marca temporal exacta de finalización y entrega del análisis"
     )
 
     class Meta:
